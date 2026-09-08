@@ -4,99 +4,691 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Indenizações e Documentos Administrativos - EB</title>
+
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- docx.js CDN (Geração de Word editável) -->
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  
+  <!-- FileSaver.js CDN (Download de arquivos) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- jsPDF CDN (Geração de PDF do checklist de documentos) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
   <script>
-    tailwind.config = { theme: { extend: { colors: { eb: { olive: '#4B5320', darkOlive: '#353c15', gold: '#c99700', goldLight: '#f4c430', dark: '#1e231b' } } } } }
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            eb: {
+              olive: '#4B5320',
+              darkOlive: '#353c15',
+              green: '#1f441e',
+              gold: '#c99700',
+              goldLight: '#f4c430',
+              sand: '#f5f3e9',
+              dark: '#1e231b',
+            }
+          }
+        }
+      }
+    }
   </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .font-serif-eb { font-family: 'Merriweather', serif; }
+  </style>
 </head>
-<body class="bg-stone-100 text-stone-900 min-h-screen flex flex-col">
+
+<body class="bg-stone-100 text-stone-900 min-h-screen flex flex-col antialiased selection:bg-eb-olive selection:text-white">
+
+  <!-- Top Navigation -->
   <header class="bg-eb-dark text-white border-b-4 border-eb-gold shadow-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-      <div class="flex items-center space-x-3">
-        <div><h1 class="text-lg font-bold">SisDoc Adm Indenizações</h1></div>
-      </div>
-      <div class="flex items-center space-x-2">
-        <button id="nav-btn-militar" onclick="switchView('militar')" class="nav-tab px-3 py-2 bg-eb-olive text-white rounded font-bold">Área do Militar</button>
-        <button id="nav-btn-admin" onclick="switchView('admin')" class="nav-tab px-3 py-2 text-stone-300 hover:text-white font-bold">Administrador</button>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-eb-olive flex items-center justify-center border-2 border-eb-gold shadow-inner">
+            <i data-lucide="shield" class="w-6 h-6 text-eb-goldLight"></i>
+          </div>
+          <div>
+            <span class="text-xs tracking-wider uppercase text-stone-300 font-medium block">Exército Brasileiro</span>
+            <h1 class="text-lg font-bold text-white tracking-wide flex items-center gap-1.5">
+              SisDoc <span class="text-eb-gold text-xs px-2 py-0.5 rounded bg-black/40 border border-eb-gold/30">Adm Indenizações</span>
+            </h1>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button id="nav-btn-militar" onclick="switchView('militar')"
+            class="nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all bg-eb-olive text-white shadow-sm border border-eb-gold/40">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Área do Militar</span> (Solicitação)
+          </button>
+          
+          <button id="nav-btn-admin" onclick="switchView('admin')"
+            class="nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all text-stone-300 hover:text-white hover:bg-stone-800">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Painel do</span> Administrador
+            <span id="admin-badge-count" class="hidden ml-1 px-1.5 py-0.2 text-xs bg-red-600 text-white font-bold rounded-full">0</span>
+          </button>
+        </div>
       </div>
     </div>
   </header>
 
-  <div id="loading-overlay" class="fixed inset-0 z-50 bg-black/60 hidden flex flex-col items-center justify-center text-white">
-    <div class="w-10 h-10 border-4 border-eb-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p id="loading-overlay-msg" class="text-sm font-bold">Processando...</p>
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex flex-col items-center justify-center text-white">
+    <div class="w-14 h-14 border-4 border-eb-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p id="loading-overlay-msg" class="text-sm font-semibold tracking-wide">Processando solicitação...</p>
+    <p class="text-xs text-stone-300 mt-1">Gerando documentos oficiais e enviando para o servidor.</p>
   </div>
 
-  <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ÁREA DO MILITAR (FORMULÁRIO) -->
     <section id="view-militar" class="space-y-6">
-      <form id="form-solicitacao" onsubmit="handleSalvarSolicitacao(event)" class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 space-y-4">
-        
-        <div>
-          <h3 class="font-bold text-stone-800 border-b pb-2 mb-3">1. Modalidade e Identificação</h3>
-          <select name="modalidade" class="w-full border p-2 rounded mb-3 bg-stone-50">
-            <option value="movimentacao">Movimentação / Transferência</option>
-            <option value="transporte_pnr">Transporte de Bagagem Mesma Sede (PNR)</option>
-            <option value="curso">Curso</option>
-          </select>
-          <div class="grid grid-cols-2 gap-3">
-            <input type="text" name="posto" required placeholder="Posto/Grad (Ex: 1º Sgt)" class="border p-2 rounded">
-            <input type="text" name="nomeCompleto" required placeholder="Nome Completo" class="border p-2 rounded uppercase">
-            <input type="text" name="idtMilitar" required placeholder="Identidade Militar" class="border p-2 rounded">
-            <input type="text" name="cpf" required placeholder="CPF (Apenas números)" class="border p-2 rounded">
+      <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <div class="p-3 bg-stone-100 rounded-lg text-eb-olive">
+            <i data-lucide="file-text" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-stone-800">Requerimento Eletrônico de Indenizações</h2>
+            <p class="text-xs text-stone-500">Preencha os dados abaixo para gerar sua solicitação e enviar automaticamente à Divisão Administrativa.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO -->
+      <form id="form-solicitacao" onsubmit="handleSalvarSolicitacao(event)" class="space-y-6">
+
+        <!-- Bloco 1: Modalidade -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="layers" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">1. Modalidade da Solicitação *</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="transporte_pnr" required onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Transporte de Bagagem na Mesma Sede</span>
+                <span class="block text-[11px] text-stone-500">Ocupação ou desocupação de PNR</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="movimentacao" checked onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Movimentação / Transferência</span>
+                <span class="block text-[11px] text-stone-500">Transferência por necessidade de serviço</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="movimentacao_comp" onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Movimentação - Complemento</span>
+                <span class="block text-[11px] text-stone-500">Reajuste ou complemento de ajuda de custo</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="curso" onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Curso</span>
+                <span class="block text-[11px] text-stone-500">Cursos e estágios de aperfeiçoamento</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="curso_comp" onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Curso - Complemento</span>
+                <span class="block text-[11px] text-stone-500">Complementação de ajuda de custo de curso</span>
+              </div>
+            </label>
           </div>
         </div>
 
-        <div>
-          <h3 class="font-bold text-stone-800 border-b pb-2 mb-3">2. Movimentação</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <input type="text" name="omOrigem" required placeholder="OM Origem" value="5º BIL" class="border p-2 rounded">
-            <input type="text" name="omDestino" required placeholder="OM Destino" class="border p-2 rounded">
-            <input type="text" name="documentoAutorizador" required placeholder="Documento Autorizador (Ex: Bol DGP 088)" class="border p-2 rounded col-span-2">
+        <!-- Bloco 2: Identificação do Militar -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="user-check" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">2. Identificação do Militar</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Posto / Graduação *</label>
+              <select name="posto" required class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm bg-white">
+                <option value="">Selecione...</option>
+                <option value="Cel">Coronel (Cel)</option>
+                <option value="Ten Cel">Tenente-Coronel (Ten Cel)</option>
+                <option value="Maj">Major (Maj)</option>
+                <option value="Cap">Capitão (Cap)</option>
+                <option value="1º Ten">1º Tenente (1º Ten)</option>
+                <option value="2º Ten">2º Tenente (2º Ten)</option>
+                <option value="Asp Of">Aspirante a Oficial (Asp Of)</option>
+                <option value="S Ten">Subtenente (S Ten)</option>
+                <option value="1º Sgt">1º Sargento (1º Sgt)</option>
+                <option value="2º Sgt">2º Sargento (2º Sgt)</option>
+                <option value="3º Sgt">3º Sargento (3º Sgt)</option>
+                <option value="Cb">Cabo (Cb)</option>
+                <option value="Sd">Soldado (Sd)</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Nome Completo *</label>
+              <input type="text" name="nomeCompleto" required placeholder="Ex: MARCOS ANTÔNIO DA SILVA" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm uppercase">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Arma / Quadro / Serviço *</label>
+              <input type="text" name="arma" required placeholder="Ex: Inf, Cav, Art" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Identidade Militar *</label>
+              <input type="text" name="idtMilitar" required placeholder="Ex: 021987654-3" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">CPF *</label>
+              <input type="text" name="cpf" id="input-cpf" required placeholder="000.000.000-00" maxlength="14" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Prec-CP *</label>
+              <input type="text" name="precCp" required placeholder="Ex: 96 1234567" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Telefone de Contato *</label>
+              <input type="tel" name="telefone" id="input-telefone" required placeholder="(12) 99999-9999" maxlength="15" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">E-mail *</label>
+              <input type="email" name="email" required placeholder="militar@eb.mil.br" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">OM Atual</label>
+              <input type="text" name="omAtual" value="5º BATALHÃO DE INFANTARIA LEVE" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm bg-stone-50">
+            </div>
           </div>
         </div>
 
-        <button type="submit" class="w-full bg-eb-olive text-white font-bold py-3 rounded hover:bg-eb-darkOlive">
-          Gerar Documentos e Enviar
+        <!-- Bloco 3: Dados Bancários -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="landmark" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">3. Domicílio Bancário</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Banco *</label>
+              <input type="text" name="banco" required value="001 - Banco do Brasil" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Agência (com dígito) *</label>
+              <input type="text" name="agencia" required class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Conta Corrente (com dígito) *</label>
+              <input type="text" name="contaCorrente" required class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 4: Dados da Movimentação -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="map-pin" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">4. Dados da Movimentação</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">OM de Origem e Guarnição *</label>
+              <input type="text" name="omOrigem" required value="5º BIL Guarnição: Lorena – SP" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">OM de Destino e Guarnição *</label>
+              <input type="text" name="omDestino" required class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Cidade onde residirá após movimentação</label>
+              <input type="text" name="cidadeResidenciaFutura" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Documento Autorizador / Publicação *</label>
+              <input type="text" name="documentoAutorizador" required placeholder="Ex: Adt DCEM 1B ao Bol DGP nº 088, de 6 AGO" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Motivo / Enquadramento</label>
+              <input type="text" name="motivoMovimentacao" id="input-motivo" value="Transferência por Necessidade do Serviço" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div id="campo-desligamento">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Previsão da Data de Desligamento</label>
+              <input type="text" name="dataDesligamento" id="input-data-desligamento" placeholder="DD/MM/AAAA" maxlength="10" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div id="campo-periodo-curso" class="hidden sm:col-span-2 grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Início do Curso</label>
+                <input type="text" name="dataInicioCurso" id="input-inicio-curso" placeholder="DD/MM/AAAA" maxlength="10" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Término do Curso</label>
+                <input type="text" name="dataTerminoCurso" id="input-termino-curso" placeholder="DD/MM/AAAA" maxlength="10" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Data do Ajuste de Contas *</label>
+              <input type="text" name="dataAjusteContas" required value="30 dias após a data de desligamento" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Tipo de Movimentação</label>
+              <select name="tipoMovimentacao" id="select-tipo-movimentacao" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm bg-white">
+                <option value="Com desligamento">Com desligamento</option>
+                <option value="Sem desligamento">Sem desligamento</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 5: Opções Requeridas -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="check-square" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">5. Opções de Indenização Requeridas (DIEx)</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Ajuda de Custo</span>
+              <div class="flex items-center gap-3">
+                <label><input type="radio" name="opt_ajuda_custo" value="nao" class="text-stone-500"> Não</label>
+                <label class="font-bold text-eb-olive"><input type="radio" name="opt_ajuda_custo" value="sim" checked> Sim</label>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Transporte de Bagagem</span>
+              <div class="flex items-center gap-3">
+                <label><input type="radio" name="opt_bagagem" value="nao" class="text-stone-500"> Não</label>
+                <label class="font-bold text-eb-olive"><input type="radio" name="opt_bagagem" value="sim" checked> Sim</label>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Passagens</span>
+              <div class="flex items-center gap-3">
+                <label><input type="radio" name="opt_passagens" value="nao" class="text-stone-500"> Não</label>
+                <label class="font-bold text-eb-olive"><input type="radio" name="opt_passagens" value="sim" checked> Sim</label>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Transp de Automóvel</span>
+              <div class="flex items-center gap-3">
+                <label><input type="radio" name="opt_automovel" value="nao" checked class="text-stone-500"> Não</label>
+                <label class="font-bold text-eb-olive"><input type="radio" name="opt_automovel" value="sim"> Sim</label>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Transp de Motocicleta</span>
+              <div class="flex items-center gap-3">
+                <label><input type="radio" name="opt_motocicleta" value="nao" checked class="text-stone-500"> Não</label>
+                <label class="font-bold text-eb-olive"><input type="radio" name="opt_motocicleta" value="sim"> Sim</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 6: Dependentes -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-stone-200 gap-2">
+            <div class="flex items-center gap-2">
+              <i data-lucide="users" class="w-5 h-5 text-eb-olive"></i>
+              <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">6. Dependentes Legais</h3>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+              <label class="inline-flex items-center gap-1.5 font-medium text-stone-700">
+                <span>Possui dependentes?</span>
+                <input type="checkbox" id="check-possui-dep" onchange="toggleDependentesGroup()" class="rounded text-eb-olive">
+              </label>
+              <label id="lbl-dep-acompanham" class="hidden inline-flex items-center gap-1.5 font-medium text-stone-700">
+                <span>Acompanharão o militar?</span>
+                <input type="checkbox" id="check-dep-acompanham" checked class="rounded text-eb-olive">
+              </label>
+            </div>
+          </div>
+          <div id="container-dependentes" class="hidden space-y-3">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs text-stone-500">Relação de dependentes:</span>
+              <button type="button" onclick="adicionarDependente()" class="px-3 py-1.5 bg-stone-100 text-stone-800 text-xs font-semibold rounded-md flex items-center gap-1 border border-stone-300">
+                <i data-lucide="plus" class="w-3.5 h-3.5 text-eb-olive"></i> Adicionar Dependente
+              </button>
+            </div>
+            <div id="lista-dependentes" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- Bloco 7: Veículos -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="car" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">7. Dados dos Veículos</h3>
+          </div>
+          <div class="space-y-5">
+            <div class="p-3.5 rounded-lg border border-stone-200 bg-stone-50/60">
+              <span class="text-xs font-bold text-stone-700 uppercase block mb-2">Automóvel</span>
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <input type="text" name="auto_marca_modelo" placeholder="Marca / Modelo" class="border px-2.5 py-1.5 text-xs rounded">
+                <input type="text" name="auto_cor" placeholder="Cor" class="border px-2.5 py-1.5 text-xs rounded">
+                <input type="text" name="auto_placa" placeholder="Placa" class="border px-2.5 py-1.5 text-xs rounded uppercase">
+                <input type="text" name="auto_ano" placeholder="Ano/Modelo" class="border px-2.5 py-1.5 text-xs rounded">
+              </div>
+            </div>
+            <div class="p-3.5 rounded-lg border border-stone-200 bg-stone-50/60">
+              <span class="text-xs font-bold text-stone-700 uppercase block mb-2">Motocicleta</span>
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <input type="text" name="moto_marca_modelo" placeholder="Marca / Modelo" class="border px-2.5 py-1.5 text-xs rounded">
+                <input type="text" name="moto_cor" placeholder="Cor" class="border px-2.5 py-1.5 text-xs rounded">
+                <input type="text" name="moto_placa" placeholder="Placa" class="border px-2.5 py-1.5 text-xs rounded uppercase">
+                <input type="text" name="moto_ano" placeholder="Ano/Modelo" class="border px-2.5 py-1.5 text-xs rounded">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-eb-olive text-white font-bold py-3 rounded-lg hover:bg-eb-darkOlive transition flex items-center justify-center gap-2">
+          <i data-lucide="send" class="w-5 h-5"></i> Enviar Solicitação e Gerar Documentos
         </button>
       </form>
     </section>
 
+    <!-- ÁREA DO ADMINISTRADOR -->
     <section id="view-admin" class="hidden space-y-6">
       <div id="admin-login-card" class="bg-white p-6 rounded-xl shadow-sm max-w-md mx-auto">
-        <h2 class="font-bold mb-4">Login Admin</h2>
-        <input type="text" id="admin-user-input" placeholder="Usuário" class="w-full border p-2 rounded mb-3">
-        <input type="password" id="admin-pass-input" placeholder="Senha" class="w-full border p-2 rounded mb-3">
-        <button onclick="handleAdminLogin()" class="w-full bg-eb-olive text-white p-2 rounded font-bold">Entrar</button>
+        <div class="text-center mb-6">
+          <div class="w-14 h-14 mx-auto rounded-full bg-eb-olive flex items-center justify-center mb-3">
+            <i data-lucide="lock" class="w-7 h-7 text-eb-goldLight"></i>
+          </div>
+          <h2 class="font-bold text-lg">Painel Administrativo</h2>
+        </div>
+        <form onsubmit="handleAdminLogin(event)" autocomplete="off" class="space-y-4">
+          <input type="text" id="admin-user-input" required placeholder="Usuário" class="w-full border p-2 rounded">
+          <input type="password" id="admin-pass-input" required placeholder="Senha" class="w-full border p-2 rounded">
+          <button type="submit" class="w-full bg-eb-olive text-white p-2 rounded font-bold">Entrar</button>
+        </form>
       </div>
 
       <div id="admin-dashboard-panel" class="hidden bg-white p-6 rounded-xl shadow-sm">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="font-bold">Painel de Processos</h2>
-          <button onclick="recarregarTabelaServidor()" class="bg-stone-200 px-3 py-1 rounded">Atualizar Lista</button>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="folder-open" class="w-5 h-5 text-eb-olive"></i> Processos Recebidos</h2>
+          <div class="flex gap-2">
+            <button onclick="recarregarTabelaServidor()" class="bg-stone-200 px-3 py-1.5 text-sm rounded font-medium">Atualizar</button>
+            <button onclick="handleAdminLogout()" class="bg-stone-800 text-white px-3 py-1.5 text-sm rounded font-medium">Sair</button>
+          </div>
         </div>
-        <table class="w-full text-left text-xs border">
+        <table class="w-full text-left text-xs">
           <thead class="bg-stone-100">
-            <tr><th class="p-2">ID / Nome</th><th class="p-2">Destino</th><th class="p-2">Documentos</th></tr>
+            <tr>
+              <th class="p-3">ID / Data</th>
+              <th class="p-3">Militar</th>
+              <th class="p-3">Destino</th>
+              <th class="p-3 text-center">Documentos (Nuvem)</th>
+            </tr>
           </thead>
-          <tbody id="tabela-solicitacoes-body"></tbody>
+          <tbody id="tabela-solicitacoes-body" class="divide-y divide-stone-200"></tbody>
         </table>
       </div>
     </section>
   </main>
 
+  <!-- MODAL DE SUCESSO -->
+  <div id="modal-pos-envio" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 text-center shadow-2xl">
+      <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4">
+        <i data-lucide="check-circle-2" class="w-10 h-10"></i>
+      </div>
+      <h3 class="text-xl font-bold mb-2">Enviado com Sucesso!</h3>
+      <p class="text-sm text-stone-600 mb-6">O seu requerimento e todos os documentos foram gerados e salvos no servidor da Divisão Administrativa.</p>
+      
+      <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-6 text-amber-900 font-bold">
+        Procure a Divisão Administrativa para assinatura do processo e entrega dos documentos anexos.
+      </div>
+
+      <div class="flex justify-center gap-3">
+        <button onclick="baixarPDFDocumentosAtual()" class="bg-stone-800 text-white px-4 py-2 rounded font-bold text-sm">Baixar Meu Checklist (PDF)</button>
+        <button onclick="document.getElementById('modal-pos-envio').classList.add('hidden')" class="bg-eb-olive text-white px-4 py-2 rounded font-bold text-sm">Concluir</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-stone-900 text-stone-400 py-6 text-xs text-center mt-auto">
+    <p class="font-semibold text-stone-300">5º BATALHÃO DE INFANTARIA LEVE &bull; REGIMENTO ITORORÓ</p>
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- LÓGICA DE NEGÓCIO E GERAÇÃO DOS DOCUMENTOS     -->
+  <!-- ============================================== -->
   <script>
+    let dependentesList = [];
+    let ultimaSolicitacao = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      document.getElementById('input-cpf').addEventListener('input', e => e.target.value = e.target.value.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2').slice(0, 14));
+      handleModalidadeChange();
+    });
+
     function switchView(view) {
       document.getElementById('view-militar').classList.toggle('hidden', view !== 'militar');
       document.getElementById('view-admin').classList.toggle('hidden', view !== 'admin');
+      if (view === 'admin') verificarSessaoAdmin();
     }
+
+    function handleModalidadeChange() {
+      const mod = document.querySelector('input[name="modalidade"]:checked').value;
+      const dC = document.getElementById('campo-desligamento');
+      const dP = document.getElementById('campo-periodo-curso');
+      const iM = document.getElementById('input-motivo');
+      const sT = document.getElementById('select-tipo-movimentacao');
+      
+      const r = (n, v) => document.querySelector(`input[name="${n}"][value="${v}"]`).checked = true;
+
+      if (mod === 'transporte_pnr') {
+        iM.value = 'Mudança de residência na mesma Sede (Ocupação de PNR)';
+        sT.value = 'Sem desligamento';
+        dC.classList.add('hidden'); dP.classList.add('hidden');
+        r('opt_bagagem','sim'); r('opt_ajuda_custo','nao'); r('opt_passagens','nao'); r('opt_automovel','nao'); r('opt_motocicleta','nao');
+      } else if (mod === 'curso') {
+        iM.value = 'Curso de Especialização / Aperfeiçoamento';
+        sT.value = 'Sem desligamento';
+        dC.classList.add('hidden'); dP.classList.remove('hidden');
+        r('opt_ajuda_custo','sim'); r('opt_passagens','sim'); r('opt_bagagem','nao');
+      } else {
+        iM.value = 'Transferência por Necessidade do Serviço';
+        sT.value = 'Com desligamento';
+        dC.classList.remove('hidden'); dP.classList.add('hidden');
+        r('opt_ajuda_custo','sim'); r('opt_bagagem','sim'); r('opt_passagens','sim');
+      }
+    }
+
+    function toggleDependentesGroup() {
+      const c = document.getElementById('check-possui-dep').checked;
+      document.getElementById('container-dependentes').classList.toggle('hidden', !c);
+      document.getElementById('lbl-dep-acompanham').classList.toggle('hidden', !c);
+      if(c && dependentesList.length===0) adicionarDependente();
+    }
+
+    function adicionarDependente() {
+      dependentesList.push({ id: Date.now(), nome: '', parentesco: 'Esposa', dtNasc: '', idade: '' });
+      renderizarDependentes();
+    }
+
+    function removerDependente(id) {
+      dependentesList = dependentesList.filter(d => d.id !== id);
+      renderizarDependentes();
+    }
+
+    function renderizarDependentes() {
+      const lista = document.getElementById('lista-dependentes');
+      lista.innerHTML = '';
+      dependentesList.forEach(dep => {
+        lista.innerHTML += `
+          <div class="grid grid-cols-4 gap-2 bg-stone-50 p-2 border rounded">
+            <input type="text" placeholder="Nome" class="border p-1 text-xs" oninput="atualizaDep(${dep.id}, 'nome', this.value)">
+            <select class="border p-1 text-xs bg-white" onchange="atualizaDep(${dep.id}, 'parentesco', this.value)">
+              <option>Esposa</option><option>Filho(a)</option><option>Pai/Mãe</option>
+            </select>
+            <input type="text" placeholder="Nasc." class="border p-1 text-xs" oninput="atualizaDep(${dep.id}, 'dtNasc', this.value)">
+            <div class="flex gap-1"><input type="number" placeholder="Idade" class="border p-1 text-xs w-full" oninput="atualizaDep(${dep.id}, 'idade', this.value)"><button type="button" onclick="removerDependente(${dep.id})" class="text-red-500 font-bold px-2">X</button></div>
+          </div>
+        `;
+      });
+    }
+    function atualizaDep(id, campo, valor) { const d = dependentesList.find(x => x.id===id); if(d) d[campo] = valor; }
+
+    function obterDataExtensoMilitar() {
+      const m = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      const d = new Date(); return `${d.getDate()} de ${m[d.getMonth()]} de ${d.getFullYear()}`;
+    }
+
+    // ===============================================
+    // DOCUMENTOS ORIGINAIS MILITARES RESTAURADOS
+    // ===============================================
+
+    async function gerarBlobPDF(sol) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('MINISTÉRIO DA DEFESA', 105, 18, { align: 'center' });
+      doc.text('EXÉRCITO BRASILEIRO', 105, 23, { align: 'center' });
+      doc.text('5º BATALHÃO DE INFANTARIA LEVE', 105, 28, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('- Divisão Administrativa -', 105, 33, { align: 'center' });
+
+      doc.setDrawColor(75, 83, 32); doc.setLineWidth(0.8); doc.line(20, 37, 190, 37);
+
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+      doc.text('RELAÇÃO DE DOCUMENTOS PARA PROCESSO', 105, 45, { align: 'center' });
+
+      doc.setDrawColor(200, 200, 200); doc.setFillColor(248, 248, 248);
+      doc.roundedRect(20, 50, 170, 32, 2, 2, 'FD');
+
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      doc.text('Protocolo:', 24, 56); doc.setFont('helvetica', 'normal'); doc.text(`${sol.id}`, 45, 56);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Militar:', 24, 62); doc.setFont('helvetica', 'normal'); doc.text(`${sol.posto} ${sol.nomeCompleto} - CPF: ${sol.cpf}`, 45, 62);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Destino:', 24, 68); doc.setFont('helvetica', 'normal'); doc.text(`${sol.omDestino}`, 45, 68);
+
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text('DOCUMENTOS EXIGIDOS:', 20, 95);
+      
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+      let y = 103;
+      const docs = ['Cópia Autenticada do Documento Autorizador / Publicação', 'Cópia Autenticada do Último Contracheque', 'Cópia Autenticada da Identidade e CPF', 'DIEx de Opção Assinado'];
+      if(sol.opcoes.automovel || sol.opcoes.motocicleta) docs.push('Cópia do CRLV do Veículo em nome do titular');
+      if(sol.possuiDependentes) docs.push('Certidões de Casamento/Nascimento dos Dependentes');
+
+      docs.forEach((item, i) => {
+        doc.rect(22, y - 3, 4, 4);
+        doc.text(`${i+1}. ${item}`, 29, y);
+        y += 8;
+      });
+
+      doc.line(25, 200, 85, 200); doc.text('Assinatura do Requerente', 55, 205, {align:'center'});
+      doc.line(115, 200, 185, 200); doc.text('Recebido (Div Adm)', 150, 205, {align:'center'});
+
+      return doc.output('blob');
+    }
+
+    async function gerarBlobDIEx(sol) {
+      const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+      const doc = new Document({
+        sections: [{
+          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+          children: [
+            new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'MINISTÉRIO DA DEFESA\nEXÉRCITO BRASILEIRO\n5º BATALHÃO DE INFANTARIA LEVE', bold: true, size: 24 })] }),
+            new Paragraph({ spacing: { before: 400, after: 200 }, children: [new TextRun({ text: `DIEx S/Nº\t\t\t\tLorena - SP, ${obterDataExtensoMilitar()}.`, bold: true, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `Do: ${sol.posto} ${sol.nomeCompleto}`, bold: true, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `Ao: Sr Chefe da Divisão Administrativa`, bold: true, size: 24 })] }),
+            new Paragraph({ spacing: { before: 200, after: 200 }, children: [new TextRun({ text: 'Assunto: Solicitação de Indenização de Transporte', bold: true, size: 24 })] }),
+            
+            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [new TextRun({ text: `1. Tendo em vista a minha movimentação para ${sol.omDestino}, solicito as providências decorrentes com amparo na Portaria nº 290-DGP, optando por:`, size: 24 })] }),
+            
+            new Paragraph({ children: [new TextRun({ text: `a. Ajuda de Custo: ${sol.opcoes.ajudaCusto ? 'SIM' : 'NÃO'}`, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `b. Transporte de Bagagem: ${sol.opcoes.bagagem ? 'SIM' : 'NÃO'}`, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `c. Transporte de Automóvel/Moto: ${sol.opcoes.automovel || sol.opcoes.motocicleta ? 'SIM' : 'NÃO'}`, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `d. Passagens: ${sol.opcoes.passagens ? 'SIM' : 'NÃO'}`, size: 24 })] }),
+            
+            new Paragraph({ spacing: { before: 200, after: 200 }, children: [new TextRun({ text: '2. Dados Complementares:', bold: true, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `- CPF: ${sol.cpf} / Idt: ${sol.idtMilitar} / Prec-CP: ${sol.precCp}`, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `- Banco: ${sol.banco} | Ag: ${sol.agencia} | CC: ${sol.contaCorrente}`, size: 24 })] }),
+            
+            new Paragraph({ spacing: { before: 400 }, alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `${sol.nomeCompleto} - ${sol.posto}`, bold: true, size: 24 })] })
+          ]
+        }]
+      });
+      return await Packer.toBlob(doc);
+    }
+
+    async function gerarBlobNotaBAR(sol) {
+      const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+      const doc = new Document({
+        sections: [{
+          children: [
+            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [new TextRun({ text: `Solicitou ao Ch Div Adm a Indenização de Transporte em virtude de movimentação para ${sol.omDestino}, conforme publicação ${sol.documentoAutorizador}.`, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `1. Favorecido: ${sol.posto} ${sol.nomeCompleto} (CPF: ${sol.cpf})`, bold: true, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `2. OM de Destino: ${sol.omDestino}`, bold: true, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `3. Conta Bancária: Banco ${sol.banco} - Ag ${sol.agencia} - CC ${sol.contaCorrente}`, bold: true, size: 24 })] }),
+            new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: 'Em consequência, a Div Adm elabore o processo de pagamento.', size: 24 })] })
+          ]
+        }]
+      });
+      return await Packer.toBlob(doc);
+    }
+
+    async function gerarBlobOP(sol) {
+      const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+      const doc = new Document({
+        sections: [{
+          children: [
+            new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 400 }, children: [new TextRun({ text: 'ORDEM DE PAGAMENTO DE INDENIZAÇÕES', bold: true, size: 28 })] }),
+            new Paragraph({ children: [new TextRun({ text: `Processo Requerimento ID: `, bold: true, size: 24 }), new TextRun({ text: sol.id, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `Militar Favorecido: `, bold: true, size: 24 }), new TextRun({ text: `${sol.posto} ${sol.nomeCompleto}`, size: 24 })] }),
+            new Paragraph({ children: [new TextRun({ text: `CPF / Identidade: `, bold: true, size: 24 }), new TextRun({ text: `${sol.cpf} / ${sol.idtMilitar}`, size: 24 })] }),
+            new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: 'Autorizo o pagamento referente aos direitos pleiteados (Ajuda de Custo e Transportes).', size: 24 })] })
+          ]
+        }]
+      });
+      return await Packer.toBlob(doc);
+    }
+
+    // ===============================================
+    // INTEGRAÇÃO COM SERVIDOR E UPLOAD
+    // ===============================================
 
     async function subirArquivoParaVercel(blob, nomeArquivo) {
       const res = await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}`, { method: 'POST', body: blob });
-      if (!res.ok) throw new Error(`Upload recusado pelo servidor. Status: ${res.status}`);
+      if (!res.ok) throw new Error('Erro ao subir arquivo no servidor.');
       const data = await res.json();
       return data.url;
     }
@@ -106,10 +698,11 @@
       const form = document.getElementById('form-solicitacao');
       const fd = new FormData(form);
       const overlay = document.getElementById('loading-overlay');
-      const overlayMsg = document.getElementById('loading-overlay-msg');
-      overlay.classList.remove('hidden');
-
+      const msg = document.getElementById('loading-overlay-msg');
+      
       try {
+        overlay.classList.remove('hidden');
+
         const sol = {
           id: 'REQ-' + Date.now().toString().slice(-6),
           dataCriacao: new Date().toLocaleDateString('pt-BR'),
@@ -118,61 +711,95 @@
           nomeCompleto: fd.get('nomeCompleto').toUpperCase(),
           cpf: fd.get('cpf'),
           idtMilitar: fd.get('idtMilitar'),
+          precCp: fd.get('precCp'),
+          banco: fd.get('banco'),
+          agencia: fd.get('agencia'),
+          contaCorrente: fd.get('contaCorrente'),
           omOrigem: fd.get('omOrigem'),
           omDestino: fd.get('omDestino'),
-          documentoAutorizador: fd.get('documentoAutorizador')
+          documentoAutorizador: fd.get('documentoAutorizador'),
+          opcoes: {
+            ajudaCusto: fd.get('opt_ajuda_custo') === 'sim',
+            bagagem: fd.get('opt_bagagem') === 'sim',
+            passagens: fd.get('opt_passagens') === 'sim',
+            automovel: fd.get('opt_automovel') === 'sim',
+            motocicleta: fd.get('opt_motocicleta') === 'sim'
+          },
+          possuiDependentes: document.getElementById('check-possui-dep').checked
         };
 
-        // Geração dos Blobs (Simplificada para evitar erros locais)
-        overlayMsg.textContent = 'Gerando PDF...';
-        const docPdf = new window.jspdf.jsPDF();
-        docPdf.text(`Checklist Indenizacoes - ${sol.nomeCompleto}`, 10, 10);
-        const blobPdf = docPdf.output('blob');
+        msg.textContent = 'Gerando Documentos Militares...';
+        const blobPdf = await gerarBlobPDF(sol);
+        const blobDiex = await gerarBlobDIEx(sol);
+        const blobBar = await gerarBlobNotaBAR(sol);
+        const blobOp = await gerarBlobOP(sol);
 
-        overlayMsg.textContent = 'Gerando Word...';
-        const { Document, Packer, Paragraph, TextRun } = docx;
-        const docWord = new Document({
-          sections: [{ children: [new Paragraph({ children: [new TextRun({ text: `DIEx de: ${sol.nomeCompleto}`, bold: true })] })] }]
-        });
-        const blobWord = await Packer.toBlob(docWord);
+        msg.textContent = 'Enviando para o Servidor...';
+        const nomeM = sol.nomeCompleto.replace(/\s+/g, '_');
+        const urlPdf = await subirArquivoParaVercel(blobPdf, `Checklist_${sol.id}_${nomeM}.pdf`);
+        const urlDiex = await subirArquivoParaVercel(blobDiex, `DIEx_${sol.id}_${nomeM}.docx`);
+        const urlBar = await subirArquivoParaVercel(blobBar, `BAR_${sol.id}_${nomeM}.docx`);
+        const urlOp = await subirArquivoParaVercel(blobOp, `OP_${sol.id}_${nomeM}.docx`);
 
-        // Uploads
-        overlayMsg.textContent = 'Enviando arquivos...';
-        const urlPdf = await subirArquivoParaVercel(blobPdf, `Checklist_${sol.id}.pdf`);
-        const urlWord = await subirArquivoParaVercel(blobWord, `DIEx_${sol.id}.docx`);
-
-        // Salvar BD
-        overlayMsg.textContent = 'Salvando no banco de dados...';
+        msg.textContent = 'Registrando Processo...';
         const res = await fetch('/api/solicitacoes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...sol, urlPdfDocs: urlPdf, urlDiex: urlWord })
+          body: JSON.stringify({ ...sol, urlPdfDocs: urlPdf, urlDiex, urlNotaBar: urlBar, urlOp })
         });
 
-        if (!res.ok) throw new Error('Falha ao gravar no Banco de Dados');
+        if (!res.ok) throw new Error('Falha ao salvar no banco central');
 
-        overlay.classList.add('hidden');
-        alert(`SUCESSO!\nSua solicitação ${sol.id} foi salva. Procure a Divisão Administrativa.`);
+        ultimaSolicitacao = sol;
         form.reset();
+        overlay.classList.add('hidden');
+        document.getElementById('modal-pos-envio').classList.remove('hidden');
 
       } catch (err) {
         overlay.classList.add('hidden');
-        alert("⚠️ ERRO DETALHADO:\n" + err.message + "\n\nSe o erro persistir, tire um print desta tela.");
+        alert("⚠️ OCORREU UM ERRO:\n" + err.message);
         console.error(err);
       }
     }
 
-    async function handleAdminLogin() {
+    async function baixarPDFDocumentosAtual() {
+      if (ultimaSolicitacao) {
+        const blob = await gerarBlobPDF(ultimaSolicitacao);
+        saveAs(blob, `Checklist_${ultimaSolicitacao.id}.pdf`);
+      }
+    }
+
+    // ===============================================
+    // PAINEL ADMINISTRATIVO
+    // ===============================================
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
       const u = document.getElementById('admin-user-input').value;
       const s = document.getElementById('admin-pass-input').value;
       const res = await fetch('/api/login', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({usuario:u, senha:s}) });
       const data = await res.json();
       if(data.success) {
         sessionStorage.setItem('sisdoc_admin_token', data.token);
+        verificarSessaoAdmin();
+      } else alert('Login inválido');
+    }
+
+    function verificarSessaoAdmin() {
+      const token = sessionStorage.getItem('sisdoc_admin_token');
+      if (token) {
         document.getElementById('admin-login-card').classList.add('hidden');
         document.getElementById('admin-dashboard-panel').classList.remove('hidden');
         recarregarTabelaServidor();
-      } else alert('Login inválido');
+      } else {
+        document.getElementById('admin-login-card').classList.remove('hidden');
+        document.getElementById('admin-dashboard-panel').classList.add('hidden');
+      }
+    }
+
+    function handleAdminLogout() {
+      sessionStorage.removeItem('sisdoc_admin_token');
+      verificarSessaoAdmin();
     }
 
     async function recarregarTabelaServidor() {
@@ -182,7 +809,19 @@
       const tbody = document.getElementById('tabela-solicitacoes-body');
       tbody.innerHTML = '';
       dados.forEach(d => {
-        tbody.innerHTML += `<tr><td class="p-2">${d.id}<br/><b>${d.nomeCompleto}</b></td><td class="p-2">${d.omDestino}</td><td class="p-2"><a href="${d.urlPdfDocs}" target="_blank" class="bg-rose-600 text-white px-2 py-1 rounded">PDF</a> <a href="${d.urlDiex}" target="_blank" class="bg-eb-olive text-white px-2 py-1 rounded">Word</a></td></tr>`;
+        tbody.innerHTML += `
+          <tr class="hover:bg-stone-50 border-b">
+            <td class="p-3"><b>${d.id}</b></td>
+            <td class="p-3"><b>${d.posto} ${d.nomeCompleto}</b><br><span class="text-stone-500">CPF: ${d.cpf}</span></td>
+            <td class="p-3">${d.omDestino}</td>
+            <td class="p-3 text-center flex justify-center gap-2">
+              <a href="${d.urlPdfDocs}" target="_blank" class="bg-rose-600 text-white px-2 py-1 rounded text-xs">PDF</a>
+              <a href="${d.urlDiex}" target="_blank" class="bg-eb-olive text-white px-2 py-1 rounded text-xs">DIEx</a>
+              <a href="${d.urlNotaBar}" target="_blank" class="bg-stone-700 text-white px-2 py-1 rounded text-xs">BAR</a>
+              <a href="${d.urlOp}" target="_blank" class="bg-emerald-700 text-white px-2 py-1 rounded text-xs">OP</a>
+            </td>
+          </tr>
+        `;
       });
     }
   </script>
