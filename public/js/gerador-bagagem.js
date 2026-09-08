@@ -2,7 +2,6 @@
 
 import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData, obterDataExtenso } from './utils.js';
 
-// Estado global da tela
 let dependentes = [];
 let dadosFormularioAtual = null;
 
@@ -88,7 +87,7 @@ function renderDependentes() {
 }
 
 // ==========================================
-// 3. COMUNICAÇÃO COM O SERVIDOR (API)
+// 3. COMUNICAÇÃO COM O SERVIDOR
 // ==========================================
 async function subirArquivoParaServidor(blob, nomeArquivo) {
   const res = await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}`, {
@@ -100,14 +99,12 @@ async function subirArquivoParaServidor(blob, nomeArquivo) {
   return data.url;
 }
 
-
 // ==========================================
 // 4. PROCESSAMENTO E GERAÇÃO DOS ARQUIVOS
 // ==========================================
 async function processarFormulario(e) {
   e.preventDefault();
 
-  // Alterar o botão para estado de "Carregando"
   const btnSubmit = document.querySelector('button[type="submit"]');
   const txtOriginalBtn = btnSubmit.innerHTML;
   btnSubmit.innerHTML = '<i data-lucide="loader" class="w-6 h-6 animate-spin"></i> Enviando para a Nuvem...';
@@ -131,81 +128,37 @@ async function processarFormulario(e) {
       dependentes: [...dependentes]
     };
 
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType } = window.docx;
+    const { Document, Packer, Paragraph, TextRun, AlignmentType } = window.docx;
 
     // ----------------------------------------------------
-    // GERAÇÃO DO DIEx (Docx)
+    // GERAÇÃO DO DIEx (Modelo exato CMSE)
     // ----------------------------------------------------
-    let tabelaDependentes;
-    if (dadosFormularioAtual.dependentes.length > 0) {
-      const rows = [
-        new TableRow({
-          children: [
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Nome", bold: true, size: 24 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Grau de parentesco", bold: true, size: 24 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Dt Nasc", bold: true, size: 24 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Idade", bold: true, size: 24 })] })] }),
-          ]
-        })
-      ];
-      dadosFormularioAtual.dependentes.forEach(d => {
-        rows.push(new TableRow({
-          children: [
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.nome || "-", size: 24 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.parentesco || "-", size: 24 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.dtNasc || "-", size: 24 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.idade || "-", size: 24 })] })] }),
-          ]
-        }));
-      });
-      tabelaDependentes = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: rows });
-    } else {
-      tabelaDependentes = new Paragraph({ children: [new TextRun({ text: "Não possui dependentes.", size: 24 })] });
-    }
-
     const docDIEx = new Document({
       sections: [{
         properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
         children: [
           new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "MINISTÉRIO DA DEFESA\nEXÉRCITO BRASILEIRO\n5° BATALHÃO DE INFANTARIA LEVE\n(Terço da Bahia/1631)\nREGIMENTO ITORORÓ", bold: true, size: 24 })] }),
-          new Paragraph({ spacing: { before: 400, after: 200 }, children: [
+          new Paragraph({ spacing: { before: 400, after: 400 }, children: [
             new TextRun({ text: "DIEx S/Nº", bold: true, size: 24 }),
             new TextRun({ text: `\t\t\t\tLorena - SP, ${obterDataExtenso()}.`, size: 24 })
           ]}),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "Do ", bold: true, size: 24 }), new TextRun({ text: `${dadosFormularioAtual.nome}`, size: 24 })] }),
-          new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "Ao Sr Chefe da Divisão Administrativa", bold: true, size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "Assunto: ", bold: true, size: 24 }), new TextRun({ text: "Solicitação de Indenização de Transporte de Bagagem na mesma Sede", size: 24 })] }),
-          new Paragraph({ spacing: { after: 50 }, children: [new TextRun({ text: "Anexos: 1) 01(uma) cópia autenticada do BAR da ocupação de PNR;", bold: true, size: 24 })] }),
-          new Paragraph({ spacing: { after: 200 }, indent: { left: 900 }, children: [new TextRun({ text: "2) 01 (uma) cópia autenticada do último contracheque, com o desconto do PNR;", bold: true, size: 24 })] }),
-          
-          new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, indent: { firstLine: 700 }, children: [
-            new TextRun({ text: `1. Tendo em vista a minha ocupação de PNR, Publicado em ${dadosFormularioAtual.bi}, solicito indenização de Bagagem na mesma Sede, com amparo no inciso IV, da letra d, do artigo 48, da Portaria nº 290-DGP, de 9 DEZ 13.`, size: 24 })
+          new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
+            new TextRun({ text: `Solicito o encaminhamento deste documento e anexo ao CMSE, a fim de que seja feito o repasse, para esta OM, dos recursos necessários para o pagamento de indenização de transporte de bagagem na mesma sede ao ${dadosFormularioAtual.posto} ${dadosFormularioAtual.nome}, conforme dados abaixo:`, size: 24 })
           ]}),
-
-          new Paragraph({ spacing: { after: 100 }, indent: { firstLine: 700 }, children: [new TextRun({ text: "2. Informações Complementares:", bold: true, size: 24 })] }),
-          new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `a. CPF: ${dadosFormularioAtual.cpf}`, size: 24 })] }),
-          new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `b. Identidade militar: ${dadosFormularioAtual.idt}`, size: 24 })] }),
-          new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `c. Prec CP: ${dadosFormularioAtual.preccp}`, size: 24 })] }),
-          new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `d. Banco: ${dadosFormularioAtual.banco}   Agência: ${dadosFormularioAtual.agencia}   Conta corrente: ${dadosFormularioAtual.conta}`, size: 24 })] }),
-          new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `e. Data do Ajuste de Contas: após o recebimento da Nota de Crédito.`, size: 24 })] }),
-          new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `f. Telefone contato: ${dadosFormularioAtual.telefone}`, size: 24 })] }),
-          new Paragraph({ indent: { left: 700 }, spacing: { after: 200 }, children: [new TextRun({ text: `g. Email: ${dadosFormularioAtual.email}`, size: 24 })] }),
-
-          new Paragraph({ spacing: { after: 100 }, indent: { firstLine: 700 }, children: [new TextRun({ text: "3. Dependentes:", bold: true, size: 24 })] }),
-          tabelaDependentes,
-
-          new Paragraph({ spacing: { before: 400, after: 400 }, children: [
-            new TextRun({ text: "OBS: De acordo com a Port nº 290-DGP, de 9 Dez 13 e sob a pena prevista no Art 312 do Código Penal Militar (CPM).", bold: true, size: 24 })
-          ]}),
-
-          new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `${dadosFormularioAtual.nome} – ${dadosFormularioAtual.posto}`, bold: true, size: 24 })] }),
-          new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `Idt ${dadosFormularioAtual.idt} / MD`, size: 24 })] })
+          new Paragraph({ children: [new TextRun({ text: "OM: 5º Batalhão de Infantaria Leve;", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "CODUG: 160472;", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "CODOM: 007260;", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: `POSTO/NOME: ${dadosFormularioAtual.posto} ${dadosFormularioAtual.nome};`, size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "DISTÂNCIA (SISCOD): Até 50 Km;", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "BAGAGEM: 50 metros cúbicos;", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: `BAR OCUPAÇÃO do PNR: ${dadosFormularioAtual.bi}; e`, size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "BAR DIEx Opção: BAR nº XXX/5º BIL de XX MÊS XX.", size: 24 })] })
         ]
       }]
     });
 
     // ----------------------------------------------------
-    // GERAÇÃO DA NOTA PARA BAR (Docx)
+    // GERAÇÃO DA NOTA PARA BAR (Modelo Exato)
     // ----------------------------------------------------
     let textoDepBAR = 'Não possui';
     if (dadosFormularioAtual.dependentes.length > 0) {
@@ -219,37 +172,34 @@ async function processarFormulario(e) {
           new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
             new TextRun({ text: `Solicitou o pagamento de indenização de transporte de bagagem na mesma sede, em virtude da ocupação de PNR ocorrida em ${dadosFormularioAtual.dataOcupacao}, conforme publicado no ${dadosFormularioAtual.bi}.`, size: 24 })
           ]}),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "1. Tipo de Movimentação: ", bold: true, size: 24 }), new TextRun({ text: "Sem desligamento", size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "2. Motivo da movimentação: ", bold: true, size: 24 }), new TextRun({ text: "Mudança de residência na mesma Sede", size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "3. OM de Origem: ", bold: true, size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "4. OM de Destino: ", bold: true, size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "5. Documento que autorizou a movimentação: ", bold: true, size: 24 }), new TextRun({ text: dadosFormularioAtual.bi, size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "6. Tipo de Pagamento: ", bold: true, size: 24 }), new TextRun({ text: "Indenização de Transporte de Bagagem na mesma Sede", size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "7. Dependentes: ", bold: true, size: 24 }), new TextRun({ text: textoDepBAR, size: 24 })] }),
-          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "8. CPF: ", bold: true, size: 24 }), new TextRun({ text: dadosFormularioAtual.cpf, size: 24 })] }),
-          new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "9. Domicílio Bancário: ", bold: true, size: 24 }), new TextRun({ text: `- Banco: ${dadosFormularioAtual.banco}, Agência: ${dadosFormularioAtual.agencia} Conta: ${dadosFormularioAtual.conta}`, size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "1. Tipo de Movimentação: ", size: 24 }), new TextRun({ text: "Sem desligamento", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "2. Motivo da movimentação: ", size: 24 }), new TextRun({ text: "Mudança de residência na mesma Sede", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "3. OM de Origem: ", size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "4. OM de Destino: ", size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "5. Documento que autorizou a movimentação: ", size: 24 }), new TextRun({ text: dadosFormularioAtual.bi, size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "6. Tipo de Pagamento: ", size: 24 }), new TextRun({ text: "Indenização de Transporte de Bagagem na mesma Sede", size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "7. Dependentes: ", size: 24 }), new TextRun({ text: textoDepBAR, size: 24 })] }),
+          new Paragraph({ children: [new TextRun({ text: "8. CPF: ", size: 24 }), new TextRun({ text: dadosFormularioAtual.cpf, size: 24 })] }),
+          new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "9. Domicílio Bancário: ", size: 24 }), new TextRun({ text: `- Banco: ${dadosFormularioAtual.banco}, Agência: ${dadosFormularioAtual.agencia} Conta: ${dadosFormularioAtual.conta}`, size: 24 })] }),
           
           new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
             new TextRun({ text: "Em consequência a divisão administrativa elabore o processo de pagamento da indenização de transporte de bagagem e demais interessados tomem as providências decorrentes.", size: 24 })
           ]}),
-          new Paragraph({ alignment: AlignmentType.RIGHT, children: [
-            new TextRun({ text: `(Nota p/ BAR nº - DA.5, de ${obterDataExtenso().split(' de ').slice(1).join(' de ')})`, italics: true, size: 24 })
+          new Paragraph({ children: [
+            new TextRun({ text: `(Nota p/ BAR nº - DA.5, de ${obterDataExtenso().split(' de ').slice(1).join(' de ')})`, size: 24 })
           ]})
         ]
       }]
     });
 
     // ----------------------------------------------------
-    // CONVERSÃO PARA BLOB (Arquivos físicos em memória)
+    // CONVERSÃO E UPLOAD
     // ----------------------------------------------------
     const blobDIEx = await window.docx.Packer.toBlob(docDIEx);
     const blobBAR = await window.docx.Packer.toBlob(docBAR);
     const docPdf = criarInstanciaPDF(dadosFormularioAtual);
     const blobPdf = docPdf.output('blob');
 
-    // ----------------------------------------------------
-    // UPLOAD PARA O SERVIDOR RENDER
-    // ----------------------------------------------------
     const nomeUnico = `${dadosFormularioAtual.posto}_${dadosFormularioAtual.nome.replace(/\s+/g, '_')}_${Date.now()}`;
     
     const urlDiex = await subirArquivoParaServidor(blobDIEx, `DIEx_Bagagem_${nomeUnico}.docx`);
@@ -257,13 +207,13 @@ async function processarFormulario(e) {
     const urlPdfDocs = await subirArquivoParaServidor(blobPdf, `Checklist_Bagagem_${nomeUnico}.pdf`);
 
     // ----------------------------------------------------
-    // SALVAR NO BANCO DE DADOS (Admin)
+    // SALVAR NO BANCO DE DADOS
     // ----------------------------------------------------
     const payloadReq = {
       id: 'REQ-' + Date.now().toString().slice(-6),
       dataCriacao: new Date().toLocaleDateString('pt-BR'),
       modalidade: 'transporte_pnr',
-      omDestino: '5º BIL Guarnição: Lorena-SP', // Padronizado para PNR na mesma sede
+      omDestino: '5º BIL Guarnição: Lorena-SP',
       posto: dadosFormularioAtual.posto,
       nomeCompleto: dadosFormularioAtual.nome,
       cpf: dadosFormularioAtual.cpf,
@@ -280,21 +230,15 @@ async function processarFormulario(e) {
 
     if (!resDb.ok) throw new Error('Não foi possível registrar a solicitação no painel.');
 
-    // ----------------------------------------------------
-    // FINALIZAÇÃO: DOWNLOAD LOCAL PARA O MILITAR E MODAL
-    // ----------------------------------------------------
-    // Força o download dos Word para o computador do militar
     window.saveAs(blobDIEx, `DIEx_Bagagem_${nomeUnico}.docx`);
     window.saveAs(blobBAR, `Nota_BAR_Bagagem_${nomeUnico}.docx`);
 
-    // Abre a tela de sucesso
     document.getElementById('modal-sucesso').classList.remove('hidden');
 
   } catch (erro) {
     console.error(erro);
     alert('Erro ao enviar solicitação: ' + erro.message);
   } finally {
-    // Restaura o botão ao estado normal
     btnSubmit.innerHTML = txtOriginalBtn;
     btnSubmit.disabled = false;
     if (window.lucide) lucide.createIcons();
@@ -302,7 +246,7 @@ async function processarFormulario(e) {
 }
 
 // ==========================================
-// 5. GERAÇÃO DO CHECKLIST (PDF) PARA O MILITAR
+// 5. GERAÇÃO DO CHECKLIST (PDF)
 // ==========================================
 function criarInstanciaPDF(dados) {
   const { jsPDF } = window.jspdf;
