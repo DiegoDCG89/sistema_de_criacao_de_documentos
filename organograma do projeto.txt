@@ -1,0 +1,12 @@
+sisdoc-eb/
+├── package.json
+├── vercel.json
+├── .env.example
+├── README.md
+├── api/
+│   ├── setup.js
+│   ├── upload.js
+│   ├── login.js
+│   └── solicitacoes.js
+└── public/
+    └── index.html

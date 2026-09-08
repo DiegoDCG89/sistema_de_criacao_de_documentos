@@ -1,0 +1,14 @@
+{
+  "name": "sisdoc-eb-vercel",
+  "version": "1.0.0",
+  "description": "Sistema de Indenizações e Documentos Administrativos - EB",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build complete'"
+  },
+  "dependencies": {
+    "@vercel/blob": "^0.27.1",
+    "@vercel/postgres": "^0.10.0"
+  }
+}
