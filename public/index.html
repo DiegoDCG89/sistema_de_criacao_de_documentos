@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SisDoc Adm - Exército Brasileiro</title>
+  <title>SisDoc Adm - Menu Principal</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -18,10 +15,10 @@
 </head>
 <body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col">
 
-  <!-- Cabeçalho Principal -->
+  <!-- Cabeçalho -->
   <header class="bg-[#1e231b] text-white border-b-4 border-[#c99700] shadow-md sticky top-0 z-40">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      <div class="flex items-center space-x-3 cursor-pointer" onclick="voltarParaInicio()">
+      <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-full bg-[#4B5320] flex items-center justify-center border-2 border-[#c99700]">
           <i data-lucide="shield" class="w-6 h-6 text-[#f4c430]"></i>
         </div>
@@ -30,493 +27,55 @@
           <h1 class="text-lg font-bold text-white tracking-wide">SisDoc Adm Indenizações</h1>
         </div>
       </div>
-      <button onclick="voltarParaInicio()" class="text-sm font-semibold text-stone-300 hover:text-white transition flex items-center gap-1">
-        <i data-lucide="home" class="w-4 h-4"></i> Início
-      </button>
     </div>
   </header>
 
-  <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-8">
+  <!-- Menu de Seleção -->
+  <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-12">
+    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 sm:p-10 text-center">
+      <h2 class="text-2xl font-bold text-stone-800 mb-2">Requerimento Eletrônico</h2>
+      <p class="text-stone-500 mb-10">Selecione a modalidade da sua solicitação para iniciar o preenchimento.</p>
 
-    <!-- ========================================== -->
-    <!-- TELA 1: PÁGINA INICIAL (SELEÇÃO DE TIPO)   -->
-    <!-- ========================================== -->
-    <section id="tela-inicial" class="space-y-6">
-      <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 sm:p-8 text-center">
-        <h2 class="text-2xl font-bold text-stone-800 mb-2">Requerimento Eletrônico</h2>
-        <p class="text-stone-500 mb-8">Selecione a modalidade da sua solicitação para iniciar o preenchimento.</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
-          
-          <!-- Card: Bagagem na Mesma Sede (Ativo) -->
-          <button onclick="abrirFormulario('pnr')" class="relative flex flex-col items-start p-5 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 transition-all text-left group">
-            <div class="p-3 bg-stone-100 rounded-lg text-[#4B5320] group-hover:bg-[#4B5320] group-hover:text-white transition mb-3">
-              <i data-lucide="package" class="w-6 h-6"></i>
-            </div>
-            <span class="block text-base font-bold text-stone-900 mb-1">Bagagem na Mesma Sede</span>
-            <span class="block text-xs text-stone-500">Ocupação ou desocupação de PNR</span>
-          </button>
-
-          <!-- Card: Movimentação / Transferência -->
-          <button onclick="alert('Página em desenvolvimento. Vamos criar esta na próxima etapa!')" class="relative flex flex-col items-start p-5 rounded-xl border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 transition-all text-left opacity-70">
-            <div class="p-3 bg-stone-100 rounded-lg text-stone-500 mb-3">
-              <i data-lucide="truck" class="w-6 h-6"></i>
-            </div>
-            <span class="block text-base font-bold text-stone-900 mb-1">Transferência</span>
-            <span class="block text-xs text-stone-500">Movimentação por necessidade do serviço</span>
-          </button>
-
-          <!-- Card: Curso -->
-          <button onclick="alert('Página em desenvolvimento. Vamos criar esta na próxima etapa!')" class="relative flex flex-col items-start p-5 rounded-xl border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 transition-all text-left opacity-70">
-            <div class="p-3 bg-stone-100 rounded-lg text-stone-500 mb-3">
-              <i data-lucide="graduation-cap" class="w-6 h-6"></i>
-            </div>
-            <span class="block text-base font-bold text-stone-900 mb-1">Cursos e Estágios</span>
-            <span class="block text-xs text-stone-500">Aperfeiçoamento ou especialização</span>
-          </button>
-
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ========================================== -->
-    <!-- TELA 2: FORMULÁRIO (BAGAGEM MESMA SEDE)    -->
-    <!-- ========================================== -->
-    <section id="tela-form-pnr" class="hidden space-y-6">
-      <div class="bg-white rounded-xl shadow-lg border border-stone-200 overflow-hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
         
-        <div class="bg-[#4B5320] p-6 text-white flex items-center justify-between">
-          <div>
-            <h1 class="text-xl font-bold">Transporte de Bagagem na Mesma Sede</h1>
-            <p class="text-stone-200 text-sm mt-1">Preencha os dados para gerar o DIEx e a Nota para BAR</p>
+        <!-- MÓDULO 1: Bagagem (Ativo) -->
+        <a href="bagagem-pnr.html" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 transition-all text-left group cursor-pointer shadow-sm hover:shadow-md">
+          <div class="p-3 bg-stone-100 rounded-lg text-[#4B5320] group-hover:bg-[#4B5320] group-hover:text-white transition mb-4">
+            <i data-lucide="package" class="w-7 h-7"></i>
           </div>
-          <button onclick="voltarParaInicio()" class="p-2 bg-[#353c15] rounded hover:bg-[#1f441e] transition">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
-          </button>
-        </div>
+          <span class="block text-lg font-bold text-stone-900 mb-1">Bagagem na Mesma Sede</span>
+          <span class="block text-sm text-stone-500">Ocupação ou desocupação de PNR</span>
+        </a>
 
-        <form id="form-pnr" onsubmit="processarFormulario(event)" class="p-6 sm:p-8 space-y-6">
-          
-          <!-- Identificação -->
-          <div>
-            <h2 class="text-sm font-bold text-stone-800 border-b border-stone-200 pb-2 mb-4 uppercase tracking-wide">1. Identificação</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Posto / Graduação *</label>
-                <input type="text" id="posto" required placeholder="Ex: S Ten" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div class="sm:col-span-2">
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Nome Completo *</label>
-                <input type="text" id="nome" required placeholder="Ex: FULANO DE TAL" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">CPF *</label>
-                <input type="text" id="cpf" required placeholder="Ex: 000.000.000-00" maxlength="14" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Identidade Militar *</label>
-                <input type="text" id="idt" required placeholder="Ex: 000.000.000-0" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Prec CP *</label>
-                <input type="text" id="preccp" required placeholder="Ex: 000.000.000" maxlength="11" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Telefone *</label>
-                <input type="text" id="telefone" required placeholder="Ex: (12) 99999-9999" maxlength="15" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div class="sm:col-span-2 lg:col-span-1">
-                <label class="block text-xs font-semibold text-stone-600 mb-1">E-mail *</label>
-                <input type="email" id="email" required placeholder="Ex: email@eb.mil.br" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-            </div>
+        <!-- MÓDULO 2: Transferência (Futuro) -->
+        <button onclick="alert('Módulo em desenvolvimento. Estará disponível na próxima etapa!')" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-100 bg-stone-50 text-left opacity-75 cursor-not-allowed">
+          <div class="p-3 bg-stone-200 rounded-lg text-stone-400 mb-4">
+            <i data-lucide="truck" class="w-7 h-7"></i>
           </div>
+          <span class="block text-lg font-bold text-stone-700 mb-1">Transferência</span>
+          <span class="block text-sm text-stone-500">Movimentação por necessidade do serviço</span>
+        </button>
 
-          <!-- Banco e Publicação -->
-          <div>
-            <h2 class="text-sm font-bold text-stone-800 border-b border-stone-200 pb-2 mb-4 uppercase tracking-wide">2. Banco e Ocupação (PNR)</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Banco *</label>
-                <input type="text" id="banco" required value="Banco do Brasil" placeholder="Ex: Banco do Brasil" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Agência *</label>
-                <input type="text" id="agencia" required placeholder="Ex: 1234-5" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Conta Corrente *</label>
-                <input type="text" id="conta" required placeholder="Ex: 12345-6" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div class="sm:col-span-2">
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Documento de Publicação (BI/BAR) *</label>
-                <input type="text" id="bi" required placeholder="Ex: BI nº 01 do dia 01 de janeiro de 2026" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-stone-600 mb-1">Data da Ocupação *</label>
-                <input type="text" id="dataOcupacao" required placeholder="Ex: 01/01/2026" maxlength="10" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
-              </div>
-            </div>
+        <!-- MÓDULO 3: Cursos (Futuro) -->
+        <button onclick="alert('Módulo em desenvolvimento. Estará disponível na próxima etapa!')" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-100 bg-stone-50 text-left opacity-75 cursor-not-allowed">
+          <div class="p-3 bg-stone-200 rounded-lg text-stone-400 mb-4">
+            <i data-lucide="graduation-cap" class="w-7 h-7"></i>
           </div>
+          <span class="block text-lg font-bold text-stone-700 mb-1">Cursos e Estágios</span>
+          <span class="block text-sm text-stone-500">Aperfeiçoamento ou especialização</span>
+        </button>
 
-          <!-- Dependentes -->
-          <div>
-            <div class="flex justify-between items-center border-b border-stone-200 pb-2 mb-4">
-              <h2 class="text-sm font-bold text-stone-800 uppercase tracking-wide">3. Dependentes</h2>
-              <button type="button" onclick="addDependente()" class="text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition">
-                + Adicionar
-              </button>
-            </div>
-            <div id="lista-dependentes" class="space-y-3"></div>
-          </div>
-
-          <!-- Botão -->
-          <div class="pt-4">
-            <button type="submit" class="w-full bg-[#4B5320] hover:bg-[#353c15] text-white font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg">
-              <i data-lucide="check-circle" class="w-6 h-6"></i> Confirmar e Gerar Documentos
-            </button>
-          </div>
-
-        </form>
       </div>
-    </section>
-
+    </div>
   </main>
 
-  <!-- ========================================== -->
-  <!-- MODAL FLUTUANTE (SUCESSO & AVISO)          -->
-  <!-- ========================================== -->
-  <div id="modal-sucesso" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative">
-      
-      <!-- Icone de Sucesso -->
-      <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-        <i data-lucide="check" class="w-10 h-10"></i>
-      </div>
-      
-      <h3 class="text-2xl font-bold text-center text-stone-900 mb-2">Solicitação Gerada!</h3>
-      <p class="text-center text-sm text-stone-500 mb-6">Os documentos (DIEx e Nota BAR) foram gerados e baixados no seu computador.</p>
-
-      <!-- Lista de Anexos -->
-      <div class="bg-stone-50 border border-stone-200 rounded-xl p-4 mb-5">
-        <h4 class="text-xs font-bold text-stone-800 uppercase tracking-wider mb-2 flex items-center gap-1">
-          <i data-lucide="paperclip" class="w-4 h-4 text-[#4B5320]"></i> Documentos Necessários (Anexos):
-        </h4>
-        <ul class="text-sm text-stone-700 list-disc list-inside space-y-1.5">
-          <li>01 (uma) cópia autenticada do BAR da ocupação de PNR;</li>
-          <li>01 (uma) cópia autenticada do último contracheque, com o desconto do PNR;</li>
-          <li>DIEx de Opção assinado.</li>
-        </ul>
-      </div>
-
-      <!-- AVISO EM VERMELHO OBRIGATÓRIO -->
-      <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded-r-lg">
-        <p class="text-red-700 font-bold text-center text-sm sm:text-base leading-snug uppercase tracking-wide">
-          O militar deverá comparecer a Divisão Administrativa para assinatura e entrega de documentos
-        </p>
-      </div>
-
-      <!-- Ações -->
-      <div class="flex flex-col gap-3">
-        <button onclick="baixarPDFChecklist()" class="w-full bg-[#1e231b] hover:bg-black text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition">
-          <i data-lucide="download-cloud" class="w-5 h-5 text-[#f4c430]"></i> Baixar Lista de Anexos (PDF)
-        </button>
-        <button onclick="fecharModalEVoltar()" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition">
-          Voltar ao Início
-        </button>
-      </div>
-
-    </div>
-  </div>
+  <!-- Rodapé -->
+  <footer class="bg-stone-900 text-stone-400 py-6 text-xs text-center mt-auto">
+    <p class="font-semibold text-stone-300">5º BATALHÃO DE INFANTARIA LEVE &bull; REGIMENTO ITORORÓ</p>
+  </footer>
 
   <script>
     lucide.createIcons();
-
-    let dependentes = [];
-    let dadosFormularioAtual = null;
-
-    // ==========================================
-    // NAVEGAÇÃO DE TELAS
-    // ==========================================
-    function abrirFormulario(tipo) {
-      if (tipo === 'pnr') {
-        document.getElementById('tela-inicial').classList.add('hidden');
-        document.getElementById('tela-form-pnr').classList.remove('hidden');
-      }
-    }
-
-    function voltarParaInicio() {
-      document.getElementById('tela-form-pnr').classList.add('hidden');
-      document.getElementById('tela-inicial').classList.remove('hidden');
-      document.getElementById('form-pnr').reset();
-      dependentes = [];
-      renderDependentes();
-    }
-
-    function fecharModalEVoltar() {
-      document.getElementById('modal-sucesso').classList.add('hidden');
-      voltarParaInicio();
-    }
-
-    // ==========================================
-    // MÁSCARAS
-    // ==========================================
-    document.getElementById('cpf').addEventListener('input', e => {
-      e.target.value = e.target.value.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    });
-    document.getElementById('idt').addEventListener('input', e => {
-      e.target.value = e.target.value.replace(/\D/g, '').replace(/(\d+)(\d)$/, '$1-$2');
-    });
-    document.getElementById('preccp').addEventListener('input', e => {
-      e.target.value = e.target.value.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,3})$/, '$1.$2');
-    });
-    document.getElementById('telefone').addEventListener('input', e => {
-      let v = e.target.value.replace(/\D/g, '');
-      if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
-      else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
-      else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
-      e.target.value = v;
-    });
-    document.getElementById('dataOcupacao').addEventListener('input', e => {
-      e.target.value = e.target.value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2})(\d)/, '$1/$2');
-    });
-
-    // ==========================================
-    // DEPENDENTES
-    // ==========================================
-    function addDependente() {
-      dependentes.push({ id: Date.now(), nome: '', parentesco: 'Esposa', dtNasc: '', idade: '' });
-      renderDependentes();
-    }
-    function removerDependente(id) {
-      dependentes = dependentes.filter(d => d.id !== id);
-      renderDependentes();
-    }
-    function atualizarDep(id, campo, valor) {
-      const dep = dependentes.find(d => d.id === id);
-      if (dep) dep[campo] = valor;
-    }
-    function renderDependentes() {
-      const container = document.getElementById('lista-dependentes');
-      container.innerHTML = '';
-      if (dependentes.length === 0) {
-        container.innerHTML = '<p class="text-xs text-stone-500 italic">Nenhum dependente adicionado. (Opcional)</p>';
-        return;
-      }
-      dependentes.forEach(dep => {
-        container.innerHTML += `
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-stone-50 p-2.5 rounded border border-stone-200">
-            <div class="sm:col-span-5"><input type="text" placeholder="Nome Completo" value="${dep.nome}" oninput="atualizarDep(${dep.id}, 'nome', this.value.toUpperCase())" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 uppercase"></div>
-            <div class="sm:col-span-3"><input type="text" placeholder="Parentesco (Ex: Esposa)" value="${dep.parentesco}" oninput="atualizarDep(${dep.id}, 'parentesco', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5"></div>
-            <div class="sm:col-span-2"><input type="text" placeholder="Dt Nasc" value="${dep.dtNasc}" maxlength="10" oninput="this.value = this.value.replace(/\\D/g, '').replace(/(\\d{2})(\\d)/, '$1/$2').replace(/(\\d{2})(\\d)/, '$1/$2'); atualizarDep(${dep.id}, 'dtNasc', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5"></div>
-            <div class="sm:col-span-2 flex gap-1"><input type="number" placeholder="Idade" value="${dep.idade}" oninput="atualizarDep(${dep.id}, 'idade', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5"><button type="button" onclick="removerDependente(${dep.id})" class="text-red-500 hover:text-red-700 px-2 font-bold"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>
-          </div>
-        `;
-      });
-      lucide.createIcons();
-    }
-
-    // ==========================================
-    // PROCESSAMENTO E GERAÇÃO DOS ARQUIVOS
-    // ==========================================
-    function obterDataExtenso() {
-      const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-      const d = new Date();
-      return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
-    }
-
-    async function processarFormulario(e) {
-      e.preventDefault();
-
-      dadosFormularioAtual = {
-        posto: document.getElementById('posto').value.trim(),
-        nome: document.getElementById('nome').value.trim().toUpperCase(),
-        cpf: document.getElementById('cpf').value.trim(),
-        idt: document.getElementById('idt').value.trim(),
-        preccp: document.getElementById('preccp').value.trim(),
-        telefone: document.getElementById('telefone').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        banco: document.getElementById('banco').value.trim(),
-        agencia: document.getElementById('agencia').value.trim(),
-        conta: document.getElementById('conta').value.trim(),
-        bi: document.getElementById('bi').value.trim(),
-        dataOcupacao: document.getElementById('dataOcupacao').value.trim(),
-        dependentes: [...dependentes]
-      };
-
-      const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType } = docx;
-
-      // 1. GERAR DIEx
-      let tabelaDependentes;
-      if (dadosFormularioAtual.dependentes.length > 0) {
-        const rows = [
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Nome", bold: true, size: 24 })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Grau de parentesco", bold: true, size: 24 })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Dt Nasc", bold: true, size: 24 })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Idade", bold: true, size: 24 })] })] }),
-            ]
-          })
-        ];
-        dadosFormularioAtual.dependentes.forEach(d => {
-          rows.push(new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.nome || "-", size: 24 })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.parentesco || "-", size: 24 })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.dtNasc || "-", size: 24 })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.idade || "-", size: 24 })] })] }),
-            ]
-          }));
-        });
-        tabelaDependentes = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: rows });
-      } else {
-        tabelaDependentes = new Paragraph({ children: [new TextRun({ text: "Não possui dependentes.", size: 24 })] });
-      }
-
-      const docDIEx = new Document({
-        sections: [{
-          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
-          children: [
-            new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "MINISTÉRIO DA DEFESA\nEXÉRCITO BRASILEIRO\n5° BATALHÃO DE INFANTARIA LEVE\n(Terço da Bahia/1631)\nREGIMENTO ITORORÓ", bold: true, size: 24 })] }),
-            new Paragraph({ spacing: { before: 400, after: 200 }, children: [
-              new TextRun({ text: "DIEx S/Nº", bold: true, size: 24 }),
-              new TextRun({ text: `\t\t\t\tLorena - SP, ${obterDataExtenso()}.`, size: 24 })
-            ]}),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "Do ", bold: true, size: 24 }), new TextRun({ text: `${dadosFormularioAtual.nome}`, size: 24 })] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "Ao Sr Chefe da Divisão Administrativa", bold: true, size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "Assunto: ", bold: true, size: 24 }), new TextRun({ text: "Solicitação de Indenização de Transporte de Bagagem na mesma Sede", size: 24 })] }),
-            new Paragraph({ spacing: { after: 50 }, children: [new TextRun({ text: "Anexos: 1) 01(uma) cópia autenticada do BAR da ocupação de PNR;", bold: true, size: 24 })] }),
-            new Paragraph({ spacing: { after: 200 }, indent: { left: 900 }, children: [new TextRun({ text: "2) 01 (uma) cópia autenticada do último contracheque, com o desconto do PNR;", bold: true, size: 24 })] }),
-            
-            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, indent: { firstLine: 700 }, children: [
-              new TextRun({ text: `1. Tendo em vista a minha ocupação de PNR, Publicado em ${dadosFormularioAtual.bi}, solicito indenização de Bagagem na mesma Sede, com amparo no inciso IV, da letra d, do artigo 48, da Portaria nº 290-DGP, de 9 DEZ 13.`, size: 24 })
-            ]}),
-
-            new Paragraph({ spacing: { after: 100 }, indent: { firstLine: 700 }, children: [new TextRun({ text: "2. Informações Complementares:", bold: true, size: 24 })] }),
-            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `a. CPF: ${dadosFormularioAtual.cpf}`, size: 24 })] }),
-            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `b. Identidade militar: ${dadosFormularioAtual.idt}`, size: 24 })] }),
-            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `c. Prec CP: ${dadosFormularioAtual.preccp}`, size: 24 })] }),
-            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `d. Banco: ${dadosFormularioAtual.banco}   Agência: ${dadosFormularioAtual.agencia}   Conta corrente: ${dadosFormularioAtual.conta}`, size: 24 })] }),
-            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `e. Data do Ajuste de Contas: após o recebimento da Nota de Crédito.`, size: 24 })] }),
-            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `f. Telefone contato: ${dadosFormularioAtual.telefone}`, size: 24 })] }),
-            new Paragraph({ indent: { left: 700 }, spacing: { after: 200 }, children: [new TextRun({ text: `g. Email: ${dadosFormularioAtual.email}`, size: 24 })] }),
-
-            new Paragraph({ spacing: { after: 100 }, indent: { firstLine: 700 }, children: [new TextRun({ text: "3. Dependentes:", bold: true, size: 24 })] }),
-            tabelaDependentes,
-
-            new Paragraph({ spacing: { before: 400, after: 400 }, children: [
-              new TextRun({ text: "OBS: De acordo com a Port nº 290-DGP, de 9 Dez 13 e sob a pena prevista no Art 312 do Código Penal Militar (CPM).", bold: true, size: 24 })
-            ]}),
-
-            new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `${dadosFormularioAtual.nome} – ${dadosFormularioAtual.posto}`, bold: true, size: 24 })] }),
-            new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `Idt ${dadosFormularioAtual.idt} / MD`, size: 24 })] })
-          ]
-        }]
-      });
-
-      // 2. GERAR NOTA PARA BAR
-      let textoDepBAR = 'Não possui';
-      if (dadosFormularioAtual.dependentes.length > 0) {
-        textoDepBAR = dadosFormularioAtual.dependentes.map(d => `${d.nome} – ${d.parentesco}`).join('; ');
-      }
-
-      const docBAR = new Document({
-        sections: [{
-          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
-          children: [
-            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
-              new TextRun({ text: `Solicitou o pagamento de indenização de transporte de bagagem na mesma sede, em virtude da ocupação de PNR ocorrida em ${dadosFormularioAtual.dataOcupacao}, conforme publicado no ${dadosFormularioAtual.bi}.`, size: 24 })
-            ]}),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "1. Tipo de Movimentação: ", bold: true, size: 24 }), new TextRun({ text: "Sem desligamento", size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "2. Motivo da movimentação: ", bold: true, size: 24 }), new TextRun({ text: "Mudança de residência na mesma Sede", size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "3. OM de Origem: ", bold: true, size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "4. OM de Destino: ", bold: true, size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "5. Documento que autorizou a movimentação: ", bold: true, size: 24 }), new TextRun({ text: dadosFormularioAtual.bi, size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "6. Tipo de Pagamento: ", bold: true, size: 24 }), new TextRun({ text: "Indenização de Transporte de Bagagem na mesma Sede", size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "7. Dependentes: ", bold: true, size: 24 }), new TextRun({ text: textoDepBAR, size: 24 })] }),
-            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "8. CPF: ", bold: true, size: 24 }), new TextRun({ text: dadosFormularioAtual.cpf, size: 24 })] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "9. Domicílio Bancário: ", bold: true, size: 24 }), new TextRun({ text: `- Banco: ${dadosFormularioAtual.banco}, Agência: ${dadosFormularioAtual.agencia} Conta: ${dadosFormularioAtual.conta}`, size: 24 })] }),
-            
-            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
-              new TextRun({ text: "Em consequência a divisão administrativa elabore o processo de pagamento da indenização de transporte de bagagem e demais interessados tomem as providências decorrentes.", size: 24 })
-            ]}),
-            new Paragraph({ alignment: AlignmentType.RIGHT, children: [
-              new TextRun({ text: `(Nota p/ BAR nº - DA.5, de ${obterDataExtenso().split(' de ').slice(1).join(' de ')})`, italics: true, size: 24 })
-            ]})
-          ]
-        }]
-      });
-
-      // Baixar os documentos DOCX localmente
-      const blobDIEx = await Packer.toBlob(docDIEx);
-      saveAs(blobDIEx, `DIEx_Bagagem_${dadosFormularioAtual.posto}_${dadosFormularioAtual.nome.replace(/\s+/g, '_')}.docx`);
-
-      const blobBAR = await Packer.toBlob(docBAR);
-      saveAs(blobBAR, `Nota_BAR_Bagagem_${dadosFormularioAtual.posto}_${dadosFormularioAtual.nome.replace(/\s+/g, '_')}.docx`);
-
-      // Mostrar o Modal Flutuante final
-      document.getElementById('modal-sucesso').classList.remove('hidden');
-    }
-
-    // ==========================================
-    // GERAÇÃO DO CHECKLIST EM PDF 
-    // ==========================================
-    function baixarPDFChecklist() {
-      if (!dadosFormularioAtual) return;
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.text('MINISTÉRIO DA DEFESA', 105, 20, { align: 'center' });
-      doc.text('EXÉRCITO BRASILEIRO', 105, 26, { align: 'center' });
-      doc.text('5º BATALHÃO DE INFANTARIA LEVE', 105, 32, { align: 'center' });
-      
-      doc.setDrawColor(75, 83, 32); 
-      doc.setLineWidth(0.5); 
-      doc.line(20, 38, 190, 38);
-
-      doc.setFontSize(14);
-      doc.text('RELAÇÃO DE DOCUMENTOS (ANEXOS)', 105, 48, { align: 'center' });
-
-      // Dados do Militar
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Militar:`, 20, 60);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`${dadosFormularioAtual.posto} ${dadosFormularioAtual.nome}`, 35, 60);
-      
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Modalidade:`, 20, 66);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Transporte de Bagagem na Mesma Sede (PNR)`, 43, 66);
-
-      // Caixa de Aviso Vermelha
-      doc.setFillColor(254, 226, 226); // red-100
-      doc.setDrawColor(220, 38, 38);   // red-600
-      doc.setLineWidth(0.5);
-      doc.roundedRect(20, 75, 170, 16, 2, 2, 'FD');
-
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(185, 28, 28); // red-700
-      doc.text('O MILITAR DEVERÁ COMPARECER A DIVISÃO ADMINISTRATIVA', 105, 81, { align: 'center' });
-      doc.text('PARA ASSINATURA E ENTREGA DE DOCUMENTOS', 105, 87, { align: 'center' });
-
-      // Lista de Documentos
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      doc.text('ANEXOS NECESSÁRIOS:', 20, 105);
-      
-      doc.setFont('helvetica', 'normal');
-      doc.text('[   ] 01 (uma) cópia autenticada do BAR da ocupação de PNR', 20, 115);
-      doc.text('[   ] 01 (uma) cópia autenticada do último contracheque, com o desconto do PNR', 20, 123);
-      doc.text('[   ] DIEx de Opção assinado', 20, 131);
-
-      doc.save(`Checklist_Bagagem_${dadosFormularioAtual.posto}_${dadosFormularioAtual.nome.replace(/\s+/g, '_')}.pdf`);
-    }
   </script>
 </body>
 </html>
