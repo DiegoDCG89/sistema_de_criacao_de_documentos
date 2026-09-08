@@ -9,24 +9,29 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Configuração para processar JSON e uploads binários
+// Configuração para aceitar requisições de formulários e arquivos maiores (até 50MB)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.raw({ type: '*/*', limit: '50mb' }));
 
-// Diretório para armazenar os arquivos gerados
+// ----------------------------------------------------
+// BANCO DE DADOS LOCAL E ARMAZENAMENTO
+// ----------------------------------------------------
+// Diretório para salvar os arquivos .pdf e .docx gerados
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Arquivo local para persistência de dados das solicitações
+// Arquivo JSON para salvar os dados das solicitações como um banco de dados
 const dbFile = path.join(__dirname, 'solicitacoes_db.json');
+
 function lerSolicitacoes() {
   try {
     if (!fs.existsSync(dbFile)) return [];
     const raw = fs.readFileSync(dbFile, 'utf-8');
     return JSON.parse(raw) || [];
-  } catch {
+  } catch (err) {
+    console.error('Erro ao ler DB:', err);
     return [];
   }
 }
@@ -35,11 +40,13 @@ function salvarSolicitacoes(dados) {
   try {
     fs.writeFileSync(dbFile, JSON.stringify(dados, null, 2), 'utf-8');
   } catch (err) {
-    console.error('Erro ao salvar no arquivo db:', err);
+    console.error('Erro ao salvar no DB:', err);
   }
 }
 
-// Credenciais de Administrador
+// ----------------------------------------------------
+// AUTENTICAÇÃO DO ADMINISTRADOR
+// ----------------------------------------------------
 const ADMIN_USER = process.env.ADMIN_USER || 'root';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'aeromovel';
 
@@ -51,9 +58,6 @@ function validarToken(req) {
   return token === expectedToken;
 }
 
-// ----------------------------------------------------
-// 1. ROTA DE LOGIN
-// ----------------------------------------------------
 app.post('/api/login', express.json(), (req, res) => {
   const { usuario, senha } = req.body || {};
   if (usuario === ADMIN_USER && senha === ADMIN_SECRET_KEY) {
@@ -64,14 +68,17 @@ app.post('/api/login', express.json(), (req, res) => {
 });
 
 // ----------------------------------------------------
-// 2. ROTA DE UPLOAD DE ARQUIVOS (.docx e .pdf)
+// ROTAS DA API - UPLOAD DE ARQUIVOS (.docx e .pdf)
 // ----------------------------------------------------
 app.post('/api/upload', (req, res) => {
   try {
     const filename = req.query.filename || `arquivo-${Date.now()}`;
     const filePath = path.join(uploadsDir, filename);
 
+    // Salva o arquivo fisicamente na pasta uploads/
     fs.writeFileSync(filePath, req.body);
+    
+    // Monta o link para o administrador conseguir baixar depois
     const host = req.get('host');
     const protocol = req.protocol;
     const fileUrl = `${protocol}://${host}/uploads/${encodeURIComponent(filename)}`;
@@ -83,12 +90,13 @@ app.post('/api/upload', (req, res) => {
   }
 });
 
-// Serve a pasta de arquivos para download direto
+// Libera a pasta /uploads para acesso público (download dos arquivos)
 app.use('/uploads', express.static(uploadsDir));
 
 // ----------------------------------------------------
-// 3. ROTAS DE SOLICITAÇÕES (CRIAR, LISTAR, DELETAR)
+// ROTAS DA API - SOLICITAÇÕES
 // ----------------------------------------------------
+// Listar todas as solicitações (Painel Admin)
 app.get('/api/solicitacoes', (req, res) => {
   if (!validarToken(req)) {
     return res.status(401).json({ error: 'Acesso não autorizado' });
@@ -97,6 +105,7 @@ app.get('/api/solicitacoes', (req, res) => {
   return res.status(200).json(lista);
 });
 
+// Receber uma nova solicitação (Militar)
 app.post('/api/solicitacoes', express.json(), (req, res) => {
   try {
     const sol = req.body;
@@ -105,7 +114,7 @@ app.post('/api/solicitacoes', express.json(), (req, res) => {
     }
 
     const lista = lerSolicitacoes();
-    lista.unshift(sol);
+    lista.unshift(sol); // Adiciona a nova solicitação no topo da lista
     salvarSolicitacoes(lista);
 
     return res.status(201).json({ success: true, id: sol.id });
@@ -115,6 +124,7 @@ app.post('/api/solicitacoes', express.json(), (req, res) => {
   }
 });
 
+// Deletar uma solicitação (Admin)
 app.delete('/api/solicitacoes', (req, res) => {
   if (!validarToken(req)) {
     return res.status(401).json({ error: 'Acesso não autorizado' });
@@ -129,7 +139,7 @@ app.delete('/api/solicitacoes', (req, res) => {
 });
 
 // ----------------------------------------------------
-// 4. SERVIR ARQUIVOS ESTÁTICOS / HTML
+// SERVIR A INTERFACE (FRONTEND)
 // ----------------------------------------------------
 function encontrarIndexHtml() {
   const caminhosPossiveis = [
@@ -147,11 +157,17 @@ function encontrarIndexHtml() {
 }
 
 const arquivoIndex = encontrarIndexHtml();
+
 if (arquivoIndex) {
+  // Configura a pasta onde o index.html está como pasta estática
   app.use(express.static(path.dirname(arquivoIndex)));
+  
+  // Qualquer rota que não seja /api/... vai carregar o index.html
   app.get('*', (req, res) => {
     res.sendFile(arquivoIndex);
   });
+} else {
+  console.error('[ERRO] Arquivo index.html não localizado.');
 }
 
 app.listen(PORT, () => {
