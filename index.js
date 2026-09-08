@@ -9,9 +9,34 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Configuração para aceitar requisições JSON
 app.use(express.json());
 
-// Procura o index.html nos caminhos mais prováveis
+// Credenciais administrativas (definidas por variáveis de ambiente ou valores padrão)
+const ADMIN_USER = process.env.ADMIN_USER || 'root';
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'aeromovel';
+
+// ----------------------------------------------------
+// 1. ROTA DE AUTENTICAÇÃO DO ADMINISTRADOR
+// ----------------------------------------------------
+app.post('/api/login', (req, res) => {
+  const { usuario, senha } = req.body || {};
+
+  if (usuario === ADMIN_USER && senha === ADMIN_SECRET_KEY) {
+    const token = Buffer.from(`${ADMIN_USER}:${ADMIN_SECRET_KEY}`).toString('base64');
+    return res.status(200).json({
+      success: true,
+      token,
+      message: 'Autenticado com sucesso'
+    });
+  }
+
+  return res.status(401).json({ success: false, error: 'Credenciais inválidas' });
+});
+
+// ----------------------------------------------------
+// 2. ENTREGA DA INTERFACE ESTÁTICA
+// ----------------------------------------------------
 function encontrarIndexHtml() {
   const caminhosPossiveis = [
     path.join(__dirname, 'public', 'index.html'),
@@ -22,10 +47,7 @@ function encontrarIndexHtml() {
   ];
 
   for (const p of caminhosPossiveis) {
-    if (fs.existsSync(p)) {
-      console.log(`[OK] index.html encontrado em: ${p}`);
-      return p;
-    }
+    if (fs.existsSync(p)) return p;
   }
   return null;
 }
@@ -33,21 +55,9 @@ function encontrarIndexHtml() {
 const arquivoIndex = encontrarIndexHtml();
 
 if (arquivoIndex) {
-  // Serve a pasta onde o index.html foi encontrado
   app.use(express.static(path.dirname(arquivoIndex)));
-
   app.get('*', (req, res) => {
     res.sendFile(arquivoIndex);
-  });
-} else {
-  console.error('[ERRO] index.html NÃO encontrado. Conteúdo do diretório atual:');
-  console.error(fs.readdirSync(__dirname));
-  
-  app.get('*', (req, res) => {
-    res.status(404).send(`
-      <h2>Arquivo index.html não localizado no servidor.</h2>
-      <p>Verifique se o arquivo está na pasta correta no GitHub.</p>
-    `);
   });
 }
 
