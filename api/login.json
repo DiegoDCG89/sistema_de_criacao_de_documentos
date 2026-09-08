@@ -1,0 +1,19 @@
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+
+  const { usuario, senha } = req.body || {};
+  const ADMIN_USER = process.env.ADMIN_USER || 'root';
+  const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'aeromovel';
+
+  if (usuario === ADMIN_USER && senha === ADMIN_SECRET_KEY) {
+    return res.status(200).json({
+      success: true,
+      token: Buffer.from(`${ADMIN_USER}:${ADMIN_SECRET_KEY}`).toString('base64'),
+      message: 'Autenticado com sucesso'
+    });
+  }
+
+  return res.status(401).json({ success: false, error: 'Credenciais inválidas' });
+}
