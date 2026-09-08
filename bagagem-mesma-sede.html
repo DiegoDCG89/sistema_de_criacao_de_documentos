@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transporte de Bagagem na Mesma Sede (PNR)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-stone-100 text-stone-800 min-h-screen p-4 sm:p-8">
+
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg border border-stone-200 overflow-hidden">
+    <!-- Cabeçalho -->
+    <div class="bg-[#4B5320] p-6 text-white text-center">
+      <h1 class="text-2xl font-bold">Solicitação de Indenização</h1>
+      <p class="text-stone-200 mt-1">Transporte de Bagagem na Mesma Sede (Ocupação de PNR)</p>
+    </div>
+
+    <!-- Formulário -->
+    <form id="form-pnr" onsubmit="gerarDocumentos(event)" class="p-6 sm:p-8 space-y-6">
+      
+      <!-- Seção 1: Dados Pessoais -->
+      <div>
+        <h2 class="text-lg font-bold border-b border-stone-200 pb-2 mb-4 flex items-center gap-2">
+          <i data-lucide="user" class="w-5 h-5 text-[#4B5320]"></i> Identificação do Militar
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Posto / Graduação *</label>
+            <input type="text" id="posto" required placeholder="Ex: S Ten" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Nome Completo *</label>
+            <input type="text" id="nome" required placeholder="Ex: FULANO DE TAL" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">CPF *</label>
+            <input type="text" id="cpf" required placeholder="Ex: 000.000.000-00" maxlength="14" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Identidade Militar *</label>
+            <input type="text" id="idt" required placeholder="Ex: 000.000.000-0" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Prec CP *</label>
+            <input type="text" id="preccp" required placeholder="Ex: 000.000.000" maxlength="11" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 2: Contato e Banco -->
+      <div>
+        <h2 class="text-lg font-bold border-b border-stone-200 pb-2 mb-4 flex items-center gap-2">
+          <i data-lucide="phone" class="w-5 h-5 text-[#4B5320]"></i> Contato e Domicílio Bancário
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Telefone *</label>
+            <input type="text" id="telefone" required placeholder="Ex: (12) 99999-9999" maxlength="15" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div class="lg:col-span-3">
+            <label class="block text-xs font-semibold text-stone-600 mb-1">E-mail *</label>
+            <input type="email" id="email" required placeholder="Ex: militar@eb.mil.br" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Banco *</label>
+            <input type="text" id="banco" required placeholder="Ex: Banco do Brasil" value="Banco do Brasil" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div class="lg:col-span-1">
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Agência *</label>
+            <input type="text" id="agencia" required placeholder="Ex: 1234-5" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Conta Corrente *</label>
+            <input type="text" id="conta" required placeholder="Ex: 12345-6" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 3: Publicação da Ocupação -->
+      <div>
+        <h2 class="text-lg font-bold border-b border-stone-200 pb-2 mb-4 flex items-center gap-2">
+          <i data-lucide="file-text" class="w-5 h-5 text-[#4B5320]"></i> Dados da Publicação (PNR)
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Documento de Publicação (BI/BAR) *</label>
+            <input type="text" id="bi" required placeholder="Ex: BI nº 01 do dia 01 de janeiro de 2026" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">Data da Ocupação *</label>
+            <input type="text" id="dataOcupacao" required placeholder="Ex: 01/01/2026" maxlength="10" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            <p class="text-[10px] text-stone-400 mt-1">Para gerar a Nota do BAR</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 4: Dependentes -->
+      <div>
+        <div class="flex justify-between items-center border-b border-stone-200 pb-2 mb-4">
+          <h2 class="text-lg font-bold flex items-center gap-2">
+            <i data-lucide="users" class="w-5 h-5 text-[#4B5320]"></i> Dependentes
+          </h2>
+          <button type="button" onclick="addDependente()" class="text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition">
+            + Adicionar
+          </button>
+        </div>
+        <div id="lista-dependentes" class="space-y-3">
+          <!-- Linhas injetadas via JS -->
+        </div>
+      </div>
+
+      <!-- Botão de Ação -->
+      <div class="pt-4 border-t border-stone-200">
+        <button type="submit" class="w-full bg-[#4B5320] hover:bg-[#353c15] text-white font-bold py-3.5 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+          <i data-lucide="download" class="w-5 h-5"></i> Gerar Documentos (DIEx e Nota BAR)
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    // Inicializar Ícones
+    lucide.createIcons();
+
+    // ==========================================
+    // MÁSCARAS DE PREENCHIMENTO
+    // ==========================================
+    document.getElementById('cpf').addEventListener('input', e => {
+      e.target.value = e.target.value.replace(/\D/g, '')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    });
+
+    document.getElementById('idt').addEventListener('input', e => {
+      e.target.value = e.target.value.replace(/\D/g, '').replace(/(\d+)(\d)$/, '$1-$2');
+    });
+
+    document.getElementById('preccp').addEventListener('input', e => {
+      // Ex: 000.000.000
+      e.target.value = e.target.value.replace(/\D/g, '')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,3})$/, '$1.$2');
+    });
+
+    document.getElementById('telefone').addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+      else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+      else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+      e.target.value = v;
+    });
+
+    document.getElementById('dataOcupacao').addEventListener('input', e => {
+      e.target.value = e.target.value.replace(/\D/g, '')
+        .replace(/(\d{2})(\d)/, '$1/$2')
+        .replace(/(\d{2})(\d)/, '$1/$2');
+    });
+
+
+    // ==========================================
+    // LÓGICA DE DEPENDENTES
+    // ==========================================
+    let dependentes = [];
+
+    function addDependente() {
+      const id = Date.now();
+      dependentes.push({ id, nome: '', parentesco: 'Esposa', dtNasc: '', idade: '' });
+      renderDependentes();
+    }
+
+    function removerDependente(id) {
+      dependentes = dependentes.filter(d => d.id !== id);
+      renderDependentes();
+    }
+
+    function atualizarDep(id, campo, valor) {
+      const dep = dependentes.find(d => d.id === id);
+      if (dep) dep[campo] = valor;
+    }
+
+    function renderDependentes() {
+      const container = document.getElementById('lista-dependentes');
+      container.innerHTML = '';
+      
+      if (dependentes.length === 0) {
+        container.innerHTML = '<p class="text-xs text-stone-500 italic">Nenhum dependente adicionado. (Opcional)</p>';
+        return;
+      }
+
+      dependentes.forEach(dep => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 sm:grid-cols-12 gap-2 bg-stone-50 p-2.5 rounded border border-stone-200';
+        div.innerHTML = `
+          <div class="sm:col-span-5">
+            <input type="text" placeholder="Nome Completo" value="${dep.nome}" oninput="atualizarDep(${dep.id}, 'nome', this.value.toUpperCase())" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 uppercase">
+          </div>
+          <div class="sm:col-span-3">
+            <input type="text" placeholder="Parentesco (Ex: Esposa)" value="${dep.parentesco}" oninput="atualizarDep(${dep.id}, 'parentesco', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5">
+          </div>
+          <div class="sm:col-span-2">
+            <input type="text" placeholder="Dt Nasc" value="${dep.dtNasc}" maxlength="10" oninput="this.value = this.value.replace(/\\D/g, '').replace(/(\\d{2})(\\d)/, '$1/$2').replace(/(\\d{2})(\\d)/, '$1/$2'); atualizarDep(${dep.id}, 'dtNasc', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5">
+          </div>
+          <div class="sm:col-span-2 flex gap-1">
+            <input type="number" placeholder="Idade" value="${dep.idade}" oninput="atualizarDep(${dep.id}, 'idade', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5">
+            <button type="button" onclick="removerDependente(${dep.id})" class="text-red-500 hover:text-red-700 px-2 font-bold"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+
+    // Inicializa com lista vazia
+    renderDependentes();
+
+
+    // ==========================================
+    // GERAÇÃO DOS DOCUMENTOS (DOCX)
+    // ==========================================
+    function obterDataExtenso() {
+      const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      const d = new Date();
+      return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+    }
+
+    async function gerarDocumentos(e) {
+      e.preventDefault();
+      
+      const form = {
+        posto: document.getElementById('posto').value.trim(),
+        nome: document.getElementById('nome').value.trim().toUpperCase(),
+        cpf: document.getElementById('cpf').value.trim(),
+        idt: document.getElementById('idt').value.trim(),
+        preccp: document.getElementById('preccp').value.trim(),
+        telefone: document.getElementById('telefone').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        banco: document.getElementById('banco').value.trim(),
+        agencia: document.getElementById('agencia').value.trim(),
+        conta: document.getElementById('conta').value.trim(),
+        bi: document.getElementById('bi').value.trim(),
+        dataOcupacao: document.getElementById('dataOcupacao').value.trim()
+      };
+
+      const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+
+      // ----------------------------------------------------
+      // 1. GERAR DIEx (Opção Transporte na mesma sede)
+      // ----------------------------------------------------
+      
+      // Tabela de Dependentes para o DIEx
+      let tabelaDependentes;
+      if (dependentes.length > 0) {
+        const rows = [
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Nome", bold: true, size: 24 })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Grau de parentesco", bold: true, size: 24 })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Dt Nasc", bold: true, size: 24 })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Idade", bold: true, size: 24 })] })] }),
+            ]
+          })
+        ];
+        dependentes.forEach(d => {
+          rows.push(new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.nome || "-", size: 24 })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.parentesco || "-", size: 24 })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.dtNasc || "-", size: 24 })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.idade || "-", size: 24 })] })] }),
+            ]
+          }));
+        });
+        tabelaDependentes = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: rows });
+      } else {
+        tabelaDependentes = new Paragraph({ children: [new TextRun({ text: "Não possui dependentes.", size: 24 })] });
+      }
+
+      const docDIEx = new Document({
+        sections: [{
+          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+          children: [
+            new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "MINISTÉRIO DA DEFESA\nEXÉRCITO BRASILEIRO\n5° BATALHÃO DE INFANTARIA LEVE\n(Terço da Bahia/1631)\nREGIMENTO ITORORÓ", bold: true, size: 24 })] }),
+            new Paragraph({ spacing: { before: 400, after: 200 }, children: [
+              new TextRun({ text: "DIEx S/Nº", bold: true, size: 24 }),
+              new TextRun({ text: `\t\t\t\tLorena - SP, ${obterDataExtenso()}.`, size: 24 })
+            ]}),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "Do ", bold: true, size: 24 }), new TextRun({ text: `${form.nome}`, size: 24 })] }),
+            new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "Ao Sr Chefe da Divisão Administrativa", bold: true, size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "Assunto: ", bold: true, size: 24 }), new TextRun({ text: "Solicitação de Indenização de Transporte de Bagagem na mesma Sede", size: 24 })] }),
+            new Paragraph({ spacing: { after: 50 }, children: [new TextRun({ text: "Anexos: 1) 01(uma) cópia autenticada do BAR da ocupação de PNR;", bold: true, size: 24 })] }),
+            new Paragraph({ spacing: { after: 200 }, indent: { left: 900 }, children: [new TextRun({ text: "2) 01 (uma) cópia autenticada do último contracheque, com o desconto do PNR;", bold: true, size: 24 })] }),
+            
+            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, indent: { firstLine: 700 }, children: [
+              new TextRun({ text: `1. Tendo em vista a minha ocupação de PNR, Publicado em ${form.bi}, solicito indenização de Bagagem na mesma Sede, com amparo no inciso IV, da letra d, do artigo 48, da Portaria nº 290-DGP, de 9 DEZ 13.`, size: 24 })
+            ]}),
+
+            new Paragraph({ spacing: { after: 100 }, indent: { firstLine: 700 }, children: [new TextRun({ text: "2. Informações Complementares:", bold: true, size: 24 })] }),
+            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `a. CPF: ${form.cpf}`, size: 24 })] }),
+            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `b. Identidade militar: ${form.idt}`, size: 24 })] }),
+            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `c. Prec CP: ${form.preccp}`, size: 24 })] }),
+            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `d. Banco: ${form.banco}   Agência: ${form.agencia}   Conta corrente: ${form.conta}`, size: 24 })] }),
+            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `e. Data do Ajuste de Contas: após o recebimento da Nota de Crédito.`, size: 24 })] }),
+            new Paragraph({ indent: { left: 700 }, children: [new TextRun({ text: `f. Telefone contato: ${form.telefone}`, size: 24 })] }),
+            new Paragraph({ indent: { left: 700 }, spacing: { after: 200 }, children: [new TextRun({ text: `g. Email: ${form.email}`, size: 24 })] }),
+
+            new Paragraph({ spacing: { after: 100 }, indent: { firstLine: 700 }, children: [new TextRun({ text: "3. Dependentes:", bold: true, size: 24 })] }),
+            tabelaDependentes,
+
+            new Paragraph({ spacing: { before: 400, after: 400 }, children: [
+              new TextRun({ text: "OBS: De acordo com a Port nº 290-DGP, de 9 Dez 13 e sob a pena prevista no Art 312 do Código Penal Militar (CPM).", bold: true, size: 24 })
+            ]}),
+
+            new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `${form.nome} – ${form.posto}`, bold: true, size: 24 })] }),
+            new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `Idt ${form.idt} / MD`, size: 24 })] })
+          ]
+        }]
+      });
+
+      // ----------------------------------------------------
+      // 2. GERAR NOTA PARA BAR (Bagagem na Mesma Sede)
+      // ----------------------------------------------------
+      
+      let textoDepBAR = 'Não possui';
+      if (dependentes.length > 0) {
+        textoDepBAR = dependentes.map(d => `${d.nome} – ${d.parentesco}`).join('; ');
+      }
+
+      const docBAR = new Document({
+        sections: [{
+          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+          children: [
+            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
+              new TextRun({ text: `Solicitou o pagamento de indenização de transporte de bagagem na mesma sede, em virtude da ocupação de PNR ocorrida em ${form.dataOcupacao}, conforme publicado no ${form.bi}.`, size: 24 })
+            ]}),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "1. Tipo de Movimentação: ", bold: true, size: 24 }), new TextRun({ text: "Sem desligamento", size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "2. Motivo da movimentação: ", bold: true, size: 24 }), new TextRun({ text: "Mudança de residência na mesma Sede", size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "3. OM de Origem: ", bold: true, size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "4. OM de Destino: ", bold: true, size: 24 }), new TextRun({ text: "5º BIL Guarnição: Lorena-SP", size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "5. Documento que autorizou a movimentação: ", bold: true, size: 24 }), new TextRun({ text: form.bi, size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "6. Tipo de Pagamento: ", bold: true, size: 24 }), new TextRun({ text: "Indenização de Transporte de Bagagem na mesma Sede", size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "7. Dependentes: ", bold: true, size: 24 }), new TextRun({ text: textoDepBAR, size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "8. CPF: ", bold: true, size: 24 }), new TextRun({ text: form.cpf, size: 24 })] }),
+            new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "9. Domicílio Bancário: ", bold: true, size: 24 }), new TextRun({ text: `- Banco: ${form.banco}, Agência: ${form.agencia} Conta: ${form.conta}`, size: 24 })] }),
+            
+            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
+              new TextRun({ text: "Em consequência a divisão administrativa elabore o processo de pagamento da indenização de transporte de bagagem e demais interessados tomem as providências decorrentes.", size: 24 })
+            ]}),
+            new Paragraph({ alignment: AlignmentType.RIGHT, children: [
+              new TextRun({ text: `(Nota p/ BAR nº - DA.5, de ${obterDataExtenso().split(' de ').slice(1).join(' de ')})`, italics: true, size: 24 })
+            ]})
+          ]
+        }]
+      });
+
+      // Baixar os documentos
+      const blobDIEx = await Packer.toBlob(docDIEx);
+      saveAs(blobDIEx, `DIEx_Bagagem_PNR_${form.posto}_${form.nome.replace(/\s+/g, '_')}.docx`);
+
+      const blobBAR = await Packer.toBlob(docBAR);
+      saveAs(blobBAR, `Nota_BAR_Bagagem_PNR_${form.posto}_${form.nome.replace(/\s+/g, '_')}.docx`);
+    }
+  </script>
+</body>
+</html>
