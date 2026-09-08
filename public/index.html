@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Indenizações e Documentos Administrativos - EB</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- docx.js CDN (Geração de Word editável) -->
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  
+  <!-- FileSaver.js CDN (Download de arquivos) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- jsPDF CDN (Geração de PDF do checklist de documentos) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            eb: {
+              olive: '#4B5320',
+              darkOlive: '#353c15',
+              green: '#1f441e',
+              gold: '#c99700',
+              goldLight: '#f4c430',
+              sand: '#f5f3e9',
+              dark: '#1e231b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-serif-eb {
+      font-family: 'Merriweather', serif;
+    }
+  </style>
+</head>
+
+<body class="bg-stone-100 text-stone-900 min-h-screen flex flex-col antialiased selection:bg-eb-olive selection:text-white">
+
+  <!-- Top Navigation -->
+  <header class="bg-eb-dark text-white border-b-4 border-eb-gold shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-eb-olive flex items-center justify-center border-2 border-eb-gold shadow-inner">
+            <i data-lucide="shield" class="w-6 h-6 text-eb-goldLight"></i>
+          </div>
+          <div>
+            <span class="text-xs tracking-wider uppercase text-stone-300 font-medium block">Exército Brasileiro</span>
+            <h1 class="text-lg font-bold text-white tracking-wide flex items-center gap-1.5">
+              SisDoc <span class="text-eb-gold text-xs px-2 py-0.5 rounded bg-black/40 border border-eb-gold/30">Adm Indenizações</span>
+            </h1>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button id="nav-btn-militar" onclick="switchView('militar')"
+            class="nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all bg-eb-olive text-white shadow-sm border border-eb-gold/40">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Área do Militar</span> (Solicitação)
+          </button>
+          
+          <button id="nav-btn-admin" onclick="switchView('admin')"
+            class="nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all text-stone-300 hover:text-white hover:bg-stone-800">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Painel do</span> Administrador
+            <span id="admin-badge-count" class="hidden ml-1 px-1.5 py-0.2 text-xs bg-red-600 text-white font-bold rounded-full">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex flex-col items-center justify-center text-white">
+    <div class="w-14 h-14 border-4 border-eb-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p id="loading-overlay-msg" class="text-sm font-semibold tracking-wide">Processando solicitação...</p>
+    <p class="text-xs text-stone-300 mt-1">Gerando documentos oficiais e enviando para a nuvem.</p>
+  </div>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ÁREA DO MILITAR (FORMULÁRIO) -->
+    <section id="view-militar" class="space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <div class="p-3 bg-stone-100 rounded-lg text-eb-olive">
+            <i data-lucide="file-text" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-stone-800">Requerimento Eletrônico de Indenizações</h2>
+            <p class="text-xs text-stone-500">Preencha os dados abaixo para gerar sua solicitação e enviar automaticamente à Divisão Administrativa.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-stone-50 border border-stone-200 px-3 py-2 rounded-lg text-xs text-stone-700">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-eb-olive shrink-0"></i>
+          <span>Em conformidade com o Art. 312 do CPM e Portaria nº 290-DGP.</span>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO -->
+      <form id="form-solicitacao" onsubmit="handleSalvarSolicitacao(event)" class="space-y-6">
+
+        <!-- Bloco 1: Modalidade -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="layers" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">1. Modalidade da Solicitação *</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="transporte_pnr" required onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Transporte de Bagagem na Mesma Sede</span>
+                <span class="block text-[11px] text-stone-500">Ocupação ou desocupação de PNR</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="movimentacao" checked onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Movimentação / Transferência</span>
+                <span class="block text-[11px] text-stone-500">Transferência por necessidade de serviço</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="movimentacao_comp" onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Movimentação - Complemento</span>
+                <span class="block text-[11px] text-stone-500">Reajuste ou complemento de ajuda de custo</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="curso" onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Curso</span>
+                <span class="block text-[11px] text-stone-500">Cursos e estágios de aperfeiçoamento</span>
+              </div>
+            </label>
+
+            <label class="modalidade-card relative flex items-start p-3.5 rounded-lg border-2 border-stone-200 hover:border-eb-olive/60 cursor-pointer transition-all bg-white hover:bg-stone-50">
+              <input type="radio" name="modalidade" value="curso_comp" onchange="handleModalidadeChange()" class="mt-1 text-eb-olive focus:ring-eb-olive">
+              <div class="ml-3">
+                <span class="block text-sm font-semibold text-stone-900">Curso - Complemento</span>
+                <span class="block text-[11px] text-stone-500">Complementação de ajuda de custo de curso</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Bloco 2: Identificação do Militar -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="user-check" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">2. Identificação do Militar</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Posto / Graduação *</label>
+              <select name="posto" required class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive bg-white">
+                <option value="">Selecione...</option>
+                <option value="Cel">Coronel (Cel)</option>
+                <option value="Ten Cel">Tenente-Coronel (Ten Cel)</option>
+                <option value="Maj">Major (Maj)</option>
+                <option value="Cap">Capitão (Cap)</option>
+                <option value="1º Ten">1º Tenente (1º Ten)</option>
+                <option value="2º Ten">2º Tenente (2º Ten)</option>
+                <option value="Asp Of">Aspirante a Oficial (Asp Of)</option>
+                <option value="S Ten">Subtenente (S Ten)</option>
+                <option value="1º Sgt">1º Sargento (1º Sgt)</option>
+                <option value="2º Sgt">2º Sargento (2º Sgt)</option>
+                <option value="3º Sgt">3º Sargento (3º Sgt)</option>
+                <option value="Cb">Cabo (Cb)</option>
+                <option value="Sd">Soldado (Sd)</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Nome Completo *</label>
+              <input type="text" name="nomeCompleto" required placeholder="Ex: MARCOS ANTÔNIO DA SILVA" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive uppercase">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Arma / Quadro / Serviço *</label>
+              <input type="text" name="arma" required placeholder="Ex: Inf, Cav, Art, Int, Sau" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Identidade Militar (com Órgão) *</label>
+              <input type="text" name="idtMilitar" required placeholder="Ex: 021987654-3 / MD" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">CPF *</label>
+              <input type="text" name="cpf" id="input-cpf" required placeholder="000.000.000-00" maxlength="14" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Prec-CP *</label>
+              <input type="text" name="precCp" id="input-preccp" required placeholder="Ex: 96 1234567" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Telefone de Contato *</label>
+              <input type="tel" name="telefone" id="input-telefone" required placeholder="(12) 99999-9999" maxlength="15" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">E-mail *</label>
+              <input type="email" name="email" required placeholder="militar@eb.mil.br" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">OM Expedidora / Atual</label>
+              <input type="text" name="omAtual" value="5º BATALHÃO DE INFANTARIA LEVE" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm bg-stone-50 text-stone-700 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 3: Dados Bancários -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="landmark" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">3. Domicílio Bancário</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Banco *</label>
+              <input type="text" name="banco" required placeholder="Ex: 001 - Banco do Brasil" value="001 - Banco do Brasil" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Agência (com dígito) *</label>
+              <input type="text" name="agencia" required placeholder="Ex: 0123-4" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Conta Corrente (com dígito) *</label>
+              <input type="text" name="contaCorrente" required placeholder="Ex: 12345-6" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 4: Dados da Movimentação -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="map-pin" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">4. Dados da Movimentação, Curso ou Ocupação de PNR</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">OM de Origem e Guarnição *</label>
+              <input type="text" name="omOrigem" required value="5º BIL Guarnição: Lorena – SP" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">OM de Destino e Guarnição *</label>
+              <input type="text" name="omDestino" required placeholder="Ex: EASA Guarnição: Cruz Alta - RS ou 5º BIL" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Cidade onde residirá após movimentação</label>
+              <input type="text" name="cidadeResidenciaFutura" placeholder="Ex: Cruz Alta - RS ou Lorena - SP" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Documento Autorizador / Publicação *</label>
+              <input type="text" name="documentoAutorizador" required placeholder="Ex: Adt DCEM 1B ao Bol DGP nº 088, de 6 AGO 25 ou BAR nº 025, de 10 FEV 25" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Motivo / Enquadramento</label>
+              <input type="text" name="motivoMovimentacao" id="input-motivo" value="Transferência por Necessidade do Serviço" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div id="campo-desligamento">
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Previsão da Data de Desligamento</label>
+              <input type="text" name="dataDesligamento" id="input-data-desligamento" placeholder="DD/MM/AAAA" maxlength="10" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div id="campo-periodo-curso" class="hidden sm:col-span-2 grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Início do Curso</label>
+                <input type="text" name="dataInicioCurso" id="input-inicio-curso" placeholder="DD/MM/AAAA" maxlength="10" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Término do Curso</label>
+                <input type="text" name="dataTerminoCurso" id="input-termino-curso" placeholder="DD/MM/AAAA" maxlength="10" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Data do Ajuste de Contas *</label>
+              <input type="text" name="dataAjusteContas" required value="30 dias após a data de desligamento" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-stone-700 mb-1">Tipo de Movimentação</label>
+              <select name="tipoMovimentacao" id="select-tipo-movimentacao" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive bg-white">
+                <option value="Com desligamento">Com desligamento</option>
+                <option value="Sem desligamento">Sem desligamento</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 5: Opções Requeridas -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="check-square" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">5. Opções de Indenização Requeridas (DIEx)</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Ajuda de Custo</span>
+              <div class="flex items-center gap-3">
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer">
+                  <input type="radio" name="opt_ajuda_custo" value="nao" class="text-stone-500"> Não
+                </label>
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer font-bold text-eb-olive">
+                  <input type="radio" name="opt_ajuda_custo" value="sim" checked class="text-eb-olive focus:ring-eb-olive"> Sim
+                </label>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Transporte de Bagagem</span>
+              <div class="flex items-center gap-3">
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer">
+                  <input type="radio" name="opt_bagagem" value="nao" class="text-stone-500"> Não
+                </label>
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer font-bold text-eb-olive">
+                  <input type="radio" name="opt_bagagem" value="sim" checked class="text-eb-olive focus:ring-eb-olive"> Sim
+                </label>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Passagens</span>
+              <div class="flex items-center gap-3">
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer">
+                  <input type="radio" name="opt_passagens" value="nao" class="text-stone-500"> Não
+                </label>
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer font-bold text-eb-olive">
+                  <input type="radio" name="opt_passagens" value="sim" checked class="text-eb-olive focus:ring-eb-olive"> Sim
+                </label>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Transporte de Automóvel</span>
+              <div class="flex items-center gap-3">
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer">
+                  <input type="radio" name="opt_automovel" value="nao" checked class="text-stone-500"> Não
+                </label>
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer font-bold text-eb-olive">
+                  <input type="radio" name="opt_automovel" value="sim" class="text-eb-olive focus:ring-eb-olive"> Sim
+                </label>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-stone-50">
+              <span class="text-sm font-medium text-stone-800">Transporte de Motocicleta</span>
+              <div class="flex items-center gap-3">
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer">
+                  <input type="radio" name="opt_motocicleta" value="nao" checked class="text-stone-500"> Não
+                </label>
+                <label class="inline-flex items-center text-xs gap-1 cursor-pointer font-bold text-eb-olive">
+                  <input type="radio" name="opt_motocicleta" value="sim" class="text-eb-olive focus:ring-eb-olive"> Sim
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 6: Dependentes -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-stone-200 gap-2">
+            <div class="flex items-center gap-2">
+              <i data-lucide="users" class="w-5 h-5 text-eb-olive"></i>
+              <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">6. Dependentes Legais</h3>
+            </div>
+            
+            <div class="flex items-center gap-4 text-xs">
+              <label class="inline-flex items-center gap-1.5 font-medium text-stone-700">
+                <span>Possui dependentes?</span>
+                <input type="checkbox" id="check-possui-dep" onchange="toggleDependentesGroup()" class="rounded text-eb-olive focus:ring-eb-olive">
+              </label>
+              <label id="lbl-dep-acompanham" class="hidden inline-flex items-center gap-1.5 font-medium text-stone-700">
+                <span>Acompanharão o militar?</span>
+                <input type="checkbox" id="check-dep-acompanham" checked class="rounded text-eb-olive focus:ring-eb-olive">
+              </label>
+            </div>
+          </div>
+
+          <div id="container-dependentes" class="hidden space-y-3">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs text-stone-500">Relação de dependentes:</span>
+              <button type="button" onclick="adicionarDependente()" class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold rounded-md flex items-center gap-1 border border-stone-300 transition">
+                <i data-lucide="plus" class="w-3.5 h-3.5 text-eb-olive"></i> Adicionar Dependente
+              </button>
+            </div>
+            <div id="lista-dependentes" class="space-y-2"></div>
+          </div>
+          <div id="empty-dependentes-msg" class="text-xs text-stone-500 italic py-2">
+            Nenhum dependente informado ou não se aplica à solicitação ("Não há").
+          </div>
+        </div>
+
+        <!-- Bloco 7: Veículos -->
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 sm:p-6">
+          <div class="flex items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+            <i data-lucide="car" class="w-5 h-5 text-eb-olive"></i>
+            <h3 class="font-bold text-stone-800 uppercase tracking-wide text-sm">7. Dados dos Veículos (Se houver opção de transporte)</h3>
+          </div>
+
+          <div class="space-y-5">
+            <div class="p-3.5 rounded-lg border border-stone-200 bg-stone-50/60">
+              <span class="text-xs font-bold text-stone-700 uppercase tracking-wider block mb-2">Automóvel</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Marca / Modelo</label>
+                  <input type="text" name="auto_marca_modelo" placeholder="Ex: Chevrolet Onix 1.0" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Cor</label>
+                  <input type="text" name="auto_cor" placeholder="Ex: Branca" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Placa</label>
+                  <input type="text" name="auto_placa" id="input-auto-placa" placeholder="Ex: ABC1D23" maxlength="8" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs uppercase">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Ano / Modelo</label>
+                  <input type="text" name="auto_ano" id="input-auto-ano" placeholder="Ex: 2021/2022" maxlength="9" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs">
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-lg border border-stone-200 bg-stone-50/60">
+              <span class="text-xs font-bold text-stone-700 uppercase tracking-wider block mb-2">Motocicleta</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Marca / Modelo</label>
+                  <input type="text" name="moto_marca_modelo" placeholder="Ex: Honda CG 160 Titan" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Cor</label>
+                  <input type="text" name="moto_cor" placeholder="Ex: Preta" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Placa</label>
+                  <input type="text" name="moto_placa" id="input-moto-placa" placeholder="Ex: XYZ9A87" maxlength="8" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs uppercase">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-stone-600 mb-0.5">Ano / Modelo</label>
+                  <input type="text" name="moto_ano" id="input-moto-ano" placeholder="Ex: 2023/2023" maxlength="9" class="w-full rounded border-stone-300 border px-2.5 py-1.5 text-xs">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submissão -->
+        <div class="bg-stone-50 border border-stone-300 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="text-xs text-stone-600 max-w-2xl space-y-1">
+            <p><strong>Declaração de Veracidade:</strong> Declaro que as informações prestadas são autênticas, sob as penas cominadas no Art. 312 do CPM e Portaria nº 290-DGP.</p>
+          </div>
+
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <button type="reset" class="px-4 py-2.5 rounded-lg border border-stone-300 text-stone-700 bg-white hover:bg-stone-100 text-sm font-medium transition">
+              Limpar
+            </button>
+            <button type="submit" id="btn-submit-solicitacao" class="flex-1 md:flex-initial px-6 py-2.5 rounded-lg bg-eb-olive hover:bg-eb-darkOlive text-white text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 border border-eb-gold/30">
+              <i data-lucide="send" class="w-4 h-4"></i> Enviar Solicitação ao Administrador
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- ÁREA DO ADMINISTRADOR -->
+    <section id="view-admin" class="hidden space-y-6">
+
+      <!-- Login Card -->
+      <div id="admin-login-card" class="max-w-md mx-auto my-12 bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden">
+        <div class="bg-eb-dark p-6 text-center text-white border-b-4 border-eb-gold">
+          <div class="w-14 h-14 mx-auto rounded-full bg-eb-olive border-2 border-eb-gold flex items-center justify-center mb-3">
+            <i data-lucide="lock" class="w-7 h-7 text-eb-goldLight"></i>
+          </div>
+          <h2 class="text-lg font-bold">Autenticação Administrativa</h2>
+          <p class="text-xs text-stone-300">Divisão Administrativa / Seção de Pagamento</p>
+        </div>
+
+        <form onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Usuário</label>
+            <input type="text" id="admin-user-input" required placeholder="root" value="root" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-700 mb-1">Senha</label>
+            <input type="password" id="admin-pass-input" required placeholder="Sua senha administrativa" value="aeromovel" class="w-full rounded-lg border-stone-300 border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eb-olive">
+          </div>
+
+          <div id="login-error-msg" class="hidden text-xs font-semibold text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
+            Usuário ou senha inválidos. Verifique as credenciais.
+          </div>
+
+          <button type="submit" class="w-full py-2.5 rounded-lg bg-eb-olive hover:bg-eb-darkOlive text-white text-sm font-bold shadow transition flex items-center justify-center gap-2">
+            <i data-lucide="log-in" class="w-4 h-4"></i> Acessar Painel Central
+          </button>
+        </form>
+      </div>
+
+      <!-- Dashboard do Administrador -->
+      <div id="admin-dashboard-panel" class="hidden space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-eb-olive font-bold border border-stone-200">
+              <i data-lucide="shield-alert" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-stone-800">Painel do Administrador - Gestão Centralizada</h2>
+              <p class="text-xs text-stone-500">Documentos salvos e sincronizados no Vercel Blob e Vercel Postgres</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="recarregarTabelaServidor()" class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium rounded-lg border border-stone-300 flex items-center gap-1.5 transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Atualizar
+            </button>
+            <button onclick="handleAdminLogout()" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sair
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-stone-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-stone-800 text-sm uppercase tracking-wide">Solicitações Recebidas no Servidor</h3>
+              <span id="total-registros-badge" class="px-2 py-0.5 rounded-full text-xs bg-stone-100 text-stone-700 border border-stone-200 font-semibold">0 itens</span>
+            </div>
+
+            <div class="relative w-full sm:w-64">
+              <input type="text" id="filtro-busca" oninput="filtrarTabelaAdmin()" placeholder="Buscar favorecido, CPF ou OM..." class="w-full pl-3 pr-3 py-1.5 text-xs rounded-lg border-stone-300 border focus:outline-none focus:ring-1 focus:ring-eb-olive">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-stone-200 text-left text-xs">
+              <thead class="bg-stone-50 font-semibold text-stone-600 uppercase">
+                <tr>
+                  <th class="px-4 py-3">Data / ID</th>
+                  <th class="px-4 py-3">Militar Favorecido</th>
+                  <th class="px-4 py-3">Modalidade / Motivo</th>
+                  <th class="px-4 py-3">Origem &rarr; Destino</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3 text-center">Documentos na Nuvem</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-solicitacoes-body" class="divide-y divide-stone-100"></tbody>
+            </table>
+          </div>
+
+          <div id="empty-state-admin" class="hidden py-12 text-center text-stone-500">
+            <i data-lucide="inbox" class="w-12 h-12 mx-auto text-stone-300 mb-2"></i>
+            <p class="font-medium text-sm">Nenhuma solicitação encontrada no servidor.</p>
+            <p class="text-xs text-stone-400">Os formulários enviados por qualquer militar aparecerão automaticamente aqui.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL PÓS-ENVIO -->
+  <div id="modal-pos-envio" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border-2 border-eb-gold transform transition-all my-8">
+      <div class="text-center mb-5">
+        <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3 shadow-inner">
+          <i data-lucide="check-circle-2" class="w-9 h-9"></i>
+        </div>
+        <span id="pos-envio-id-tag" class="px-3 py-1 bg-stone-100 text-stone-700 font-mono text-xs rounded-full border border-stone-200 inline-block mb-1"></span>
+        <h3 class="text-xl font-bold text-stone-900">Solicitação Enviada com Sucesso ao Servidor!</h3>
+      </div>
+
+      <div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 sm:p-5 mb-6 text-center shadow-sm">
+        <div class="flex items-center justify-center gap-2 text-amber-900 font-bold text-base sm:text-lg">
+          <i data-lucide="alert-circle" class="w-6 h-6 text-amber-600 shrink-0"></i>
+          <span>Atenção: Próxima Etapa</span>
+        </div>
+        <p class="text-amber-950 font-extrabold text-sm sm:text-base mt-2 tracking-wide leading-snug">
+          "Procure a Divisão Administrativa para assinatura do processo e entrega dos documentos a serem anexados"
+        </p>
+      </div>
+
+      <div class="bg-stone-50 rounded-xl p-4 border border-stone-200 mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="file-check" class="w-4 h-4 text-eb-olive"></i>
+            Relação de Documentos para Apresentação
+          </h4>
+          <span id="pos-envio-modalidade-badge" class="text-[11px] font-semibold text-eb-olive"></span>
+        </div>
+        <ul id="pos-envio-lista-docs" class="text-xs text-stone-600 space-y-1.5 list-disc list-inside"></ul>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2 border-t border-stone-200">
+        <button id="btn-rebaixar-pdf" onclick="baixarPDFDocumentosAtual()"
+          class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold flex items-center justify-center gap-2 transition">
+          <i data-lucide="download" class="w-4 h-4 text-eb-gold"></i>
+          Baixar Minha Via (PDF)
+        </button>
+        <button onclick="fecharModalPosEnvio()"
+          class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-eb-olive hover:bg-eb-darkOlive text-white text-xs font-bold shadow transition flex items-center justify-center gap-2">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          Entendido / Concluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação Customizado -->
+  <div id="custom-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-stone-200 text-center">
+      <div class="w-12 h-12 mx-auto rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      </div>
+      <h3 id="modal-title" class="text-base font-bold text-stone-800 mb-1">Atenção</h3>
+      <p id="modal-desc" class="text-xs text-stone-600 mb-6">Deseja realmente prosseguir?</p>
+      <div class="flex gap-3 justify-center">
+        <button id="modal-btn-cancel" class="px-4 py-2 text-xs font-semibold rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100">Cancelar</button>
+        <button id="modal-btn-confirm" class="px-4 py-2 text-xs font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-stone-900 text-stone-400 border-t border-stone-800 py-6 text-xs text-center">
+    <div class="max-w-7xl mx-auto px-4 space-y-1">
+      <p class="font-semibold text-stone-300">5º BATALHÃO DE INFANTARIA LEVE &bull; REGIMENTO ITORORÓ</p>
+      <p>Sistema Centralizado de Confecção Documental &bull; Vercel Serverless Architecture</p>
+    </div>
+  </footer>
+
+  <!-- LÓGICA JAVASCRIPT -->
+  <script>
+    const AUTH_SESSION_KEY = 'sisdoc_admin_token';
+    let dependentesList = [];
+    let ultimaSolicitacaoCriada = null;
+    let solicitacoesServidor = [];
+
+    // Algoritmo Oficial de CPF
+    function validarCPF(cpfLimpo) {
+      const cpf = cpfLimpo.replace(/\D/g, '');
+      if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+
+      let soma = 0;
+      for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+      let resto = 11 - (soma % 11);
+      let dig1 = (resto === 10 || resto === 11) ? 0 : resto;
+      if (dig1 !== parseInt(cpf.charAt(9))) return false;
+
+      soma = 0;
+      for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+      resto = 11 - (soma % 11);
+      let dig2 = (resto === 10 || resto === 11) ? 0 : resto;
+      return dig2 === parseInt(cpf.charAt(10));
+    }
+
+    function aplicarMascaraCPF(valor) {
+      return valor.replace(/\D/g, '').slice(0, 11)
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+
+    function aplicarMascaraTelefone(valor) {
+      const v = valor.replace(/\D/g, '').slice(0, 11);
+      if (v.length > 10) return v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+      if (v.length > 6) return v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+      if (v.length > 2) return v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+      return v;
+    }
+
+    function aplicarMascaraData(valor) {
+      return valor.replace(/\D/g, '').slice(0, 8)
+        .replace(/(\d{2})(\d)/, '$1/$2')
+        .replace(/(\d{2})(\d)/, '$1/$2');
+    }
+
+    function vincularMascarasFormulario() {
+      const elCpf = document.getElementById('input-cpf');
+      if (elCpf) elCpf.addEventListener('input', (e) => e.target.value = aplicarMascaraCPF(e.target.value));
+
+      const elTel = document.getElementById('input-telefone');
+      if (elTel) elTel.addEventListener('input', (e) => e.target.value = aplicarMascaraTelefone(e.target.value));
+
+      const elDataDeslig = document.getElementById('input-data-desligamento');
+      if (elDataDeslig) elDataDeslig.addEventListener('input', (e) => e.target.value = aplicarMascaraData(e.target.value));
+
+      const elIniCurso = document.getElementById('input-inicio-curso');
+      if (elIniCurso) elIniCurso.addEventListener('input', (e) => e.target.value = aplicarMascaraData(e.target.value));
+
+      const elFimCurso = document.getElementById('input-termino-curso');
+      if (elFimCurso) elFimCurso.addEventListener('input', (e) => e.target.value = aplicarMascaraData(e.target.value));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      vincularMascarasFormulario();
+      handleModalidadeChange();
+    });
+
+    function switchView(view) {
+      const viewMilitar = document.getElementById('view-militar');
+      const viewAdmin = document.getElementById('view-admin');
+      const btnMilitar = document.getElementById('nav-btn-militar');
+      const btnAdmin = document.getElementById('nav-btn-admin');
+
+      if (view === 'militar') {
+        viewMilitar.classList.remove('hidden');
+        viewAdmin.classList.add('hidden');
+        btnMilitar.className = 'nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all bg-eb-olive text-white shadow-sm border border-eb-gold/40';
+        btnAdmin.className = 'nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all text-stone-300 hover:text-white hover:bg-stone-800';
+      } else {
+        viewMilitar.classList.add('hidden');
+        viewAdmin.classList.remove('hidden');
+        btnAdmin.className = 'nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all bg-eb-olive text-white shadow-sm border border-eb-gold/40';
+        btnMilitar.className = 'nav-tab px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all text-stone-300 hover:text-white hover:bg-stone-800';
+        verificarSessaoAdmin();
+      }
+      lucide.createIcons();
+    }
+
+    function handleModalidadeChange() {
+      const selectedRadio = document.querySelector('input[name="modalidade"]:checked');
+      if (!selectedRadio) return;
+      const modalidade = selectedRadio.value;
+
+      document.querySelectorAll('.modalidade-card').forEach(card => {
+        card.classList.remove('border-eb-olive', 'bg-eb-sand/40', 'ring-1', 'ring-eb-olive');
+      });
+      selectedRadio.closest('.modalidade-card').classList.add('border-eb-olive', 'bg-eb-sand/40', 'ring-1', 'ring-eb-olive');
+
+      const campoDesligamento = document.getElementById('campo-desligamento');
+      const campoPeriodoCurso = document.getElementById('campo-periodo-curso');
+      const inputMotivo = document.getElementById('input-motivo');
+      const selectTipoMov = document.getElementById('select-tipo-movimentacao');
+
+      const rBagagemSim = document.querySelector('input[name="opt_bagagem"][value="sim"]');
+      const rBagagemNao = document.querySelector('input[name="opt_bagagem"][value="nao"]');
+      const rAjudaSim = document.querySelector('input[name="opt_ajuda_custo"][value="sim"]');
+      const rAjudaNao = document.querySelector('input[name="opt_ajuda_custo"][value="nao"]');
+      const rPassagensSim = document.querySelector('input[name="opt_passagens"][value="sim"]');
+      const rPassagensNao = document.querySelector('input[name="opt_passagens"][value="nao"]');
+      const rAutoNao = document.querySelector('input[name="opt_automovel"][value="nao"]');
+      const rMotoNao = document.querySelector('input[name="opt_motocicleta"][value="nao"]');
+
+      if (modalidade === 'transporte_pnr') {
+        inputMotivo.value = 'Mudança de residência na mesma Sede (Ocupação/Desocupação de PNR)';
+        selectTipoMov.value = 'Sem desligamento';
+        campoDesligamento.classList.add('hidden');
+        campoPeriodoCurso.classList.add('hidden');
+        rBagagemSim.checked = true;
+        rAjudaNao.checked = true;
+        rPassagensNao.checked = true;
+        rAutoNao.checked = true;
+        rMotoNao.checked = true;
+      } else if (modalidade === 'curso' || modalidade === 'curso_comp') {
+        inputMotivo.value = modalidade === 'curso' ? 'Curso de Especialização / Aperfeiçoamento' : 'Complemento de Ajuda de Custo - Curso';
+        selectTipoMov.value = 'Sem desligamento';
+        campoDesligamento.classList.add('hidden');
+        campoPeriodoCurso.classList.remove('hidden');
+
+        if (modalidade === 'curso_comp') {
+          rAjudaSim.checked = true;
+          rBagagemNao.checked = true;
+          rPassagensNao.checked = true;
+          rAutoNao.checked = true;
+          rMotoNao.checked = true;
+        } else {
+          rAjudaSim.checked = true;
+          rPassagensSim.checked = true;
+          rBagagemNao.checked = true;
+        }
+      } else {
+        inputMotivo.value = modalidade === 'movimentacao_comp' ? 'Complemento de Ajuda de Custo - Transferência' : 'Transferência por Necessidade do Serviço';
+        selectTipoMov.value = 'Com desligamento';
+        campoDesligamento.classList.remove('hidden');
+        campoPeriodoCurso.classList.add('hidden');
+
+        if (modalidade === 'movimentacao_comp') {
+          rAjudaSim.checked = true;
+          rBagagemNao.checked = true;
+          rPassagensNao.checked = true;
+        } else {
+          rAjudaSim.checked = true;
+          rBagagemSim.checked = true;
+          rPassagensSim.checked = true;
+        }
+      }
+    }
+
+    function toggleDependentesGroup() {
+      const check = document.getElementById('check-possui-dep');
+      const container = document.getElementById('container-dependentes');
+      const lblAcompanham = document.getElementById('lbl-dep-acompanham');
+      const emptyMsg = document.getElementById('empty-dependentes-msg');
+
+      if (check.checked) {
+        container.classList.remove('hidden');
+        lblAcompanham.classList.remove('hidden');
+        emptyMsg.classList.add('hidden');
+        if (dependentesList.length === 0) adicionarDependente();
+      } else {
+        container.classList.add('hidden');
+        lblAcompanham.classList.add('hidden');
+        emptyMsg.classList.remove('hidden');
+        dependentesList = [];
+        renderizarDependentes();
+      }
+    }
+
+    function adicionarDependente(nome = '', parentesco = 'Esposa', dtNasc = '', idade = '') {
+      dependentesList.push({ id: Date.now() + Math.random(), nome, parentesco, dtNasc, idade });
+      renderizarDependentes();
+    }
+
+    function removerDependente(id) {
+      dependentesList = dependentesList.filter(d => d.id !== id);
+      renderizarDependentes();
+      if (dependentesList.length === 0) {
+        document.getElementById('check-possui-dep').checked = false;
+        toggleDependentesGroup();
+      }
+    }
+
+    function atualizarDependente(id, field, value) {
+      const dep = dependentesList.find(d => d.id === id);
+      if (dep) dep[field] = value;
+    }
+
+    function renderizarDependentes() {
+      const listaEl = document.getElementById('lista-dependentes');
+      listaEl.innerHTML = '';
+
+      dependentesList.forEach((dep) => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 sm:grid-cols-4 gap-2 items-center p-2.5 rounded-lg border border-stone-200 bg-stone-50';
+        div.innerHTML = `
+          <div class="sm:col-span-1">
+            <input type="text" placeholder="Nome do Dependente" value="${dep.nome}" 
+              oninput="atualizarDependente(${dep.id}, 'nome', this.value.toUpperCase())" 
+              class="w-full rounded border-stone-300 border px-2.5 py-1 text-xs uppercase">
+          </div>
+          <div>
+            <select onchange="atualizarDependente(${dep.id}, 'parentesco', this.value)" 
+              class="w-full rounded border-stone-300 border px-2.5 py-1 text-xs bg-white">
+              <option value="Esposa" ${dep.parentesco === 'Esposa' ? 'selected' : ''}>Esposa</option>
+              <option value="Companheira" ${dep.parentesco === 'Companheira' ? 'selected' : ''}>Companheira</option>
+              <option value="Filho" ${dep.parentesco === 'Filho' ? 'selected' : ''}>Filho</option>
+              <option value="Filha" ${dep.parentesco === 'Filha' ? 'selected' : ''}>Filha</option>
+              <option value="Enteado(a)" ${dep.parentesco === 'Enteado(a)' ? 'selected' : ''}>Enteado(a)</option>
+              <option value="Mãe" ${dep.parentesco === 'Mãe' ? 'selected' : ''}>Mãe</option>
+              <option value="Pai" ${dep.parentesco === 'Pai' ? 'selected' : ''}>Pai</option>
+              <option value="Outro" ${dep.parentesco === 'Outro' ? 'selected' : ''}>Outro</option>
+            </select>
+          </div>
+          <div>
+            <input type="text" placeholder="Dt Nasc (DD/MM/AAAA)" value="${dep.dtNasc}" maxlength="10" 
+              oninput="this.value = aplicarMascaraData(this.value); atualizarDependente(${dep.id}, 'dtNasc', this.value)" 
+              class="w-full rounded border-stone-300 border px-2.5 py-1 text-xs">
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" placeholder="Idade" value="${dep.idade}" maxlength="3" 
+              oninput="this.value = this.value.replace(/\\D/g, ''); atualizarDependente(${dep.id}, 'idade', this.value)" 
+              class="w-full rounded border-stone-300 border px-2.5 py-1 text-xs">
+            <button type="button" onclick="removerDependente(${dep.id})" class="text-rose-500 hover:text-rose-700 p-1">
+              <i data-lucide="trash" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+        listaEl.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+
+    function obterListaDocumentosNecessarios(sol) {
+      let docs = [];
+      const docAut = sol.documentoAutorizador ? sol.documentoAutorizador : 'Documento Autorizador / Publicação';
+
+      if (sol.modalidade === 'transporte_pnr') {
+        docs.push('01 (uma) cópia autenticada do BAR da ocupação de PNR');
+        docs.push('01 (uma) cópia autenticada do último contracheque com o desconto do PNR');
+        docs.push('Cópia do DIEx de Opção assinado pelo requerente');
+      } else if (sol.modalidade && sol.modalidade.includes('comp')) {
+        docs.push(`01 (uma) cópia autenticada do ${docAut}`);
+        docs.push('01 (uma) cópia autenticada do BI de transcrição do Adiantamento DCEM');
+        docs.push('01 (uma) cópia autenticada do contracheque do mês em que solicitou a ajuda de custo inicial');
+        docs.push('01 (uma) cópia autenticada do contracheque recente atualizado');
+        docs.push('01 (uma) cópia autenticada do BAR que publicou a transcrição do DIEx de Opção inicial');
+        docs.push('01 (uma) cópia autenticada da Declaração de Beneficiários');
+        docs.push('Cópia do DIEx de Opção assinado pelo requerente');
+      } else {
+        docs.push(`01 (uma) cópia autenticada do ${docAut}`);
+        docs.push('01 (uma) cópia do Boletim Interno (BI) de transcrição da movimentação ou designação');
+        docs.push('01 (uma) cópia autenticada do último contracheque');
+        docs.push('01 (uma) cópia autenticada da Declaração de Beneficiários atualizada');
+        if (sol.opcoes && sol.opcoes.automovel) docs.push('01 (uma) cópia autenticada do CRLV (documento) do automóvel');
+        if (sol.opcoes && sol.opcoes.motocicleta) docs.push('01 (uma) cópia autenticada do CRLV (documento) da motocicleta');
+        if (sol.possuiDependentes && sol.dependentes && sol.dependentes.length > 0) {
+          docs.push('Cópia autenticada das Certidões de Nascimento / Casamento ou Termo de União Estável');
+        }
+        docs.push('Cópia do DIEx de Opção assinado pelo requerente');
+      }
+      return docs;
+    }
+
+    function obterDataExtensoMilitar() {
+      const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      const d = new Date();
+      return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+    }
+
+    // GERAÇÃO DE BLOBS
+    function gerarBlobPDF(sol) {
+      return new Promise((resolve) => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const docs = obterListaDocumentosNecessarios(sol);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('MINISTÉRIO DA DEFESA', 105, 18, { align: 'center' });
+        doc.text('EXÉRCITO BRASILEIRO', 105, 23, { align: 'center' });
+        doc.text('5º BATALHÃO DE INFANTARIA LEVE', 105, 28, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text('(Regimento Itororó / 1631) - Divisão Administrativa', 105, 33, { align: 'center' });
+
+        doc.setDrawColor(75, 83, 32);
+        doc.setLineWidth(0.8);
+        doc.line(20, 37, 190, 37);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(30, 35, 27);
+        doc.text('RELAÇÃO DE DOCUMENTOS PARA ANEXAÇÃO AO PROCESSO', 105, 45, { align: 'center' });
+
+        doc.setDrawColor(200, 200, 200);
+        doc.setFillColor(248, 248, 248);
+        doc.roundedRect(20, 50, 170, 32, 2, 2, 'FD');
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Protocolo:', 24, 56);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${sol.id} (${sol.dataCriacao})`, 45, 56);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Militar:', 24, 62);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${sol.posto} ${sol.nomeCompleto} - Idt: ${sol.idtMilitar} - CPF: ${sol.cpf}`, 45, 62);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Destino:', 24, 68);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${sol.omDestino || '5º BIL'} | Motivo: ${sol.motivoMovimentacao || 'N/I'}`, 45, 68);
+
+        doc.setFillColor(254, 243, 199);
+        doc.setDrawColor(217, 119, 6);
+        doc.setLineWidth(0.6);
+        doc.roundedRect(20, 87, 170, 24, 2, 2, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(146, 64, 14);
+        doc.text('ORIENTAÇÃO OBRIGATÓRIA AO MILITAR:', 105, 93, { align: 'center' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(120, 53, 15);
+        const splitPhrase = doc.splitTextToSize('"Procure a Divisão Administrativa para assinatura do processo e entrega dos documentos a serem anexados"', 160);
+        doc.text(splitPhrase, 105, 99, { align: 'center' });
+
+        doc.setTextColor(20, 20, 20);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text('DOCUMENTOS EXIGIDOS CONFORME A MODALIDADE:', 20, 120);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        let yPos = 128;
+        docs.forEach((item, index) => {
+          doc.setDrawColor(80, 80, 80);
+          doc.rect(22, yPos - 3.5, 4, 4);
+          const splitItem = doc.splitTextToSize(`${index + 1}. ${item}`, 155);
+          doc.text(splitItem, 29, yPos);
+          yPos += (splitItem.length * 5) + 4;
+        });
+
+        const blob = doc.output('blob');
+        resolve(blob);
+      });
+    }
+
+    async function gerarBlobDIEx(sol) {
+      const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+      const anexos = obterListaDocumentosNecessarios(sol);
+
+      const doc = new Document({
+        styles: { default: { document: { run: { font: 'Calibri', size: 21 } } } },
+        sections: [{
+          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+          children: [
+            new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'MINISTÉRIO DA DEFESA', bold: true, size: 20 })] }),
+            new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'EXÉRCITO BRASILEIRO', bold: true, size: 20 })] }),
+            new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '5º BATALHÃO DE INFANTARIA LEVE', bold: true, size: 20 })] }),
+            new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: 'REGIMENTO ITORORÓ', bold: true, size: 20 })] }),
+            new Paragraph({
+              spacing: { after: 150 },
+              children: [new TextRun({ text: 'DIEx S/Nº', bold: true }), new TextRun({ text: `\t\t\t\tLorena - SP, ${obterDataExtensoMilitar()}.` })]
+            }),
+            new Paragraph({ spacing: { after: 50 }, children: [new TextRun({ text: 'Do ', bold: true }), new TextRun({ text: `${sol.posto} ${sol.nomeCompleto}` })] }),
+            new Paragraph({ spacing: { after: 50 }, children: [new TextRun({ text: 'Ao ', bold: true }), new TextRun({ text: 'Sr Chefe da Divisão Administrativa' })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: 'Assunto: ', bold: true }), new TextRun({ text: 'Solicitação de Indenização de Transporte e Ajuda de Custo' })] }),
+            new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: 'Anexos: ', bold: true })] }),
+            ...anexos.map((anx, i) => new Paragraph({ indent: { left: 400 }, spacing: { after: 30 }, children: [new TextRun({ text: `${i + 1}) ${anx}` })] })),
+            new Paragraph({
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { before: 150, after: 100 },
+              children: [new TextRun({ text: `1. Tendo em vista a minha movimentação/designação para ${sol.omDestino}, solicito as providências decorrentes com amparo na Portaria nº 290-DGP, de 9 DEZ 13.` })]
+            }),
+            new Paragraph({
+              alignment: AlignmentType.RIGHT,
+              spacing: { before: 400 },
+              children: [new TextRun({ text: `${sol.nomeCompleto} – ${sol.posto}`, bold: true })]
+            })
+          ]
+        }]
+      });
+
+      return await Packer.toBlob(doc);
+    }
+
+    async function gerarBlobNotaBAR(sol) {
+      const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+      const doc = new Document({
+        styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
+        sections: [{
+          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+          children: [
+            new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 150 }, children: [new TextRun({ text: `Solicitou ao Ch Div Adm a Indenização de Transporte em virtude de movimentação para ${sol.omDestino}, conforme ${sol.documentoAutorizador}.` })] }),
+            new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '1. Favorecido: ', bold: true }), new TextRun({ text: `${sol.posto} ${sol.nomeCompleto} - Idt: ${sol.idtMilitar} - CPF: ${sol.cpf}` })] }),
+            new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '2. OM de Destino: ', bold: true }), new TextRun({ text: sol.omDestino })] }),
+            new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '3. Domicílio Bancário: ', bold: true }), new TextRun({ text: `Banco: ${sol.banco} | Ag: ${sol.agencia} | CC: ${sol.contaCorrente}` })] })
+          ]
+        }]
+      });
+      return await Packer.toBlob(doc);
+    }
+
+    async function gerarBlobOP(sol) {
+      const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+      const doc = new Document({
+        styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
+        sections: [{
+          properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+          children: [
+            new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'ORDEM DE PAGAMENTO DE INDENIZAÇÕES', bold: true, size: 24 })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: 'Processo: ', bold: true }), new TextRun({ text: sol.id })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: 'Favorecido: ', bold: true }), new TextRun({ text: `${sol.posto} ${sol.nomeCompleto}` })] }),
+            new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: 'CPF: ', bold: true }), new TextRun({ text: sol.cpf })] })
+          ]
+        }]
+      });
+      return await Packer.toBlob(doc);
+    }
+
+    // UPLOAD E SUBMISSÃO
+    async function subirArquivoParaVercel(blob, nomeArquivo) {
+      const response = await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}`, {
+        method: 'POST',
+        body: blob,
+      });
+      if (!response.ok) throw new Error(`Falha no upload de ${nomeArquivo}`);
+      const data = await response.json();
+      return data.url;
+    }
+
+    async function handleSalvarSolicitacao(e) {
+      e.preventDefault();
+      const form = document.getElementById('form-solicitacao');
+      const formData = new FormData(form);
+
+      const cpf = formData.get('cpf') || '';
+      if (!validarCPF(cpf)) {
+        showToast('CPF inválido! Verifique os dígitos informados.', 'error');
+        document.getElementById('input-cpf').focus();
+        return;
+      }
+
+      const overlay = document.getElementById('loading-overlay');
+      const overlayMsg = document.getElementById('loading-overlay-msg');
+      overlay.classList.remove('hidden');
+
+      try {
+        const idGerado = 'REQ-' + Date.now().toString().slice(-6);
+        const solicitacao = {
+          id: idGerado,
+          dataCriacao: new Date().toLocaleDateString('pt-BR'),
+          status: 'Pendente',
+          modalidade: formData.get('modalidade'),
+          posto: formData.get('posto'),
+          nomeCompleto: (formData.get('nomeCompleto') || '').toUpperCase().trim(),
+          arma: formData.get('arma'),
+          idtMilitar: formData.get('idtMilitar'),
+          cpf: cpf,
+          precCp: formData.get('precCp'),
+          telefone: formData.get('telefone'),
+          email: formData.get('email'),
+          omAtual: formData.get('omAtual'),
+          banco: formData.get('banco'),
+          agencia: formData.get('agencia'),
+          contaCorrente: formData.get('contaCorrente'),
+          omOrigem: formData.get('omOrigem'),
+          omDestino: formData.get('omDestino'),
+          cidadeResidenciaFutura: formData.get('cidadeResidenciaFutura') || '',
+          documentoAutorizador: formData.get('documentoAutorizador'),
+          motivoMovimentacao: formData.get('motivoMovimentacao'),
+          dataDesligamento: formData.get('dataDesligamento') || '',
+          dataInicioCurso: formData.get('dataInicioCurso') || '',
+          dataTerminoCurso: formData.get('dataTerminoCurso') || '',
+          dataAjusteContas: formData.get('dataAjusteContas'),
+          tipoMovimentacao: formData.get('tipoMovimentacao'),
+          opcoes: {
+            ajudaCusto: formData.get('opt_ajuda_custo') === 'sim',
+            bagagem: formData.get('opt_bagagem') === 'sim',
+            passagens: formData.get('opt_passagens') === 'sim',
+            automovel: formData.get('opt_automovel') === 'sim',
+            motocicleta: formData.get('opt_motocicleta') === 'sim',
+          },
+          possuiDependentes: document.getElementById('check-possui-dep').checked,
+          dependentesAcompanham: document.getElementById('check-dep-acompanham').checked,
+          dependentes: [...dependentesList],
+          veiculos: {
+            auto: { marcaModelo: formData.get('auto_marca_modelo') || '', cor: formData.get('auto_cor') || '', placa: formData.get('auto_placa') || '', ano: formData.get('auto_ano') || '' },
+            moto: { marcaModelo: formData.get('moto_marca_modelo') || '', cor: formData.get('moto_cor') || '', placa: formData.get('moto_placa') || '', ano: formData.get('moto_ano') || '' }
+          }
+        };
+
+        overlayMsg.textContent = 'Gerando documentos oficiais...';
+        const blobPdf = await gerarBlobPDF(solicitacao);
+        const blobDiex = await gerarBlobDIEx(solicitacao);
+        const blobBar = await gerarBlobNotaBAR(solicitacao);
+        const blobOp = await gerarBlobOP(solicitacao);
+
+        overlayMsg.textContent = 'Salvando arquivos no Vercel Blob...';
+        const nomeMilitar = solicitacao.nomeCompleto.replace(/\s+/g, '_');
+        let urlPdf = '', urlDiex = '', urlBar = '', urlOp = '';
+
+        try {
+          urlPdf = await subirArquivoParaVercel(blobPdf, `Checklist_${solicitacao.id}_${nomeMilitar}.pdf`);
+          urlDiex = await subirArquivoParaVercel(blobDiex, `DIEx_${solicitacao.id}_${nomeMilitar}.docx`);
+          urlBar = await subirArquivoParaVercel(blobBar, `BAR_${solicitacao.id}_${nomeMilitar}.docx`);
+          urlOp = await subirArquivoParaVercel(blobOp, `OP_${solicitacao.id}_${nomeMilitar}.docx`);
+        } catch (err) {
+          console.warn('Upload Blob ignorado no ambiente local:', err);
+        }
+
+        overlayMsg.textContent = 'Registrando processo no Vercel Postgres...';
+        const payload = { ...solicitacao, urlPdfDocs: urlPdf, urlDiex: urlDiex, urlNotaBar: urlBar, urlOp: urlOp };
+
+        const res = await fetch('/api/solicitacoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('Falha ao salvar no banco central');
+
+        ultimaSolicitacaoCriada = solicitacao;
+        form.reset();
+        dependentesList = [];
+        renderizarDependentes();
+        document.getElementById('check-possui-dep').checked = false;
+        toggleDependentesGroup();
+        handleModalidadeChange();
+
+        overlay.classList.add('hidden');
+        abrirModalPosEnvio(solicitacao);
+        baixarPDFDocumentosAtual();
+        showToast(`Solicitação ${solicitacao.id} enviada e salva na nuvem!`, 'success');
+      } catch (err) {
+        console.error(err);
+        overlay.classList.add('hidden');
+        showToast('Erro ao enviar solicitação ao servidor.', 'error');
+      }
+    }
+
+    function abrirModalPosEnvio(sol) {
+      const modal = document.getElementById('modal-pos-envio');
+      document.getElementById('pos-envio-id-tag').textContent = `Protocolo: ${sol.id} • ${sol.posto} ${sol.nomeCompleto}`;
+      const listaDocsEl = document.getElementById('pos-envio-lista-docs');
+      listaDocsEl.innerHTML = '';
+      obterListaDocumentosNecessarios(sol).forEach(docText => {
+        const li = document.createElement('li');
+        li.textContent = docText;
+        listaDocsEl.appendChild(li);
+      });
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function fecharModalPosEnvio() {
+      document.getElementById('modal-pos-envio').classList.add('hidden');
+    }
+
+    async function baixarPDFDocumentosAtual() {
+      if (ultimaSolicitacaoCriada) {
+        const blob = await gerarBlobPDF(ultimaSolicitacaoCriada);
+        saveAs(blob, `Checklist_${ultimaSolicitacaoCriada.posto}_${ultimaSolicitacaoCriada.nomeCompleto.replace(/\s+/g, '_')}_${ultimaSolicitacaoCriada.id}.pdf`);
+      }
+    }
+
+    // PAINEL ADMINISTRATIVO
+    function verificarSessaoAdmin() {
+      const token = sessionStorage.getItem(AUTH_SESSION_KEY);
+      const loginCard = document.getElementById('admin-login-card');
+      const dashboard = document.getElementById('admin-dashboard-panel');
+
+      if (token) {
+        loginCard.classList.add('hidden');
+        dashboard.classList.remove('hidden');
+        recarregarTabelaServidor();
+      } else {
+        loginCard.classList.remove('hidden');
+        dashboard.classList.add('hidden');
+      }
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const usuario = document.getElementById('admin-user-input').value.trim();
+      const senha = document.getElementById('admin-pass-input').value.trim();
+      const erroEl = document.getElementById('login-error-msg');
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario, senha })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          erroEl.classList.add('hidden');
+          sessionStorage.setItem(AUTH_SESSION_KEY, data.token);
+          showToast('Login realizado com sucesso!', 'success');
+          verificarSessaoAdmin();
+        } else {
+          erroEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        erroEl.classList.remove('hidden');
+      }
+    }
+
+    function handleAdminLogout() {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      verificarSessaoAdmin();
+      showToast('Sessão encerrada.', 'info');
+    }
+
+    async function recarregarTabelaServidor() {
+      const token = sessionStorage.getItem(AUTH_SESSION_KEY);
+      if (!token) return;
+
+      try {
+        const res = await fetch('/api/solicitacoes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.status === 401) {
+          handleAdminLogout();
+          return;
+        }
+        const dados = await res.json();
+        solicitacoesServidor = Array.isArray(dados) ? dados : [];
+        renderizarTabelaAdmin(solicitacoesServidor);
+      } catch (err) {
+        showToast('Não foi possível carregar os dados do servidor.', 'error');
+      }
+    }
+
+    function filtrarTabelaAdmin() {
+      const termo = (document.getElementById('filtro-busca').value || '').toLowerCase();
+      if (!termo) {
+        renderizarTabelaAdmin(solicitacoesServidor);
+        return;
+      }
+      const filtrados = solicitacoesServidor.filter(item => 
+        (item.nome_completo || '').toLowerCase().includes(termo) ||
+        (item.om_destino || '').toLowerCase().includes(termo) ||
+        (item.cpf || '').toLowerCase().includes(termo) ||
+        (item.id || '').toLowerCase().includes(termo)
+      );
+      renderizarTabelaAdmin(filtrados);
+    }
+
+    function renderizarTabelaAdmin(lista) {
+      const tbody = document.getElementById('tabela-solicitacoes-body');
+      const emptyState = document.getElementById('empty-state-admin');
+      const totalBadge = document.getElementById('total-registros-badge');
+      const badgeNav = document.getElementById('admin-badge-count');
+
+      totalBadge.textContent = `${lista.length} registro(s)`;
+      if (lista.length > 0) {
+        badgeNav.textContent = lista.length;
+        badgeNav.classList.remove('hidden');
+      } else {
+        badgeNav.classList.add('hidden');
+      }
+
+      if (lista.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      tbody.innerHTML = '';
+
+      lista.forEach(sol => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-stone-50/80 transition border-b border-stone-100';
+
+        const linkPdf = sol.url_pdf_docs ? `<a href="${sol.url_pdf_docs}" target="_blank" download class="px-2 py-1 bg-rose-700 hover:bg-rose-800 text-white rounded text-[10px] flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> PDF</a>` : '<span class="text-[10px] text-stone-400">Sem PDF</span>';
+        const linkDiex = sol.url_diex ? `<a href="${sol.url_diex}" target="_blank" download class="px-2 py-1 bg-eb-olive hover:bg-eb-darkOlive text-white rounded text-[10px] flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> DIEx</a>` : '<span class="text-[10px] text-stone-400">Sem DIEx</span>';
+        const linkBar = sol.url_nota_bar ? `<a href="${sol.url_nota_bar}" target="_blank" download class="px-2 py-1 bg-stone-700 hover:bg-stone-800 text-white rounded text-[10px] flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> BAR</a>` : '<span class="text-[10px] text-stone-400">Sem BAR</span>';
+        const linkOp = sol.url_op ? `<a href="${sol.url_op}" target="_blank" download class="px-2 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded text-[10px] flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> OP</a>` : '<span class="text-[10px] text-stone-400">Sem OP</span>';
+
+        tr.innerHTML = `
+          <td class="px-4 py-3 align-top whitespace-nowrap">
+            <span class="font-bold text-stone-800">${sol.id}</span>
+            <span class="block text-[10px] text-stone-500">${sol.data_criacao || ''}</span>
+          </td>
+          <td class="px-4 py-3 align-top">
+            <span class="font-bold text-stone-900">${sol.posto || ''} ${sol.nome_completo || ''}</span>
+            <span class="block text-[11px] text-stone-500">Idt: ${sol.idt_militar || ''} &bull; CPF: ${sol.cpf || ''}</span>
+          </td>
+          <td class="px-4 py-3 align-top">
+            <span class="text-[11px] font-semibold text-stone-800">${sol.modalidade || ''}</span>
+            <span class="block text-[11px] text-stone-600">${sol.motivo_movimentacao || ''}</span>
+          </td>
+          <td class="px-4 py-3 align-top text-[11px] text-stone-700">
+            <span>${sol.om_origem || ''}</span> &rarr; <span>${sol.om_destino || ''}</span>
+          </td>
+          <td class="px-4 py-3 align-top">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${sol.status || 'Pendente'}</span>
+          </td>
+          <td class="px-4 py-3 align-top text-center whitespace-nowrap">
+            <div class="flex items-center justify-center gap-1.5 flex-wrap max-w-xs">
+              ${linkPdf} ${linkDiex} ${linkBar} ${linkOp}
+              <button onclick="excluirSolicitacaoServidor('${sol.id}')" title="Excluir" class="p-1 text-stone-400 hover:text-rose-600"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    async function excluirSolicitacaoServidor(id) {
+      abrirModal('Excluir Solicitação', `Deseja realmente excluir a solicitação ${id}?`, async () => {
+        const token = sessionStorage.getItem(AUTH_SESSION_KEY);
+        try {
+          const res = await fetch(`/api/solicitacoes?id=${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            showToast(`Solicitação ${id} removida.`, 'info');
+            recarregarTabelaServidor();
+          }
+        } catch (err) {
+          showToast('Erro ao comunicar com o servidor.', 'error');
+        }
+      });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-stone-900 border-l-4 border-emerald-500 text-white',
+        error: 'bg-stone-900 border-l-4 border-rose-500 text-white',
+        info: 'bg-stone-900 border-l-4 border-eb-gold text-white'
+      };
+      toast.className = `p-4 rounded-lg shadow-xl text-xs flex items-center gap-3 transition-all duration-300 pointer-events-auto max-w-md ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i data-lucide="info" class="w-5 h-5 shrink-0"></i><div class="flex-1 font-medium">${message}</div>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function abrirModal(titulo, descricao, onConfirm) {
+      const modal = document.getElementById('custom-modal');
+      document.getElementById('modal-title').textContent = titulo;
+      document.getElementById('modal-desc').textContent = descricao;
+      const btnConfirm = document.getElementById('modal-btn-confirm');
+      const btnCancel = document.getElementById('modal-btn-cancel');
+
+      const fechar = () => modal.classList.add('hidden');
+      btnCancel.onclick = fechar;
+      btnConfirm.onclick = () => { fechar(); if (onConfirm) onConfirm(); };
+      modal.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
