@@ -1,6 +1,6 @@
 // public/js/gerador-cursos.js
 
-import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData, obterDataExtenso } from './utils.js';
+import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData } from './utils.js';
 
 let dependentes = [];
 let dadosFormularioAtual = null;
@@ -170,6 +170,10 @@ async function processarFormulario(e) {
     }
     const tabelaDep = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: rowsDep });
 
+    let txtDependentes = dadosFormularioAtual.dependentes.length > 0 
+      ? dadosFormularioAtual.dependentes.map(d => `${d.nome} (${d.parentesco})`).join("; ") 
+      : "NÃO HÁ";
+
     // --- 1. DIEx OPÇÃO CURSO ---
     const docDIEx = new Document({
       sections: [{
@@ -188,7 +192,7 @@ async function processarFormulario(e) {
           
           new Paragraph({ alignment: AlignmentType.JUSTIFIED, text: `1. Tendo em vista a minha designação para o ${dadosFormularioAtual.curso}, ${dadosFormularioAtual.omCurso} - ${dadosFormularioAtual.guarnicaoCurso}, conforme publicado no ${dadosFormularioAtual.adtDcem}, transcrito no ${dadosFormularioAtual.bi} solicito indenização de Ajuda de Custo e Passagens.`, spacing: { after: 200 } }),
           
-          new Paragraph({ text: "2. Informações Complementares:", bold: true }),
+          new Paragraph({ text: "2. Informações Complementares:" }),
           new Paragraph({ text: `a. Previsão da data de desligamento: ${dadosFormularioAtual.dataDesligamento}` }),
           new Paragraph({ text: `b. CPF: ${dadosFormularioAtual.cpf}` }),
           new Paragraph({ text: `c. Identidade: ${dadosFormularioAtual.idt}` }),
@@ -197,16 +201,41 @@ async function processarFormulario(e) {
           new Paragraph({ text: "f. Data do Ajuste de Contas: 30 dias após o recebimento da nota de crédito." }),
           new Paragraph({ text: `g. Telefone contato: ${dadosFormularioAtual.telefone}`, spacing: { after: 200 } }),
 
-          new Paragraph({ text: "3. Dependentes:", bold: true }),
+          new Paragraph({ text: "3. Dependentes:" }),
           tabelaDep,
 
-          new Paragraph({ alignment: AlignmentType.CENTER, text: `${dadosFormularioAtual.nome} - ${dadosFormularioAtual.posto}`, bold: true, spacing: { top: 600 } }),
-          new Paragraph({ alignment: AlignmentType.CENTER, text: `Identidade Militar ${dadosFormularioAtual.idt} / MD` })
+          new Paragraph({ alignment: AlignmentType.CENTER, text: `${dadosFormularioAtual.nome}  ${dadosFormularioAtual.posto}`, spacing: { top: 600 } }),
+          new Paragraph({ alignment: AlignmentType.CENTER, text: `${dadosFormularioAtual.idt} / MD` })
         ]
       }]
     });
 
-    // --- 2. ORDEM DE PAGAMENTO ---
+    // --- 2. NOTA DIEx DE OPÇÃO (CURSOS) ---
+    const docBAR = new Document({
+      sections: [{
+        properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+        children: [
+          new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
+            new TextRun({ text: `Solicitou ao Chefe da Divisão Administrativa do Batalhão, a Indenização de Ajuda de Custo e passagens em virtude da designação para a realização do ${dadosFormularioAtual.curso}.` })
+          ]}),
+          new Paragraph({ text: "1. Tipo de Movimentação: Sem desligamento;" }),
+          new Paragraph({ text: `2. Motivo da Movimentação: ${dadosFormularioAtual.curso};` }),
+          new Paragraph({ text: "3. OM de Origem: 5º BIL Guarnição: Lorena - SP;" }),
+          new Paragraph({ text: `4. OM de Destino: ${dadosFormularioAtual.omCurso} Guarnição: ${dadosFormularioAtual.guarnicaoCurso};` }),
+          new Paragraph({ text: `5. Documento que autorizou a movimentação: ${dadosFormularioAtual.adtDcem};` }),
+          new Paragraph({ text: "6. Data de ajuste de contas: Após o Recebimento do Crédito;" }),
+          new Paragraph({ text: "7. Tipo de Pagamento: Ajuda de Custo e passagens;" }),
+          new Paragraph({ text: `8. Dependentes: ${txtDependentes};` }),
+          new Paragraph({ text: `9. CPF: ${dadosFormularioAtual.cpf}; e` }),
+          new Paragraph({ text: `10. Domicílio Bancário: Banco: ${dadosFormularioAtual.banco} Agência: ${dadosFormularioAtual.agencia} Conta corrente: ${dadosFormularioAtual.conta}.`, spacing: { after: 200 } }),
+          
+          new Paragraph({ alignment: AlignmentType.JUSTIFIED, text: "Em consequência, o Ch Div Adm elabore o processo de pagamento da Indenização de Transporte e Ajuda de custo e demais interessados tomem as providências decorrentes.", spacing: { after: 400 } }),
+          new Paragraph({ alignment: AlignmentType.RIGHT, text: `(Nota p/ BAR nº - DA.5, ${dataAtual})` })
+        ]
+      }]
+    });
+
+    // --- 3. ORDEM DE PAGAMENTO ---
     const docOrdPagto = new Document({
       sections: [{
         properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
@@ -218,7 +247,7 @@ async function processarFormulario(e) {
           new Paragraph({ text: `3. Posto/Graduação: ${dadosFormularioAtual.posto};` }),
           new Paragraph({ text: `4. CPF: ${dadosFormularioAtual.cpf};` }),
           new Paragraph({ text: "5. Dados Bancários:" }),
-          new Paragraph({ text: `- Banco: ${dadosFormularioAtual.banco} Agência: ${dadosFormularioAtual.agencia} Conta: ${dadosFormularioAtual.conta}` }),
+          new Paragraph({ text: `- Banco: ${dadosFormularioAtual.banco} Agência: ${dadosFormularioAtual.agencia} Conta corrente: ${dadosFormularioAtual.conta}` }),
           new Paragraph({ text: "6. Indenizações:", spacing: { before: 100 } }),
           new Paragraph({ text: "- Ajuda de Custo: R$ XXXXXX;" }),
           new Paragraph({ text: "- Indenização de Transporte: R$ XXXXXX;" }),
@@ -235,6 +264,7 @@ async function processarFormulario(e) {
 
     // --- UPLOADS ---
     const blobDIEx = await window.docx.Packer.toBlob(docDIEx);
+    const blobBAR = await window.docx.Packer.toBlob(docBAR);
     const blobOrdPagto = await window.docx.Packer.toBlob(docOrdPagto);
     
     const docPdf = criarInstanciaPDF(dadosFormularioAtual);
@@ -243,6 +273,7 @@ async function processarFormulario(e) {
     const nomeBase = `${dadosFormularioAtual.posto}_${dadosFormularioAtual.nome.replace(/\s+/g, '_')}_${Date.now()}`;
     const urlPdfDocs = await subirArquivoParaServidor(blobPdf, `Checklist_Cursos_${nomeBase}.pdf`);
     const urlDiex = await subirArquivoParaServidor(blobDIEx, `DIEx_Cursos_${nomeBase}.docx`);
+    const urlNotaBar = await subirArquivoParaServidor(blobBAR, `NotaBAR_Cursos_${nomeBase}.docx`);
     const urlOrdPagto = await subirArquivoParaServidor(blobOrdPagto, `OrdPagto_Cursos_${nomeBase}.docx`);
 
     const payloadReq = {
@@ -255,7 +286,7 @@ async function processarFormulario(e) {
       cpf: dadosFormularioAtual.cpf,
       urlPdfDocs: urlPdfDocs,
       urlDiex: urlDiex,
-      urlNotaBar: '', // Aguardando texto
+      urlNotaBar: urlNotaBar,
       urlOp: urlOrdPagto
     };
 
@@ -263,6 +294,7 @@ async function processarFormulario(e) {
     if (!resDb.ok) throw new Error('Falha ao registrar no painel.');
 
     window.saveAs(blobDIEx, `DIEx_Cursos_${nomeBase}.docx`);
+    window.saveAs(blobBAR, `NotaBAR_Cursos_${nomeBase}.docx`);
     window.saveAs(blobOrdPagto, `OrdPagto_Cursos_${nomeBase}.docx`);
 
     document.getElementById('modal-sucesso').classList.remove('hidden');
