@@ -136,11 +136,11 @@
               <span class="block text-sm font-semibold text-stone-700 mb-2">Os dependentes acompanharão o militar?</span>
               <div class="flex gap-4">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="opt_acompanham" value="sim" checked class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4">
+                  <input type="radio" name="opt_acompanham" value="sim" checked class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="toggleListaDep('sim')">
                   <span class="text-sm font-medium">SIM</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="opt_acompanham" value="nao" class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4">
+                  <input type="radio" name="opt_acompanham" value="nao" class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="toggleListaDep('nao')">
                   <span class="text-sm font-medium">NÃO</span>
                 </label>
               </div>
@@ -155,7 +155,7 @@
           </div>
         </div>
 
-        <!-- 4. Dados do Veículo (Caixa com fundo cinza restaurada) -->
+        <!-- 4. Dados do Veículo -->
         <div class="bg-stone-50 border border-stone-200 rounded-xl p-5 space-y-6">
           <h2 class="text-sm font-bold text-stone-800 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="car" class="w-4 h-4 text-[#4B5320]"></i> 4. Dados dos Veículos
@@ -264,22 +264,35 @@
     // Gerencia a exibição dos blocos de dependentes com base na escolha "Sim/Não"
     function toggleDependentes(opcao) {
       const blocoAcompanhantes = document.getElementById('bloco-acompanhantes');
+      const acompanhamSim = document.querySelector('input[name="opt_acompanham"][value="sim"]').checked;
+      
+      if (opcao === 'sim') {
+        blocoAcompanhantes.classList.remove('hidden');
+        if (acompanhamSim) {
+          toggleListaDep('sim');
+        }
+      } else {
+        blocoAcompanhantes.classList.add('hidden');
+        toggleListaDep('nao');
+      }
+    }
+
+    // Exibe ou oculta a caixa de inserção e botão adicionar
+    function toggleListaDep(opcao) {
       const btnAddDep = document.getElementById('btn-add-dep');
       const containerLista = document.getElementById('container-lista-dependentes');
       
       if (opcao === 'sim') {
-        blocoAcompanhantes.classList.remove('hidden');
         btnAddDep.classList.remove('hidden');
         containerLista.classList.remove('hidden');
       } else {
-        blocoAcompanhantes.classList.add('hidden');
         btnAddDep.classList.add('hidden');
         containerLista.classList.add('hidden');
       }
     }
   </script>
 
-  <!-- Script principal de geração de documento para Movimentação (próximo passo) -->
+  <!-- Script principal de geração de documento para Movimentação -->
   <script type="module" src="./js/gerador-movimentacao.js"></script>
 
 </body>
