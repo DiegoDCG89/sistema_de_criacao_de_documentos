@@ -107,9 +107,15 @@
 
         <!-- 3. Dependentes -->
         <div class="bg-stone-50 border border-stone-200 rounded-xl p-5">
-          <h2 class="text-sm font-bold text-stone-800 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="users" class="w-4 h-4 text-[#4B5320]"></i> 3. Dependentes
-          </h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-sm font-bold text-stone-800 uppercase tracking-wide flex items-center gap-2">
+              <i data-lucide="users" class="w-4 h-4 text-[#4B5320]"></i> 3. Dependentes
+            </h2>
+            <!-- Botão Adicionar (Oculto por padrão) -->
+            <button type="button" id="btn-add-dep" class="hidden text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition">
+              + Adicionar
+            </button>
+          </div>
           
           <div class="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
             <!-- Possui Dependentes? -->
@@ -140,6 +146,13 @@
                   <span class="text-sm font-medium">NÃO</span>
                 </label>
               </div>
+            </div>
+          </div>
+
+          <!-- Caixa da Tabela de Dependentes (Oculta por padrão) -->
+          <div id="container-lista-dependentes" class="hidden border-t border-stone-200 pt-4 mt-4">
+            <div id="lista-dependentes" class="space-y-3">
+              <!-- A lista será populada pelo JavaScript (gerador-movimentacao.js) -->
             </div>
           </div>
         </div>
@@ -228,7 +241,7 @@
           <i data-lucide="paperclip" class="w-4 h-4 text-[#4B5320]"></i> Documentos Necessários (Anexos):
         </h4>
         <ul id="lista-anexos-final" class="text-sm text-stone-700 list-disc list-inside space-y-1.5">
-          <!-- Injetado via JS -->
+          <!-- Injetado dinamicamente via JS -->
         </ul>
       </div>
 
@@ -250,18 +263,25 @@
   </div>
 
   <script>
-    // Lógica simples de interface embutida apenas para transição de blocos visuais
+    // Gerencia a exibição dos blocos de dependentes com base na escolha "Sim/Não"
     function toggleDependentes(opcao) {
       const blocoAcompanhantes = document.getElementById('bloco-acompanhantes');
+      const btnAddDep = document.getElementById('btn-add-dep');
+      const containerLista = document.getElementById('container-lista-dependentes');
+      
       if (opcao === 'sim') {
         blocoAcompanhantes.classList.remove('hidden');
+        btnAddDep.classList.remove('hidden');
+        containerLista.classList.remove('hidden');
       } else {
         blocoAcompanhantes.classList.add('hidden');
+        btnAddDep.classList.add('hidden');
+        containerLista.classList.add('hidden');
       }
     }
   </script>
 
-  <!-- Script principal de geração de documento -->
+  <!-- Script principal de geração de documento para Movimentação (próximo passo) -->
   <script type="module" src="./js/gerador-movimentacao.js"></script>
 
 </body>
