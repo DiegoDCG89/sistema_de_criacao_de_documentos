@@ -17,7 +17,7 @@
 
   <!-- Cabeçalho -->
   <header class="bg-[#1e231b] text-white border-b-4 border-[#c99700] shadow-md sticky top-0 z-40">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
       
       <!-- Logo e Título -->
       <div class="flex items-center space-x-3">
@@ -42,31 +42,29 @@
   </header>
 
   <!-- Menu de Seleção -->
-  <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-12">
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-12">
     <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 sm:p-10 text-center">
       <h2 class="text-2xl font-bold text-stone-800 mb-2">Requerimento Eletrônico</h2>
       <p class="text-stone-500 mb-10">Selecione a modalidade da sua solicitação para iniciar o preenchimento.</p>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left items-start">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left items-start">
         
         <!-- MÓDULO 1: Bagagem (Ativo com Animação) -->
         <a href="bagagem-pnr.html" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-left group cursor-pointer">
-          
           <div class="p-3 bg-stone-100 rounded-lg text-[#4B5320] group-hover:bg-[#4B5320] group-hover:text-white transition duration-300 mb-4">
             <i data-lucide="package" class="w-7 h-7"></i>
           </div>
-          <span class="block text-lg font-bold text-stone-900 mb-1">Bagagem na Mesma Sede</span>
+          <span class="block text-lg font-bold text-stone-900 mb-1">Bagagem Mesma Sede</span>
           <span class="block text-sm text-stone-500 group-hover:text-stone-700 transition-colors">Ocupação ou desocupação de PNR</span>
           
-          <!-- Lista de anexos oculta (expande no hover) -->
           <div class="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out w-full">
             <div class="overflow-hidden">
               <div class="mt-4 pt-4 border-t border-stone-200">
-                <span class="text-[11px] font-bold text-[#4B5320] uppercase tracking-wider mb-2 block flex items-center gap-1">
+                <span class="text-[10px] font-bold text-[#4B5320] uppercase tracking-wider mb-2 block flex items-center gap-1">
                   <i data-lucide="paperclip" class="w-3 h-3"></i> Anexos Necessários:
                 </span>
                 <ul class="text-xs text-stone-600 list-disc list-inside space-y-1.5">
-                  <li>Cópia do BAR de Ocupação de PNR</li>
+                  <li>Cópia do BAR da ocupação de PNR</li>
                   <li>Cópia do último contracheque</li>
                   <li>DIEx de Opção assinado</li>
                 </ul>
@@ -75,17 +73,44 @@
           </div>
         </a>
 
-        <!-- MÓDULO 2: Transferência (Futuro) -->
-        <button onclick="alert('Módulo em desenvolvimento. Estará disponível na próxima etapa!')" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-100 bg-stone-50 text-left opacity-75 cursor-not-allowed transition-all">
-          <div class="p-3 bg-stone-200 rounded-lg text-stone-400 mb-4">
+        <!-- MÓDULO 2: Movimentação (Ativo com Animação) -->
+        <a href="movimentacao.html" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-left group cursor-pointer">
+          <div class="p-3 bg-stone-100 rounded-lg text-[#4B5320] group-hover:bg-[#4B5320] group-hover:text-white transition duration-300 mb-4">
             <i data-lucide="truck" class="w-7 h-7"></i>
           </div>
-          <span class="block text-lg font-bold text-stone-700 mb-1">Transferência</span>
-          <span class="block text-sm text-stone-500">Movimentação por necessidade do serviço</span>
+          <span class="block text-lg font-bold text-stone-900 mb-1">Movimentação</span>
+          <span class="block text-sm text-stone-500 group-hover:text-stone-700 transition-colors">Transferência por necessidade do serviço</span>
+          
+          <div class="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out w-full">
+            <div class="overflow-hidden">
+              <div class="mt-4 pt-4 border-t border-stone-200">
+                <span class="text-[10px] font-bold text-[#4B5320] uppercase tracking-wider mb-2 block flex items-center gap-1">
+                  <i data-lucide="paperclip" class="w-3 h-3"></i> Anexos Necessários:
+                </span>
+                <ul class="text-xs text-stone-600 list-disc list-inside space-y-1.5">
+                  <li>Cópia autenticada do Adt DCEM</li>
+                  <li>Cópia do BI (Transcrição do Adt DCEM)</li>
+                  <li>Cópia do último contracheque</li>
+                  <li>Declaração de Beneficiários</li>
+                  <li>CRLV do Automóvel (Se for o caso)</li>
+                  <li>CRLV da Motocicleta (Se for o caso)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </a>
+
+        <!-- MÓDULO 3: Movimentação Complemento (Futuro) -->
+        <button onclick="alert('Módulo em desenvolvimento. Estará disponível na próxima etapa!')" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-100 bg-stone-50 text-left opacity-70 cursor-not-allowed transition-all">
+          <div class="p-3 bg-stone-200 rounded-lg text-stone-400 mb-4">
+            <i data-lucide="file-plus-2" class="w-7 h-7"></i>
+          </div>
+          <span class="block text-lg font-bold text-stone-700 mb-1">Complemento</span>
+          <span class="block text-sm text-stone-500">Reajuste de ajuda de custo de Movimentação</span>
         </button>
 
-        <!-- MÓDULO 3: Cursos (Futuro) -->
-        <button onclick="alert('Módulo em desenvolvimento. Estará disponível na próxima etapa!')" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-100 bg-stone-50 text-left opacity-75 cursor-not-allowed transition-all">
+        <!-- MÓDULO 4: Cursos (Futuro) -->
+        <button onclick="alert('Módulo em desenvolvimento. Estará disponível na próxima etapa!')" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-100 bg-stone-50 text-left opacity-70 cursor-not-allowed transition-all">
           <div class="p-3 bg-stone-200 rounded-lg text-stone-400 mb-4">
             <i data-lucide="graduation-cap" class="w-7 h-7"></i>
           </div>
