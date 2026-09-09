@@ -106,18 +106,16 @@
         </div>
 
         <!-- 3. Dependentes -->
-        <div class="bg-stone-50 border border-stone-200 rounded-xl p-5">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-sm font-bold text-stone-800 uppercase tracking-wide flex items-center gap-2">
-              <i data-lucide="users" class="w-4 h-4 text-[#4B5320]"></i> 3. Dependentes
-            </h2>
+        <div>
+          <div class="flex justify-between items-center border-b border-stone-200 pb-2 mb-4">
+            <h2 class="text-sm font-bold text-stone-800 uppercase tracking-wide">3. Dependentes</h2>
             <!-- Botão Adicionar (Oculto por padrão) -->
             <button type="button" id="btn-add-dep" class="hidden text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition">
               + Adicionar
             </button>
           </div>
           
-          <div class="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+          <div class="flex flex-col sm:flex-row gap-6 items-start sm:items-center mb-4">
             <!-- Possui Dependentes? -->
             <div>
               <span class="block text-sm font-semibold text-stone-700 mb-2">Possui dependentes?</span>
@@ -150,14 +148,14 @@
           </div>
 
           <!-- Caixa da Tabela de Dependentes (Oculta por padrão) -->
-          <div id="container-lista-dependentes" class="hidden border-t border-stone-200 pt-4 mt-4">
+          <div id="container-lista-dependentes" class="hidden">
             <div id="lista-dependentes" class="space-y-3">
               <!-- A lista será populada pelo JavaScript (gerador-movimentacao.js) -->
             </div>
           </div>
         </div>
 
-        <!-- 4. Dados do Veículo -->
+        <!-- 4. Dados do Veículo (Caixa com fundo cinza restaurada) -->
         <div class="bg-stone-50 border border-stone-200 rounded-xl p-5 space-y-6">
           <h2 class="text-sm font-bold text-stone-800 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="car" class="w-4 h-4 text-[#4B5320]"></i> 4. Dados dos Veículos
@@ -166,7 +164,7 @@
           <!-- Bloco do Carro -->
           <div>
             <div class="flex items-center gap-6 mb-3">
-              <span class="block text-sm font-semibold text-stone-700">Possui Carro?</span>
+              <span class="block text-sm font-semibold text-stone-700">Possui Automóvel?</span>
               <div class="flex gap-4">
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="opt_carro" value="sim" class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="document.getElementById('tabela-carro').classList.remove('hidden')">
