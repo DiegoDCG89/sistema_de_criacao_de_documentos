@@ -1,116 +1,91 @@
-import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
-// Permite processar o JSON (formulário) até 50mb
-app.use(express.json({ limit: '50mb' }));
+// Configurações para o servidor entender o envio de arquivos e JSON
+app.use(cors());
+app.use(express.json()); 
 
+// Indica ao servidor que a pasta "public" contém as páginas do site
+app.use(express.static(path.join(__dirname, 'public')));
+// Permite que o painel admin acesse e baixe os arquivos da pasta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Garante que a pasta de uploads e o "banco de dados" existam quando iniciar
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+    fs.mkdirSync(uploadsDir);
 }
 
-const dbFile = path.join(__dirname, 'solicitacoes_db.json');
-function lerSolicitacoes() {
-  try {
-    if (!fs.existsSync(dbFile)) return [];
-    return JSON.parse(fs.readFileSync(dbFile, 'utf-8')) || [];
-  } catch {
-    return [];
-  }
-}
-function salvarSolicitacoes(dados) {
-  try { fs.writeFileSync(dbFile, JSON.stringify(dados, null, 2), 'utf-8'); } catch (err) {}
+const dbPath = path.join(__dirname, 'database.json');
+if (!fs.existsSync(dbPath)) {
+    fs.writeFileSync(dbPath, JSON.stringify([]));
 }
 
-const ADMIN_USER = process.env.ADMIN_USER || 'root';
-const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'aeromovel';
-
-function validarToken(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return false;
-  return authHeader.replace('Bearer ', '').trim() === Buffer.from(`${ADMIN_USER}:${ADMIN_SECRET_KEY}`).toString('base64');
-}
-
-app.post('/api/login', (req, res) => {
-  const { usuario, senha } = req.body || {};
-  if (usuario === ADMIN_USER && senha === ADMIN_SECRET_KEY) {
-    return res.status(200).json({ success: true, token: Buffer.from(`${ADMIN_USER}:${ADMIN_SECRET_KEY}`).toString('base64') });
-  }
-  return res.status(401).json({ success: false, error: 'Credenciais inválidas' });
-});
-
-// NOVO UPLOAD (Stream Direto: evita quebra de memória no Render)
+// ==========================================
+// ROTA 1: RECEBER E SALVAR OS ARQUIVOS (WORD E PDF)
+// ==========================================
 app.post('/api/upload', (req, res) => {
-  const filename = req.query.filename || `arquivo-${Date.now()}`;
+  const filename = req.query.filename || `documento_${Date.now()}`;
   const filePath = path.join(uploadsDir, filename);
   
-  const stream = fs.createWriteStream(filePath);
-  req.pipe(stream);
-
-  stream.on('finish', () => {
-    // Identifica HTTPS automaticamente para não dar erro de Mixed Content
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol; 
-    const host = req.get('host');
-    res.status(200).json({ url: `${protocol}://${host}/uploads/${encodeURIComponent(filename)}` });
+  // Recebe o arquivo cru (Stream) enviado pelo gerador e salva na pasta uploads
+  const writeStream = fs.createWriteStream(filePath);
+  req.pipe(writeStream);
+  
+  req.on('end', () => {
+    // Retorna a URL onde o arquivo ficou salvo para o front-end registrar no banco
+    res.json({ url: `/uploads/${filename}` });
   });
 
-  stream.on('error', (err) => {
-    console.error('Erro Stream Upload:', err);
-    res.status(500).json({ error: 'Erro ao gravar arquivo no disco do servidor.' });
+  req.on('error', (err) => {
+    console.error('Erro no upload:', err);
+    res.status(500).json({ error: 'Erro interno ao salvar o arquivo' });
   });
 });
 
-app.use('/uploads', express.static(uploadsDir));
-
-app.get('/api/solicitacoes', (req, res) => {
-  if (!validarToken(req)) return res.status(401).json({ error: 'Não autorizado' });
-  res.status(200).json(lerSolicitacoes());
-});
-
+// ==========================================
+// ROTA 2: SALVAR OS DADOS DA SOLICITAÇÃO NO BANCO
+// ==========================================
 app.post('/api/solicitacoes', (req, res) => {
   try {
-    const sol = req.body;
-    if (!sol || !sol.id) return res.status(400).json({ error: 'Dados inválidos' });
-    const lista = lerSolicitacoes();
-    lista.unshift(sol);
-    salvarSolicitacoes(lista);
-    res.status(201).json({ success: true, id: sol.id });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro interno ao salvar solicitação' });
+    const novaSolicitacao = req.body;
+    
+    // Lê o banco de dados atual
+    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    
+    // Adiciona a nova solicitação sempre no topo da lista (início)
+    db.unshift(novaSolicitacao);
+    
+    // Salva o arquivo atualizado
+    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+    
+    res.json({ success: true, message: 'Registrado no Painel Admin com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao salvar no banco:', error);
+    res.status(500).json({ error: 'Erro interno ao salvar dados do formulário.' });
   }
 });
 
-app.delete('/api/solicitacoes', (req, res) => {
-  if (!validarToken(req)) return res.status(401).json({ error: 'Não autorizado' });
-  let lista = lerSolicitacoes();
-  lista = lista.filter(item => item.id !== req.query.id);
-  salvarSolicitacoes(lista);
-  res.status(200).json({ success: true });
+// ==========================================
+// ROTA 3: ENVIAR OS DADOS PARA A TELA DO ADMIN
+// ==========================================
+app.get('/api/solicitacoes', (req, res) => {
+  try {
+    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    res.json(db);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao carregar o banco de dados.' });
+  }
 });
 
-function encontrarIndexHtml() {
-  const caminhos = [
-    path.join(__dirname, 'public', 'index.html'),
-    path.join(__dirname, 'index.html')
-  ];
-  for (const p of caminhos) {
-    if (fs.existsSync(p)) return p;
-  }
-  return null;
-}
-
-const arquivoIndex = encontrarIndexHtml();
-if (arquivoIndex) {
-  app.use(express.static(path.dirname(arquivoIndex)));
-  app.get('*', (req, res) => res.sendFile(arquivoIndex));
-}
-
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+// ==========================================
+// INICIAR SERVIDOR
+// ==========================================
+app.listen(PORT, () => {
+  console.log(`Servidor SisDoc rodando na porta ${PORT}`);
+});
