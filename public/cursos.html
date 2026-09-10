@@ -54,10 +54,13 @@
         </a>
       </div>
 
-      <form id="form-cursos" class="p-6 sm:p-8 space-y-8">
+      <form id="form-cursos" class="p-6 sm:p-8 space-y-6">
         
-        <div>
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide">1. Identificação do Militar</h2>
+        <!-- CARD 1 -->
+        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
+          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <i data-lucide="user" class="w-4 h-4 text-[#c6b075]"></i> 1. Identificação do Militar
+          </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="lg:col-span-1">
               <label class="block text-xs font-semibold text-stone-600 mb-1">Posto / Graduação *</label>
@@ -105,8 +108,9 @@
           </div>
         </div>
 
-        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5">
-          <h2 class="text-sm font-bold text-[#2c3b2c] mb-4 uppercase tracking-wide flex items-center gap-2">
+        <!-- CARD 2 -->
+        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
+          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="book-open" class="w-4 h-4 text-[#c6b075]"></i> 2. Dados do Curso e Destino
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -137,8 +141,11 @@
           </div>
         </div>
 
-        <div>
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide">3. Dados Bancários</h2>
+        <!-- CARD 3 -->
+        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
+          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <i data-lucide="wallet" class="w-4 h-4 text-[#c6b075]"></i> 3. Dados Bancários
+          </h2>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label class="block text-xs font-semibold text-stone-600 mb-1">Banco *</label>
@@ -155,8 +162,11 @@
           </div>
         </div>
 
-        <div>
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide">4. Dependentes</h2>
+        <!-- CARD 4 -->
+        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
+          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <i data-lucide="users" class="w-4 h-4 text-[#c6b075]"></i> 4. Dependentes
+          </h2>
           <div class="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
             <div>
               <span class="block text-sm font-semibold text-stone-700 mb-2">Possui dependentes?</span>
@@ -193,6 +203,7 @@
     </div>
   </main>
 
+  <!-- MODAL OMITIDO POR ESPAÇO -->
   <div id="modal-sucesso" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-[#fbfaf6] rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-[#dcd3b6]">
       <div class="w-16 h-16 mx-auto rounded-full bg-[#e1d5b3] text-[#2c3b2c] flex items-center justify-center mb-4">
@@ -200,29 +211,11 @@
       </div>
       <h3 class="text-2xl font-serif-title font-bold text-center text-stone-900 mb-2">Solicitação Gerada!</h3>
       <p class="text-center text-sm text-stone-600 mb-6">Os documentos foram gerados e enviados para o servidor.</p>
-      <div class="bg-white border border-[#dcd3b6] rounded-xl p-4 mb-5 shadow-sm">
-        <h4 class="text-xs font-bold text-[#2c3b2c] uppercase tracking-wider mb-2 flex items-center gap-1">
-          <i data-lucide="paperclip" class="w-4 h-4 text-[#c6b075]"></i> Documentos Necessários:
-        </h4>
-        <ul class="text-sm text-stone-700 list-disc list-inside space-y-1.5">
-          <li>Cópia autenticada do Adt DCEM</li>
-          <li>Cópia autenticada do BI de transcrição do Adt DCEM</li>
-          <li>Cópia autenticada do último contracheque</li>
-          <li>Cópia autenticada da Declaração de Beneficiários</li>
-        </ul>
-      </div>
-      <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded-r-lg">
-        <p class="text-red-700 font-bold text-center text-sm sm:text-base leading-snug uppercase tracking-wide">
-          O militar deverá comparecer a Divisão Administrativa para assinatura e entrega de documentos
-        </p>
-      </div>
       <div class="flex flex-col gap-3">
         <button id="btn-baixar-pdf" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] border border-[#445646] font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition">
           <i data-lucide="download-cloud" class="w-5 h-5"></i> Baixar Lista de Anexos (PDF)
         </button>
-        <a href="index.html" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition text-center block">
-          Voltar ao Início
-        </a>
+        <a href="index.html" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition text-center block">Voltar ao Início</a>
       </div>
     </div>
   </div>
