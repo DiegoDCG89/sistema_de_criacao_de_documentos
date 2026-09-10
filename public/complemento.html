@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complemento - SisDoc</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col">
+
+  <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8">
+    <div class="bg-white rounded-xl shadow-lg border border-stone-200 overflow-hidden">
+      
+      <div class="bg-[#4B5320] p-6 text-white flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold flex items-center gap-2">
+            <i data-lucide="file-plus-2" class="w-6 h-6"></i> Complemento de Indenização
+          </h1>
+          <p class="text-stone-200 text-sm mt-1">Preencha os dados para reajuste de ajuda de custo</p>
+        </div>
+        <a href="index.html" class="p-2 bg-[#353c15] rounded hover:bg-[#1f441e] transition flex items-center gap-1 text-sm font-semibold">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+        </a>
+      </div>
+
+      <form id="form-complemento" class="p-6 sm:p-8 space-y-8">
+        
+        <!-- 1. Identificação -->
+        <div>
+          <h2 class="text-sm font-bold text-stone-800 border-b border-stone-200 pb-2 mb-4 uppercase tracking-wide">1. Identificação do Militar</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="lg:col-span-1">
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Posto / Graduação *</label>
+              <select id="posto" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none bg-white">
+                <option value="">Selecione...</option>
+                <option value="Gen Ex">General de Exército (Gen Ex)</option>
+                <option value="Gen Div">General de Divisão (Gen Div)</option>
+                <option value="Gen Bda">General de Brigada (Gen Bda)</option>
+                <option value="Cel">Coronel (Cel)</option>
+                <option value="Ten Cel">Tenente-Coronel (Ten Cel)</option>
+                <option value="Maj">Major (Maj)</option>
+                <option value="Cap">Capitão (Cap)</option>
+                <option value="1º Ten">1º Tenente (1º Ten)</option>
+                <option value="2º Ten">2º Tenente (2º Ten)</option>
+                <option value="Asp Of">Aspirante a Oficial (Asp Of)</option>
+                <option value="S Ten">Subtenente (S Ten)</option>
+                <option value="1º Sgt">1º Sargento (1º Sgt)</option>
+                <option value="2º Sgt">2º Sargento (2º Sgt)</option>
+                <option value="3º Sgt">3º Sargento (3º Sgt)</option>
+                <option value="Cb">Cabo (Cb)</option>
+                <option value="Sd">Soldado (Sd)</option>
+              </select>
+            </div>
+            <div class="sm:col-span-1 lg:col-span-3">
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Nome Completo *</label>
+              <input type="text" id="nome" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">CPF *</label>
+              <input type="text" id="cpf" required maxlength="14" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Identidade Militar *</label>
+              <input type="text" id="idt" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Prec CP *</label>
+              <input type="text" id="preccp" required maxlength="11" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Telefone de Contato *</label>
+              <input type="text" id="telefone" required maxlength="15" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Banco -->
+        <div>
+          <h2 class="text-sm font-bold text-stone-800 border-b border-stone-200 pb-2 mb-4 uppercase tracking-wide">2. Dados Bancários</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Banco *</label>
+              <input type="text" id="banco" required value="Banco do Brasil" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Agência *</label>
+              <input type="text" id="agencia" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Conta Corrente *</label>
+              <input type="text" id="conta" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320] focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Modalidade -->
+        <div class="bg-stone-100 border border-stone-300 rounded-xl p-5">
+          <h2 class="text-sm font-bold text-stone-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4 text-[#4B5320]"></i> 3. Selecione a Modalidade do Complemento
+          </h2>
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="modalidade_comp" value="curso" checked onchange="toggleModalidade(this.value)" class="text-[#4B5320] focus:ring-[#4B5320] w-5 h-5">
+              <span class="text-sm font-bold text-stone-800">Complemento de Curso</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="modalidade_comp" value="transferencia" onchange="toggleModalidade(this.value)" class="text-[#4B5320] focus:ring-[#4B5320] w-5 h-5">
+              <span class="text-sm font-bold text-stone-800">Complemento de Transferência</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 4A. Dados Específicos (CURSO) -->
+        <div id="dados-curso" class="block">
+          <h2 class="text-sm font-bold text-stone-800 border-b border-stone-200 pb-2 mb-4 uppercase tracking-wide">4. Dados Específicos do Curso</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Nome do Curso *</label>
+              <input type="text" id="cursoNome" placeholder="Ex: CAS" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Cidade *</label>
+              <input type="text" id="cursoCidade" placeholder="Ex: RIO DE JANEIRO - RJ" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Guarnição *</label>
+              <input type="text" id="cursoGuarnicao" placeholder="Ex: RIO DE JANEIRO" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Aditamento que gerou o benefício *</label>
+              <input type="text" id="cursoAdt" placeholder="Ex: Adt DCEM 1A ao Bol DGP n° 000" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Data de Término *</label>
+              <input type="text" id="cursoDataTermino" placeholder="Ex: 10/12/2026" maxlength="10" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Boletim de Homologação do Curso *</label>
+              <input type="text" id="cursoBolHomologacao" placeholder="Ex: BI nº 45, de 10 JAN 26" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4B. Dados Específicos (TRANSFERÊNCIA) -->
+        <div id="dados-transferencia" class="hidden">
+          <h2 class="text-sm font-bold text-stone-800 border-b border-stone-200 pb-2 mb-4 uppercase tracking-wide">4. Dados Específicos da Movimentação</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">OM *</label>
+              <input type="text" id="transfOm" placeholder="Ex: 5º BIAMV" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Data de Desligamento *</label>
+              <input type="text" id="transfDataDesligamento" placeholder="Ex: 10/12/2026" maxlength="10" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Motivo *</label>
+              <input type="text" id="transfMotivo" placeholder="Ex: Transferência por necessidade do serviço" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stone-600 mb-1">Aditamento que gerou o benefício *</label>
+              <input type="text" id="transfAdt" placeholder="Ex: Adt DCEM 1A ao Bol DGP n° 000" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#4B5320]">
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Dependentes (Só Transferência) -->
+        <div id="bloco-dependentes" class="hidden bg-stone-50 border border-stone-200 rounded-xl p-5">
+          <h2 class="text-sm font-bold text-stone-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <i data-lucide="users" class="w-4 h-4 text-[#4B5320]"></i> 5. Dependentes
+          </h2>
+          <div class="flex items-center gap-6 mb-4">
+            <span class="block text-sm font-semibold text-stone-700">Deseja adicionar dependentes no complemento?</span>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="opt_dependentes" value="sim" class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="toggleDependentes('sim')">
+                <span class="text-sm font-medium">SIM</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="opt_dependentes" value="nao" checked class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="toggleDependentes('nao')">
+                <span class="text-sm font-medium">NÃO</span>
+              </label>
+            </div>
+          </div>
+          <div id="caixa-inclusao-dependentes" class="hidden mt-4 pt-4 border-t border-stone-200">
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-sm font-bold text-stone-700">Dados dos dependentes:</span>
+              <button type="button" id="btn-add-dep" class="text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition">
+                + Adicionar
+              </button>
+            </div>
+            <div id="lista-dependentes" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- 6. Veículos (Só Transferência) -->
+        <div id="bloco-veiculos" class="hidden bg-stone-50 border border-stone-200 rounded-xl p-5">
+          <h2 class="text-sm font-bold text-stone-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <i data-lucide="car" class="w-4 h-4 text-[#4B5320]"></i> 6. Veículos
+          </h2>
+          
+          <div class="flex items-center gap-6 mb-4">
+            <span class="block text-sm font-semibold text-stone-700">Deseja adicionar veículo no complemento?</span>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="opt_veiculos_global" value="sim" class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="toggleVeiculosGlobal('sim')">
+                <span class="text-sm font-medium">SIM</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="opt_veiculos_global" value="nao" checked class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="toggleVeiculosGlobal('nao')">
+                <span class="text-sm font-medium">NÃO</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="caixa-inclusao-veiculos" class="hidden space-y-6 pt-4 border-t border-stone-200">
+            <!-- Carro -->
+            <div>
+              <div class="flex items-center gap-6 mb-3">
+                <span class="block text-sm font-semibold text-stone-700">Transporte de Automóvel?</span>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="opt_carro" value="sim" class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="document.getElementById('tabela-carro').classList.remove('hidden')">
+                    <span class="text-sm font-medium">SIM</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="opt_carro" value="nao" checked class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="document.getElementById('tabela-carro').classList.add('hidden')">
+                    <span class="text-sm font-medium">NÃO</span>
+                  </label>
+                </div>
+              </div>
+              <div id="tabela-carro" class="hidden bg-white p-3 rounded-lg border border-stone-200 grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <input type="text" id="carro_marca" placeholder="Marca / Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#4B5320]">
+                <input type="text" id="carro_placa" placeholder="Placa" class="border border-stone-300 px-3 py-2 text-sm rounded-lg uppercase focus:ring-2 focus:ring-[#4B5320]">
+                <input type="text" id="carro_cor" placeholder="Cor" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#4B5320]">
+                <input type="text" id="carro_ano" placeholder="Ano/Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#4B5320]">
+              </div>
+            </div>
+
+            <!-- Moto -->
+            <div>
+              <div class="flex items-center gap-6 mb-3">
+                <span class="block text-sm font-semibold text-stone-700">Transporte de Motocicleta?</span>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="opt_moto" value="sim" class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="document.getElementById('tabela-moto').classList.remove('hidden')">
+                    <span class="text-sm font-medium">SIM</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="opt_moto" value="nao" checked class="text-[#4B5320] focus:ring-[#4B5320] w-4 h-4" onchange="document.getElementById('tabela-moto').classList.add('hidden')">
+                    <span class="text-sm font-medium">NÃO</span>
+                  </label>
+                </div>
+              </div>
+              <div id="tabela-moto" class="hidden bg-white p-3 rounded-lg border border-stone-200 grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <input type="text" id="moto_marca" placeholder="Marca / Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#4B5320]">
+                <input type="text" id="moto_placa" placeholder="Placa" class="border border-stone-300 px-3 py-2 text-sm rounded-lg uppercase focus:ring-2 focus:ring-[#4B5320]">
+                <input type="text" id="moto_cor" placeholder="Cor" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#4B5320]">
+                <input type="text" id="moto_ano" placeholder="Ano/Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#4B5320]">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-stone-200">
+          <button type="submit" class="w-full bg-[#4B5320] hover:bg-[#353c15] text-white font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg">
+            <i data-lucide="check-circle" class="w-6 h-6"></i> Confirmar e Gerar Documentos
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <div id="modal-sucesso" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative">
+      <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+        <i data-lucide="check" class="w-10 h-10"></i>
+      </div>
+      <h3 class="text-2xl font-bold text-center text-stone-900 mb-2">Solicitação Gerada!</h3>
+      <p class="text-center text-sm text-stone-500 mb-6">Os documentos foram gerados e enviados para o servidor.</p>
+
+      <div class="bg-stone-50 border border-stone-200 rounded-xl p-4 mb-5">
+        <h4 class="text-xs font-bold text-stone-800 uppercase tracking-wider mb-2 flex items-center gap-1">
+          <i data-lucide="paperclip" class="w-4 h-4 text-[#4B5320]"></i> Documentos Necessários (Anexos):
+        </h4>
+        <ul class="text-xs sm:text-sm text-stone-700 list-disc list-inside space-y-1.5">
+          <li>Cópia autenticada do Adt que gerou o benefício</li>
+          <li>Cópia autenticada do BI da transcrição do Adt</li>
+          <li>Contracheque do mês que solicitou a ajuda de custo</li>
+          <li>Contracheque atual (com reajuste salarial)</li>
+          <li>BAR que publicou a transcrição da DIEx de Opção</li>
+          <li>Boletim de homologação do curso (se for o caso)</li>
+          <li>BAR que publicou o pagamento da Ajuda de Custo</li>
+          <li>Declaração de Beneficiários</li>
+        </ul>
+      </div>
+
+      <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded-r-lg">
+        <p class="text-red-700 font-bold text-center text-sm sm:text-base leading-snug uppercase tracking-wide">
+          O militar deverá comparecer a Divisão Administrativa para assinatura e entrega de documentos
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <button id="btn-baixar-pdf" class="w-full bg-[#1e231b] hover:bg-black text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition">
+          <i data-lucide="download-cloud" class="w-5 h-5 text-[#f4c430]"></i> Baixar Lista de Anexos (PDF)
+        </button>
+        <a href="index.html" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition text-center block">
+          Voltar ao Início
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Lógica visual da página
+    function toggleModalidade(tipo) {
+      const blocoCurso = document.getElementById('dados-curso');
+      const blocoTransf = document.getElementById('dados-transferencia');
+      const blocoDep = document.getElementById('bloco-dependentes');
+      const blocoVeiculos = document.getElementById('bloco-veiculos');
+
+      if (tipo === 'curso') {
+        blocoCurso.classList.remove('hidden');
+        blocoTransf.classList.add('hidden');
+        blocoDep.classList.add('hidden');
+        blocoVeiculos.classList.add('hidden');
+      } else {
+        blocoCurso.classList.add('hidden');
+        blocoTransf.classList.remove('hidden');
+        blocoDep.classList.remove('hidden');
+        blocoVeiculos.classList.remove('hidden');
+      }
+    }
+
+    function toggleDependentes(opcao) {
+      const caixa = document.getElementById('caixa-inclusao-dependentes');
+      if (opcao === 'sim') caixa.classList.remove('hidden');
+      else caixa.classList.add('hidden');
+    }
+
+    function toggleVeiculosGlobal(opcao) {
+      const caixa = document.getElementById('caixa-inclusao-veiculos');
+      if (opcao === 'sim') caixa.classList.remove('hidden');
+      else caixa.classList.add('hidden');
+    }
+  </script>
+
+  <!-- O script lógico virá a seguir! -->
+  <script type="module" src="./js/gerador-complemento.js"></script>
+
+</body>
+</html>
