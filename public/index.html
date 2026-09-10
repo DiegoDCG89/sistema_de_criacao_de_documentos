@@ -1,121 +1,10 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SisDoc Adm - Menu Principal</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; }
-  </style>
-</head>
-<body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col">
-
-  <!-- Cabeçalho -->
-  <header class="bg-[#1e231b] text-white border-b-4 border-[#c99700] shadow-md sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      
-      <!-- Logo e Título -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-full bg-[#4B5320] flex items-center justify-center border-2 border-[#c99700]">
-          <i data-lucide="shield" class="w-6 h-6 text-[#f4c430]"></i>
-        </div>
-        <div>
-          <span class="text-xs tracking-wider uppercase text-stone-300 font-medium block">5º BIL - Regimento Itororó</span>
-          <h1 class="text-lg font-bold text-white tracking-wide">SisDoc Adm Indenizações</h1>
-        </div>
-      </div>
-
-      <!-- BOTÃO: Painel do Administrador -->
-      <div>
-        <a href="admin.html" class="flex items-center gap-2 bg-[#4B5320] hover:bg-[#353c15] text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm border border-[#c99700]/40">
-          <i data-lucide="lock" class="w-4 h-4 text-[#f4c430]"></i>
-          <span class="hidden sm:inline">Painel Admin</span>
-        </a>
-      </div>
-
-    </div>
-  </header>
-
-  <!-- Menu de Seleção -->
-  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-12">
-    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 sm:p-10 text-center">
-      <h2 class="text-2xl font-bold text-stone-800 mb-2">Requerimento Eletrônico</h2>
-      <p class="text-stone-500 mb-10">Selecione a modalidade da sua solicitação para iniciar o preenchimento.</p>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left items-start">
-        
-        <!-- MÓDULO 1: Bagagem (Ativo com Animação) -->
-        <a href="bagagem-pnr.html" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-left group cursor-pointer">
+<!-- MÓDULO 4: Complemento (Ativo com Animação) -->
+        <a href="complemento.html" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-left group cursor-pointer">
           <div class="p-3 bg-stone-100 rounded-lg text-[#4B5320] group-hover:bg-[#4B5320] group-hover:text-white transition duration-300 mb-4">
-            <i data-lucide="package" class="w-7 h-7"></i>
-          </div>
-          <span class="block text-lg font-bold text-stone-900 mb-1">Bagagem Mesma Sede</span>
-          <span class="block text-sm text-stone-500 group-hover:text-stone-700 transition-colors">Ocupação ou desocupação de PNR</span>
-          
-          <div class="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out w-full">
-            <div class="overflow-hidden">
-              <div class="mt-4 pt-4 border-t border-stone-200">
-                <span class="text-[10px] font-bold text-[#4B5320] uppercase tracking-wider mb-2 block flex items-center gap-1">
-                  <i data-lucide="paperclip" class="w-3 h-3"></i> Anexos Necessários:
-                </span>
-                <ul class="text-xs text-stone-600 list-disc list-inside space-y-1.5">
-                  <li>Cópia do BAR da ocupação de PNR</li>
-                  <li>Cópia do último contracheque</li>
-                  <li>DIEx de Opção assinado</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </a>
-
-        <!-- MÓDULO 2: Movimentação (Ativo com Animação) -->
-        <a href="movimentacao.html" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-left group cursor-pointer">
-          <div class="p-3 bg-stone-100 rounded-lg text-[#4B5320] group-hover:bg-[#4B5320] group-hover:text-white transition duration-300 mb-4">
-            <i data-lucide="truck" class="w-7 h-7"></i>
-          </div>
-          <span class="block text-lg font-bold text-stone-900 mb-1">Movimentação</span>
-          <span class="block text-sm text-stone-500 group-hover:text-stone-700 transition-colors">Transferência por necessidade do serviço</span>
-          
-          <div class="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out w-full">
-            <div class="overflow-hidden">
-              <div class="mt-4 pt-4 border-t border-stone-200">
-                <span class="text-[10px] font-bold text-[#4B5320] uppercase tracking-wider mb-2 block flex items-center gap-1">
-                  <i data-lucide="paperclip" class="w-3 h-3"></i> Anexos Necessários:
-                </span>
-                <ul class="text-xs text-stone-600 list-disc list-inside space-y-1.5">
-                  <li>Cópia autenticada do Adt DCEM</li>
-                  <li>Cópia do BI (Transcrição do Adt DCEM)</li>
-                  <li>Cópia do último contracheque</li>
-                  <li>Declaração de Beneficiários</li>
-                  <li>CRLV do Automóvel (Se for o caso)</li>
-                  <li>CRLV da Motocicleta (Se for o caso)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </a>
-
-        <!-- MÓDULO 3: Movimentação Complemento (Futuro) -->
-        <button onclick="alert('Módulo em desenvolvimento. Estará disponível na próxima etapa!')" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-100 bg-stone-50 text-left opacity-70 cursor-not-allowed transition-all">
-          <div class="p-3 bg-stone-200 rounded-lg text-stone-400 mb-4">
             <i data-lucide="file-plus-2" class="w-7 h-7"></i>
           </div>
-          <span class="block text-lg font-bold text-stone-700 mb-1">Complemento</span>
-          <span class="block text-sm text-stone-500">Reajuste de ajuda de custo de Movimentação</span>
-        </button>
-
-        <!-- MÓDULO 4: Cursos (Ativo com Animação) -->
-        <a href="cursos.html" class="relative flex flex-col items-start p-6 rounded-xl border-2 border-stone-200 hover:border-[#4B5320] hover:bg-stone-50 hover:scale-105 hover:shadow-lg transition-all duration-300 text-left group cursor-pointer">
-          <div class="p-3 bg-stone-100 rounded-lg text-[#4B5320] group-hover:bg-[#4B5320] group-hover:text-white transition duration-300 mb-4">
-            <i data-lucide="graduation-cap" class="w-7 h-7"></i>
-          </div>
-          <span class="block text-lg font-bold text-stone-900 mb-1">Cursos e Estágios</span>
-          <span class="block text-sm text-stone-500 group-hover:text-stone-700 transition-colors">Aperfeiçoamento ou especialização</span>
+          <span class="block text-lg font-bold text-stone-900 mb-1">Complemento</span>
+          <span class="block text-sm text-stone-500 group-hover:text-stone-700 transition-colors">Reajuste de ajuda de custo</span>
           
           <div class="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out w-full">
             <div class="overflow-hidden">
@@ -124,27 +13,14 @@
                   <i data-lucide="paperclip" class="w-3 h-3"></i> Anexos Necessários:
                 </span>
                 <ul class="text-xs text-stone-600 list-disc list-inside space-y-1.5">
-                  <li>Cópia autenticada do Adt DCEM</li>
-                  <li>Cópia autenticada do BI de transcrição do Adt DCEM</li>
-                  <li>Cópia autenticada do último contracheque</li>
-                  <li>Cópia da Declaração de Beneficiários</li>
+                  <li>Cópia do Adt que gerou o benefício</li>
+                  <li>Cópia do BI da transcrição do Adt</li>
+                  <li>Contracheques (mês da solicitação e atual)</li>
+                  <li>BAR da transcrição (Opção) e do Pagamento</li>
+                  <li>Declaração de Beneficiários</li>
+                  <li>Bol. de homologação do curso (se aplicável)</li>
                 </ul>
               </div>
             </div>
           </div>
         </a>
-
-      </div>
-    </div>
-  </main>
-
-  <!-- Rodapé -->
-  <footer class="bg-stone-900 text-stone-400 py-6 text-xs text-center mt-auto">
-    <p class="font-semibold text-stone-300">5º BATALHÃO DE INFANTARIA LEVE &bull; REGIMENTO ITORORÓ</p>
-  </footer>
-
-  <script>
-    lucide.createIcons();
-  </script>
-</body>
-</html>
