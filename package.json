@@ -1,17 +1,13 @@
 {
-  "name": "sisdoc-eb",
+  "name": "sisdoc-adm",
   "version": "1.0.0",
-  "type": "module",
-  "description": "Sistema de Indenizações e Documentos Administrativos - EB",
+  "description": "Sistema de Geração de Documentos",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js",
-    "build": "echo 'Build complete'"
+    "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "@vercel/blob": "^0.27.1",
-    "@vercel/postgres": "^0.10.0"
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   }
 }
