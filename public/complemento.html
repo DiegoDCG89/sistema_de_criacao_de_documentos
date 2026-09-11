@@ -56,7 +56,6 @@
 
       <form id="form-complemento" class="p-6 sm:p-8 space-y-6">
         
-        <!-- CARD 1 -->
         <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="user" class="w-4 h-4 text-[#c6b075]"></i> 1. Identificação do Militar
@@ -108,7 +107,6 @@
           </div>
         </div>
 
-        <!-- CARD 2 -->
         <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="wallet" class="w-4 h-4 text-[#c6b075]"></i> 2. Dados Bancários
@@ -129,9 +127,8 @@
           </div>
         </div>
 
-        <!-- CARD 3 -->
         <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
+          <h2 class="text-sm font-bold text-[#2c3b2c] mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="layers" class="w-4 h-4 text-[#c6b075]"></i> 3. Selecione a Modalidade do Complemento
           </h2>
           <div class="flex gap-6">
@@ -146,13 +143,11 @@
           </div>
         </div>
 
-        <!-- MANTIDOS OCULTOS PARA NÃO QUEBRAR O JAVASCRIPT -->
         <div class="hidden">
           <input type="hidden" id="cursoGuarnicao" value="">
           <input type="hidden" id="transfGuarnicao" value="">
         </div>
 
-        <!-- 4A. Dados Específicos (CURSO) -->
         <div id="dados-curso" class="block bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="book-open" class="w-4 h-4 text-[#c6b075]"></i> 4. Dados Específicos do Curso
@@ -189,7 +184,6 @@
           </div>
         </div>
 
-        <!-- 4B. Dados Específicos (TRANSFERÊNCIA) -->
         <div id="dados-transferencia" class="hidden bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="map-pin" class="w-4 h-4 text-[#c6b075]"></i> 4. Dados Específicos da Movimentação
@@ -218,7 +212,6 @@
           </div>
         </div>
 
-        <!-- 5. Dependentes (Só Transferência) -->
         <div id="bloco-dependentes" class="hidden bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="users" class="w-4 h-4 text-[#c6b075]"></i> 5. Dependentes
@@ -247,7 +240,6 @@
           </div>
         </div>
 
-        <!-- 6. Veículos (Só Transferência) -->
         <div id="bloco-veiculos" class="hidden bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="car" class="w-4 h-4 text-[#c6b075]"></i> 6. Veículos
@@ -265,7 +257,6 @@
               </label>
             </div>
           </div>
-
           <div id="caixa-inclusao-veiculos" class="hidden space-y-6 pt-4 border-t border-[#dcd3b6]">
             <div>
               <div class="flex items-center gap-6 mb-3">
@@ -322,6 +313,7 @@
     </div>
   </main>
 
+  <!-- MODAL SUCESSO -->
   <div id="modal-sucesso" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-[#fbfaf6] rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-[#dcd3b6]">
       <div class="w-16 h-16 mx-auto rounded-full bg-[#e1d5b3] text-[#2c3b2c] flex items-center justify-center mb-4">
@@ -329,6 +321,29 @@
       </div>
       <h3 class="text-2xl font-serif-title font-bold text-center text-stone-900 mb-2">Solicitação Gerada!</h3>
       <p class="text-center text-sm text-stone-600 mb-6">Os documentos foram gerados e enviados para o servidor.</p>
+      
+      <div class="bg-white border border-[#dcd3b6] rounded-xl p-4 mb-5 shadow-sm">
+        <h4 class="text-xs font-bold text-[#2c3b2c] uppercase tracking-wider mb-2 flex items-center gap-1">
+          <i data-lucide="paperclip" class="w-4 h-4 text-[#c6b075]"></i> Documentos Necessários:
+        </h4>
+        <ul id="lista-anexos-final" class="text-xs sm:text-sm text-stone-700 list-disc list-inside space-y-1.5">
+          <li>Cópia autenticada do Adt que gerou o benefício</li>
+          <li>Cópia autenticada do BI da transcrição do Adt</li>
+          <li>Contracheque do mês que solicitou a ajuda de custo</li>
+          <li>Contracheque atual (com reajuste salarial)</li>
+          <li>BAR que publicou a transcrição da DIEx de Opção</li>
+          <li>Boletim de homologação do curso (se aplicável)</li>
+          <li>BAR que publicou o pagamento da Ajuda de Custo</li>
+          <li>Declaração de Beneficiários</li>
+        </ul>
+      </div>
+
+      <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded-r-lg">
+        <p class="text-red-700 font-bold text-center text-sm sm:text-base leading-snug uppercase tracking-wide">
+          O militar deverá comparecer à Divisão Administrativa para assinatura e entrega de documentos
+        </p>
+      </div>
+
       <div class="flex flex-col gap-3">
         <button id="btn-baixar-pdf" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] border border-[#445646] font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition">
           <i data-lucide="download-cloud" class="w-5 h-5"></i> Baixar Lista de Anexos (PDF)
@@ -339,6 +354,7 @@
   </div>
 
   <script>
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     function toggleModalidade(tipo) {
       const blocoCurso = document.getElementById('dados-curso');
       const blocoTransf = document.getElementById('dados-transferencia');
