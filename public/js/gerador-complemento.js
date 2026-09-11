@@ -5,31 +5,21 @@ import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData } f
 let dependentes = [];
 let dadosFormularioAtual = null;
 
-// ==========================================
-// 1. INICIALIZAÇÃO E MÁSCARAS
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) lucide.createIcons();
-
   document.getElementById('cpf').addEventListener('input', e => e.target.value = mascaraCPF(e.target.value));
   document.getElementById('idt').addEventListener('input', e => e.target.value = mascaraIdt(e.target.value));
   document.getElementById('preccp').addEventListener('input', e => e.target.value = mascaraPrecCP(e.target.value));
   document.getElementById('telefone').addEventListener('input', e => e.target.value = mascaraTelefone(e.target.value));
-  
   document.getElementById('cursoDataInicio').addEventListener('input', e => e.target.value = mascaraData(e.target.value));
   document.getElementById('cursoDataTermino').addEventListener('input', e => e.target.value = mascaraData(e.target.value));
   document.getElementById('transfDataDesligamento').addEventListener('input', e => e.target.value = mascaraData(e.target.value));
-
   document.getElementById('btn-add-dep').addEventListener('click', addDependente);
   document.getElementById('form-complemento').addEventListener('submit', processarFormulario);
   document.getElementById('btn-baixar-pdf').addEventListener('click', baixarPDFChecklist);
-
   renderDependentes();
 });
 
-// ==========================================
-// 2. LÓGICA DE DEPENDENTES
-// ==========================================
 function addDependente() {
   dependentes.push({ id: Date.now(), nome: '', parentesco: 'Esposa', dtNasc: '', idade: '' });
   renderDependentes();
@@ -58,9 +48,7 @@ function renderDependentes() {
   dependentes.forEach(dep => {
     container.innerHTML += `
       <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-white p-2.5 rounded border border-stone-200 shadow-sm">
-        <div class="sm:col-span-5">
-          <input type="text" placeholder="NOME COMPLETO" value="${dep.nome}" oninput="window.atualizarDep(${dep.id}, 'nome', this.value.toUpperCase())" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 uppercase focus:ring-2 focus:ring-[#4B5320] outline-none">
-        </div>
+        <div class="sm:col-span-5"><input type="text" placeholder="NOME COMPLETO" value="${dep.nome}" oninput="window.atualizarDep(${dep.id}, 'nome', this.value.toUpperCase())" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 uppercase focus:ring-2 focus:ring-[#4B5320] outline-none"></div>
         <div class="sm:col-span-3">
           <select onchange="window.atualizarDep(${dep.id}, 'parentesco', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white focus:ring-2 focus:ring-[#4B5320] outline-none">
             <option value="Esposa" ${dep.parentesco === 'Esposa' ? 'selected' : ''}>Esposa</option>
@@ -72,28 +60,19 @@ function renderDependentes() {
             <option value="Outro" ${dep.parentesco === 'Outro' ? 'selected' : ''}>Outro</option>
           </select>
         </div>
-        <div class="sm:col-span-2">
-          <input type="text" placeholder="Dt Nasc" value="${dep.dtNasc}" maxlength="10" oninput="window.aplicarMascaraDataDep(this, ${dep.id})" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none">
-        </div>
-        <div class="sm:col-span-2 flex gap-1 items-center">
-          <input type="number" placeholder="Idade" value="${dep.idade}" oninput="window.atualizarDep(${dep.id}, 'idade', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none">
-          <button type="button" onclick="window.removerDependente(${dep.id})" class="text-red-500 hover:text-red-700 px-2 font-bold transition">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
+        <div class="sm:col-span-2"><input type="text" placeholder="Dt Nasc" value="${dep.dtNasc}" maxlength="10" oninput="window.aplicarMascaraDataDep(this, ${dep.id})" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none"></div>
+        <div class="sm:col-span-2 flex gap-1 items-center"><input type="number" placeholder="Idade" value="${dep.idade}" oninput="window.atualizarDep(${dep.id}, 'idade', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none"><button type="button" onclick="window.removerDependente(${dep.id})" class="text-red-500 hover:text-red-700 px-2 font-bold transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>
       </div>
     `;
   });
   if (window.lucide) lucide.createIcons();
 }
 
-// ==========================================
-// 3. COMUNICAÇÃO COM O SERVIDOR E IMAGENS
-// ==========================================
-async function subirArquivoParaServidor(blob, nomeArquivo) {
-  const res = await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}`, { method: 'POST', body: blob });
+// === NOVO UPLOAD PARA O GOOGLE DRIVE ===
+async function subirArquivoParaServidor(blob, nomeArquivo, nomePasta) {
+  const res = await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(nomePasta)}`, { method: 'POST', body: blob });
   if (!res.ok) throw new Error(`Falha no upload: ${nomeArquivo}`);
-  return (await res.json()).url;
+  return await res.json();
 }
 
 async function obterImagemBrasao() {
@@ -106,20 +85,15 @@ async function obterImagemBrasao() {
   }
 }
 
-// ==========================================
-// 4. PROCESSAMENTO DO FORMULÁRIO E ANEXOS
-// ==========================================
 async function processarFormulario(e) {
   e.preventDefault();
-
   const btnSubmit = document.querySelector('button[type="submit"]');
   const txtOriginalBtn = btnSubmit.innerHTML;
-  btnSubmit.innerHTML = '<i data-lucide="loader" class="w-6 h-6 animate-spin"></i> Preparando documentos...';
+  btnSubmit.innerHTML = '<i data-lucide="loader" class="w-6 h-6 animate-spin"></i> Enviando para o Google Drive...';
   btnSubmit.disabled = true;
 
   try {
     const arrayBufferBrasao = await obterImagemBrasao();
-    
     const modalidade = document.querySelector('input[name="modalidade_comp"]:checked').value;
     const temDependentes = document.querySelector('input[name="opt_dependentes"]:checked')?.value === 'sim';
     const temCarro = document.querySelector('input[name="opt_carro"]:checked')?.value === 'sim';
@@ -137,7 +111,6 @@ async function processarFormulario(e) {
       agencia: document.getElementById('agencia').value.trim(),
       conta: document.getElementById('conta').value.trim(),
       
-      // Dados Curso
       cursoNome: document.getElementById('cursoNome').value.trim().toUpperCase(),
       cursoCidade: document.getElementById('cursoCidade').value.trim().toUpperCase(),
       cursoGuarnicao: document.getElementById('cursoGuarnicao').value.trim().toUpperCase(),
@@ -147,7 +120,6 @@ async function processarFormulario(e) {
       cursoDataTermino: document.getElementById('cursoDataTermino').value.trim(),
       cursoBolHomologacao: document.getElementById('cursoBolHomologacao').value.trim(),
       
-      // Dados Transferência
       transfOm: document.getElementById('transfOm').value.trim().toUpperCase(),
       transfCidade: document.getElementById('transfCidade').value.trim().toUpperCase(),
       transfGuarnicao: document.getElementById('transfGuarnicao').value.trim().toUpperCase(),
@@ -156,37 +128,20 @@ async function processarFormulario(e) {
       transfDataDesligamento: document.getElementById('transfDataDesligamento').value.trim(),
 
       dependentes: temDependentes ? [...dependentes] : [],
-      carro: temCarro ? {
-        marca: document.getElementById('carro_marca').value.trim() || 'NÃO HÁ',
-        placa: document.getElementById('carro_placa').value.trim().toUpperCase() || 'NÃO HÁ',
-        cor: document.getElementById('carro_cor').value.trim() || 'NÃO HÁ',
-        ano: document.getElementById('carro_ano').value.trim() || 'NÃO HÁ'
-      } : null,
-      moto: temMoto ? {
-        marca: document.getElementById('moto_marca').value.trim() || 'NÃO HÁ',
-        placa: document.getElementById('moto_placa').value.trim().toUpperCase() || 'NÃO HÁ',
-        cor: document.getElementById('moto_cor').value.trim() || 'NÃO HÁ',
-        ano: document.getElementById('moto_ano').value.trim() || 'NÃO HÁ'
-      } : null,
+      carro: temCarro ? { marca: document.getElementById('carro_marca').value.trim() || 'NÃO HÁ', placa: document.getElementById('carro_placa').value.trim().toUpperCase() || 'NÃO HÁ', cor: document.getElementById('carro_cor').value.trim() || 'NÃO HÁ', ano: document.getElementById('carro_ano').value.trim() || 'NÃO HÁ' } : null,
+      moto: temMoto ? { marca: document.getElementById('moto_marca').value.trim() || 'NÃO HÁ', placa: document.getElementById('moto_placa').value.trim().toUpperCase() || 'NÃO HÁ', cor: document.getElementById('moto_cor').value.trim() || 'NÃO HÁ', ano: document.getElementById('moto_ano').value.trim() || 'NÃO HÁ' } : null,
     };
 
     const dataAtual = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
     const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, ImageRun } = window.docx;
 
-    // --- CABEÇALHO ---
     const elementosCabecalho = [];
     if (arrayBufferBrasao) {
       elementosCabecalho.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: arrayBufferBrasao, transformation: { width: 70, height: 70 } })] }));
     }
     elementosCabecalho.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "MINISTÉRIO DA DEFESA\nEXÉRCITO BRASILEIRO\nREGIMENTO ITORORÓ\n5º BATALHÃO DE INFANTARIA LEVE\n(Terço da Bahia/1631)", bold: true })] }));
 
-    // --- TABELAS ---
-    const gerarLinhaDep = (nome, grau, dtnasc, idade) => new TableRow({ children: [
-      new TableCell({ children: [new Paragraph({ text: nome })] }),
-      new TableCell({ children: [new Paragraph({ text: grau })] }),
-      new TableCell({ children: [new Paragraph({ text: dtnasc })] }),
-      new TableCell({ children: [new Paragraph({ text: idade })] })
-    ]});
+    const gerarLinhaDep = (nome, grau, dtnasc, idade) => new TableRow({ children: [new TableCell({ children: [new Paragraph({ text: nome })] }), new TableCell({ children: [new Paragraph({ text: grau })] }), new TableCell({ children: [new Paragraph({ text: dtnasc })] }), new TableCell({ children: [new Paragraph({ text: idade })] })]});
     
     let rowsDep = [gerarLinhaDep("Nome", "Grau de parentesco", "Dt Nasc", "Idade")];
     if (dadosFormularioAtual.dependentes.length > 0) {
@@ -196,17 +151,12 @@ async function processarFormulario(e) {
     }
     const tabelaDep = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: rowsDep });
 
-    let txtDependentes = dadosFormularioAtual.dependentes.length > 0 
-      ? dadosFormularioAtual.dependentes.map(d => `${d.nome} (${d.parentesco})`).join("; ") 
-      : "NÃO HÁ";
+    let txtDependentes = dadosFormularioAtual.dependentes.length > 0 ? dadosFormularioAtual.dependentes.map(d => `${d.nome} (${d.parentesco})`).join("; ") : "NÃO HÁ";
     let txtAuto = dadosFormularioAtual.carro ? `${dadosFormularioAtual.carro.marca} - Placa: ${dadosFormularioAtual.carro.placa}` : "NÃO HÁ";
     let txtMoto = dadosFormularioAtual.moto ? `${dadosFormularioAtual.moto.marca} - Placa: ${dadosFormularioAtual.moto.placa}` : "NÃO HÁ";
 
     let docDIEx, docBAR, docOrdPagto;
 
-    // ==============================================================
-    // LÓGICA: SE FOR COMPLEMENTO DE CURSO
-    // ==============================================================
     if (modalidade === 'curso') {
       docDIEx = new Document({
         sections: [{ properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } }, children: [
@@ -291,9 +241,6 @@ async function processarFormulario(e) {
       });
     } 
     
-    // ==============================================================
-    // LÓGICA: SE FOR COMPLEMENTO DE TRANSFERÊNCIA
-    // ==============================================================
     else {
       docDIEx = new Document({
         sections: [{ properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } }, children: [
@@ -379,23 +326,22 @@ async function processarFormulario(e) {
     const blobBAR = await window.docx.Packer.toBlob(docBAR);
     const blobOrdPagto = await window.docx.Packer.toBlob(docOrdPagto);
     
+    // MÁGICA DA NUVEM (Google Drive)
     const nomeBase = `${dadosFormularioAtual.posto}_${dadosFormularioAtual.nome.replace(/\s+/g, '_')}_${Date.now()}`;
-    const urlDiex = await subirArquivoParaServidor(blobDIEx, `DIEx_Complemento_${modalidade}_${nomeBase}.docx`);
-    const urlNotaBar = await subirArquivoParaServidor(blobBAR, `NotaBAR_Complemento_${modalidade}_${nomeBase}.docx`);
-    const urlOrdPagto = await subirArquivoParaServidor(blobOrdPagto, `OrdPagto_Complemento_${modalidade}_${nomeBase}.docx`);
+    const nomePasta = `Complemento - ${dadosFormularioAtual.posto} ${dadosFormularioAtual.nome}`;
 
+    await subirArquivoParaServidor(blobDIEx, `DIEx_Complemento_${modalidade}_${nomeBase}.docx`, nomePasta);
+    await subirArquivoParaServidor(blobBAR, `NotaBAR_Complemento_${modalidade}_${nomeBase}.docx`, nomePasta);
+    await subirArquivoParaServidor(blobOrdPagto, `OrdPagto_Complemento_${modalidade}_${nomeBase}.docx`, nomePasta);
+
+    // MÁGICA DO PROTOCOLO ADMIN
     const payloadReq = {
       id: 'COMP-' + Date.now().toString().slice(-6),
       dataCriacao: new Date().toLocaleDateString('pt-BR'),
       modalidade: `Complemento (${modalidade})`,
-      omDestino: modalidade === 'curso' ? dadosFormularioAtual.cursoCidade : dadosFormularioAtual.transfOm,
       posto: dadosFormularioAtual.posto,
       nomeCompleto: dadosFormularioAtual.nome,
-      cpf: dadosFormularioAtual.cpf,
-      urlPdfDocs: '', // PDF removido conforme combinado
-      urlDiex: urlDiex,
-      urlNotaBar: urlNotaBar,
-      urlOp: urlOrdPagto
+      cpf: dadosFormularioAtual.cpf
     };
 
     const resDb = await fetch('/api/solicitacoes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadReq) });
@@ -416,7 +362,6 @@ async function processarFormulario(e) {
   }
 }
 
-// Remover o checklist do Complemento já que a lista de anexos estará apenas na tela final
 function baixarPDFChecklist() {
   alert("Por favor, consulte a lista de documentos na tela. Os documentos exigidos podem variar conforme o motivo do complemento.");
 }
