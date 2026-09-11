@@ -10,23 +10,15 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap');
-    
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background-color: #eae6dd; 
-    }
-    
-    .font-serif-title {
-      font-family: 'Playfair Display', Georgia, serif;
-    }
+    body { font-family: 'Inter', sans-serif; background-color: #eae6dd; }
+    .font-serif-title { font-family: 'Playfair Display', Georgia, serif; }
   </style>
 </head>
 <body class="text-stone-800 min-h-screen flex flex-col">
 
-  <!-- Cabeçalho Principal -->
+  <!-- Cabeçalho -->
   <header class="bg-[#2c3b2c] text-white shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 flex items-center justify-center">
           <i data-lucide="shield" class="w-8 h-8 text-[#c6b075]"></i>
@@ -36,7 +28,6 @@
           <h1 class="text-base sm:text-lg font-bold tracking-wide text-white leading-none">SisDoc - Geração de Documentos</h1>
         </div>
       </div>
-
       <div class="flex items-center gap-3">
         <button class="p-1.5 border border-[#445646] rounded hover:bg-[#3b4d3d] transition-colors text-[#c6b075]">
           <i data-lucide="bell" class="w-4 h-4 sm:w-5 sm:h-5"></i>
@@ -48,13 +39,10 @@
           <i data-lucide="chevron-down" class="w-3 h-3 text-[#c6b075]"></i>
         </a>
       </div>
-
     </div>
   </header>
 
-  <!-- Corpo Principal -->
   <main class="flex-grow w-full flex flex-col items-center pt-16 px-4">
-    
     <div class="text-center mb-10">
       <h2 class="text-2xl sm:text-3xl lg:text-4xl font-serif-title font-medium text-stone-900 mb-2">Painel de Documentos Oficiais</h2>
       <p class="text-stone-600 text-sm sm:text-base">Selecione o tipo de documento oficial para gerar.</p>
@@ -64,46 +52,88 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-4xl">
       
       <!-- Card 1: Bagagem -->
-      <a href="bagagem-pnr.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex items-center gap-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-        <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
-          <i data-lucide="package" class="w-8 h-8"></i>
+      <a href="bagagem-pnr.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex flex-col hover:shadow-lg transition-all duration-300 group cursor-pointer">
+        <div class="flex items-center gap-5">
+          <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
+            <i data-lucide="package" class="w-8 h-8"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-stone-900">Bagagem Mesma Sede</h3>
+            <p class="text-sm text-stone-600 leading-snug mt-1">Ocupação de PNR</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-lg font-bold text-stone-900">Bagagem Mesma Sede</h3>
-          <p class="text-sm text-stone-600 leading-snug mt-1">Ocupação de PNR</p>
+        <div class="max-h-0 opacity-0 overflow-hidden group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 ease-in-out mt-0 group-hover:mt-4 border-t-0 group-hover:border-t border-[#dcd3b6] pt-0 group-hover:pt-4">
+          <span class="text-[11px] font-bold text-[#2c3b2c] uppercase mb-2 block tracking-wider">Documentos Necessários:</span>
+          <ul class="text-xs text-stone-600 list-disc list-inside space-y-1">
+            <li>Cópia do BAR de Ocupação</li>
+            <li>Cópia da Identidade Militar e CPF</li>
+            <li>Comprovante de dados bancários</li>
+          </ul>
         </div>
       </a>
 
       <!-- Card 2: Movimentação -->
-      <a href="movimentacao.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex items-center gap-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-        <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
-          <i data-lucide="truck" class="w-8 h-8"></i>
+      <a href="movimentacao.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex flex-col hover:shadow-lg transition-all duration-300 group cursor-pointer">
+        <div class="flex items-center gap-5">
+          <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
+            <i data-lucide="truck" class="w-8 h-8"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-stone-900">Movimentação</h3>
+            <p class="text-sm text-stone-600 leading-snug mt-1">Transferência por necessidade do serviço</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-lg font-bold text-stone-900">Movimentação</h3>
-          <p class="text-sm text-stone-600 leading-snug mt-1">Transferência por necessidade do serviço</p>
+        <div class="max-h-0 opacity-0 overflow-hidden group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 ease-in-out mt-0 group-hover:mt-4 border-t-0 group-hover:border-t border-[#dcd3b6] pt-0 group-hover:pt-4">
+          <span class="text-[11px] font-bold text-[#2c3b2c] uppercase mb-2 block tracking-wider">Documentos Necessários:</span>
+          <ul class="text-xs text-stone-600 list-disc list-inside space-y-1">
+            <li>Aditamento Mov DCEM</li>
+            <li>Boletim Interno (BI) de Transcrição</li>
+            <li>Cópia da Identidade Militar</li>
+            <li>Declaração de Beneficiários</li>
+          </ul>
         </div>
       </a>
 
       <!-- Card 3: Cursos -->
-      <a href="cursos.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex items-center gap-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-        <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
-          <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+      <a href="cursos.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex flex-col hover:shadow-lg transition-all duration-300 group cursor-pointer">
+        <div class="flex items-center gap-5">
+          <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
+            <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-stone-900">Cursos e Estágios</h3>
+            <p class="text-sm text-stone-600 leading-snug mt-1">Aperfeiçoamento ou especialização</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-lg font-bold text-stone-900">Cursos e Estágios</h3>
-          <p class="text-sm text-stone-600 leading-snug mt-1">Aperfeiçoamento ou especialização</p>
+        <div class="max-h-0 opacity-0 overflow-hidden group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 ease-in-out mt-0 group-hover:mt-4 border-t-0 group-hover:border-t border-[#dcd3b6] pt-0 group-hover:pt-4">
+          <span class="text-[11px] font-bold text-[#2c3b2c] uppercase mb-2 block tracking-wider">Documentos Necessários:</span>
+          <ul class="text-xs text-stone-600 list-disc list-inside space-y-1">
+            <li>Cópia do Adt DCEM e BI de Transcrição</li>
+            <li>Cópia autenticada do contracheque atual</li>
+            <li>Declaração de Beneficiários</li>
+          </ul>
         </div>
       </a>
 
       <!-- Card 4: Complemento -->
-      <a href="complemento.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex items-center gap-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-        <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
-          <i data-lucide="file-plus-2" class="w-8 h-8"></i>
+      <a href="complemento.html" class="bg-[#fbfaf6] border border-[#dcd3b6] rounded-xl p-5 flex flex-col hover:shadow-lg transition-all duration-300 group cursor-pointer">
+        <div class="flex items-center gap-5">
+          <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-[#f0ebd8] rounded-lg border border-[#e1d5b3] text-[#a68a44] group-hover:bg-[#2c3b2c] group-hover:text-[#c6b075] transition-colors">
+            <i data-lucide="file-plus-2" class="w-8 h-8"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-stone-900">Complemento</h3>
+            <p class="text-sm text-stone-600 leading-snug mt-1">Reajuste de ajuda de custo</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-lg font-bold text-stone-900">Complemento</h3>
-          <p class="text-sm text-stone-600 leading-snug mt-1">Reajuste de ajuda de custo</p>
+        <div class="max-h-0 opacity-0 overflow-hidden group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 ease-in-out mt-0 group-hover:mt-4 border-t-0 group-hover:border-t border-[#dcd3b6] pt-0 group-hover:pt-4">
+          <span class="text-[11px] font-bold text-[#2c3b2c] uppercase mb-2 block tracking-wider">Documentos Necessários:</span>
+          <ul class="text-xs text-stone-600 list-disc list-inside space-y-1">
+            <li>Contracheque do mês da solicitação</li>
+            <li>Contracheque atual (com reajuste)</li>
+            <li>Cópia do Adt e BI de Transcrição</li>
+            <li>BAR de pagamento da Ajuda de Custo</li>
+          </ul>
         </div>
       </a>
 
@@ -118,8 +148,6 @@
     </div>
   </footer>
 
-  <script>
-    lucide.createIcons();
-  </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>
