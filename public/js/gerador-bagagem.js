@@ -112,14 +112,13 @@ async function processarFormulario(e) {
   if (window.lucide) lucide.createIcons();
 
   try {
-    dadosFormularioAtual = {
+   dadosFormularioAtual = {
       posto: document.getElementById('posto').value.trim(),
       nome: document.getElementById('nome').value.trim().toUpperCase(),
       cpf: document.getElementById('cpf').value.trim(),
       idt: document.getElementById('idt').value.trim(),
       preccp: document.getElementById('preccp').value.trim(),
       telefone: document.getElementById('telefone').value.trim(),
-      email: document.getElementById('email').value.trim(),
       banco: document.getElementById('banco').value.trim(),
       agencia: document.getElementById('agencia').value.trim(),
       conta: document.getElementById('conta').value.trim(),
