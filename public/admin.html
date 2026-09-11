@@ -4,80 +4,63 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel Admin - SisDoc</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
-    
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background-color: #eae6dd; 
-    }
-    
-    .font-serif-title {
-      font-family: 'Playfair Display', Georgia, serif;
-    }
+    body { font-family: 'Inter', sans-serif; background-color: #eae6dd; }
+    .font-serif-title { font-family: 'Playfair Display', Georgia, serif; }
   </style>
 </head>
 <body class="text-stone-800 min-h-screen flex flex-col">
 
-  <!-- Cabeçalho Principal -->
   <header class="bg-[#2c3b2c] text-white shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 flex items-center justify-center">
           <i data-lucide="shield" class="w-8 h-8 text-[#c6b075]"></i>
         </div>
         <div class="flex flex-col justify-center">
           <span class="text-[10px] text-[#a0a89d] uppercase tracking-wider mb-[2px]">5º BI Amv - SisDoc</span>
-          <h1 class="text-base sm:text-lg font-bold tracking-wide text-white leading-none">Painel Administrativo</h1>
+          <h1 class="text-base sm:text-lg font-bold tracking-wide text-white leading-none">Livro de Protocolo</h1>
         </div>
       </div>
-
       <div class="flex items-center gap-3">
-        <a href="index.html" title="Sair do Painel" class="flex items-center gap-2 border border-[#445646] rounded px-3 py-1.5 hover:bg-[#3b4d3d] transition-colors cursor-pointer text-[#c6b075] text-sm font-semibold">
+        <a href="index.html" class="flex items-center gap-2 border border-[#445646] rounded px-3 py-1.5 hover:bg-[#3b4d3d] transition-colors cursor-pointer text-[#c6b075] text-sm font-semibold">
           <i data-lucide="log-out" class="w-4 h-4"></i> Sair
         </a>
       </div>
-
     </div>
   </header>
 
-  <!-- Corpo Principal -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
-    
     <div class="bg-[#fbfaf6] rounded-xl shadow-lg border border-[#dcd3b6] overflow-hidden">
       
       <div class="bg-[#2c3b2c] p-6 flex items-center justify-between border-b-2 border-[#c6b075]">
         <div>
           <h2 class="text-xl font-serif-title font-bold flex items-center gap-2 text-[#c6b075]">
-            <i data-lucide="database" class="w-6 h-6"></i> Geração de Documentos e Indenizações
+            <i data-lucide="list-checks" class="w-6 h-6"></i> Controle de Entradas
           </h2>
-          <p class="text-[#a0a89d] text-sm mt-1">Gerencie as solicitações recebidas no sistema</p>
+          <p class="text-[#a0a89d] text-sm mt-1">Acompanhe as solicitações geradas (Arquivos salvos no Drive)</p>
         </div>
         <button onclick="carregarSolicitacoes()" class="p-2 bg-[#1a241a] border border-[#445646] rounded hover:bg-[#3b4d3d] transition flex items-center gap-1 text-sm font-semibold text-[#c6b075]">
           <i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar
         </button>
       </div>
 
-      <!-- Tabela de Dados -->
       <div class="p-0 overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-[#eae6dd] border-b border-[#dcd3b6]">
-              <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">ID / Protocolo</th>
+              <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">Protocolo</th>
               <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">Data</th>
               <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">Modalidade</th>
-              <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">Militar</th>
+              <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">Militar Solicitante</th>
               <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">CPF</th>
-              <th class="p-4 text-xs font-bold text-[#2c3b2c] uppercase tracking-wider">Arquivos Gerados</th>
             </tr>
           </thead>
           <tbody id="tabela-corpo" class="bg-white">
-            <!-- As linhas serão inseridas aqui pelo JavaScript -->
+            <!-- Linhas inseridas pelo JS -->
           </tbody>
         </table>
       </div>
@@ -91,9 +74,7 @@
     </div>
   </footer>
 
-  <script>
-    lucide.createIcons();
-  </script>
+  <script>lucide.createIcons();</script>
   <script src="./js/admin.js"></script>
 </body>
 </html>
