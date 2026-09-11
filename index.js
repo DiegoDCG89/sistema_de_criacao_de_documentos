@@ -2,90 +2,103 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { google } = require('googleapis'); // Nova biblioteca
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configurações para o servidor entender o envio de arquivos e JSON
 app.use(cors());
 app.use(express.json()); 
-
-// Indica ao servidor que a pasta "public" contém as páginas do site
 app.use(express.static(path.join(__dirname, 'public')));
-// Permite que o painel admin acesse e baixe os arquivos da pasta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Garante que a pasta de uploads e o "banco de dados" existam quando iniciar
+// ==========================================
+// CONFIGURAÇÃO DO GOOGLE DRIVE
+// ==========================================
+// Cole o ID da pasta que você pegou no Passo 1 aqui dentro das aspas!
+const PARENT_FOLDER_ID = 'COLE_O_ID_DA_PASTA_AQUI';
+
+const auth = new google.auth.GoogleAuth({
+  keyFile: path.join(__dirname, 'google-credentials.json'),
+  scopes: ['https://www.googleapis.com/auth/drive.file']
+});
+const drive = google.drive({ version: 'v3', auth });
+
 const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
-}
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
 const dbPath = path.join(__dirname, 'database.json');
-if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify([]));
-}
+if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify([]));
 
 // ==========================================
-// ROTA 1: RECEBER E SALVAR OS ARQUIVOS (WORD E PDF)
+// ROTA 1: UPLOAD DIRETO PARA O GOOGLE DRIVE
 // ==========================================
 app.post('/api/upload', (req, res) => {
-  const filename = req.query.filename || `documento_${Date.now()}`;
-  const filePath = path.join(uploadsDir, filename);
-  
-  // Recebe o arquivo cru (Stream) enviado pelo gerador e salva na pasta uploads
-  const writeStream = fs.createWriteStream(filePath);
+  const filename = req.query.filename || `arquivo_${Date.now()}`;
+  // Recebe o nome da pasta enviado pelo front-end
+  const folderName = req.query.folder || 'Sem Classificacao'; 
+
+  // Salva temporariamente no servidor apenas para fazer a ponte
+  const tempPath = path.join(uploadsDir, filename);
+  const writeStream = fs.createWriteStream(tempPath);
   req.pipe(writeStream);
   
-  req.on('end', () => {
-    // Retorna a URL onde o arquivo ficou salvo para o front-end registrar no banco
-    res.json({ url: `/uploads/${filename}` });
-  });
+  req.on('end', async () => {
+    try {
+      // 1. Verifica se a subpasta (ex: Bagagem - Sgt Fulano) já existe
+      let query = `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and '${PARENT_FOLDER_ID}' in parents and trashed=false`;
+      let resFolder = await drive.files.list({ q: query, fields: 'files(id, name)' });
+      let subFolderId;
 
-  req.on('error', (err) => {
-    console.error('Erro no upload:', err);
-    res.status(500).json({ error: 'Erro interno ao salvar o arquivo' });
+      if (resFolder.data.files.length > 0) {
+        subFolderId = resFolder.data.files[0].id; // Já existe
+      } else {
+        // Cria a subpasta se não existir
+        let createFolder = await drive.files.create({
+            resource: { name: folderName, mimeType: 'application/vnd.google-apps.folder', parents: [PARENT_FOLDER_ID] },
+            fields: 'id'
+        });
+        subFolderId = createFolder.data.id;
+      }
+
+      // 2. Faz o upload do arquivo para dentro dessa subpasta
+      const fileMetadata = { name: filename, parents: [subFolderId] };
+      const media = { body: fs.createReadStream(tempPath) };
+      
+      const driveFile = await drive.files.create({
+          resource: fileMetadata,
+          media: media,
+          fields: 'id, webViewLink'
+      });
+
+      // 3. Apaga o arquivo temporário do Render
+      fs.unlinkSync(tempPath);
+
+      // 4. Retorna o link oficial do Google Drive para o Painel Admin!
+      res.json({ url: driveFile.data.webViewLink });
+
+    } catch (error) {
+      console.error('Erro no Drive:', error);
+      res.status(500).json({ error: 'Erro ao enviar para o Google Drive' });
+    }
   });
 });
 
 // ==========================================
-// ROTA 2: SALVAR OS DADOS DA SOLICITAÇÃO NO BANCO
+// ROTAS 2 E 3: BANCO DE DADOS (MANTIDAS)
 // ==========================================
 app.post('/api/solicitacoes', (req, res) => {
   try {
-    const novaSolicitacao = req.body;
-    
-    // Lê o banco de dados atual
     const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-    
-    // Adiciona a nova solicitação sempre no topo da lista (início)
-    db.unshift(novaSolicitacao);
-    
-    // Salva o arquivo atualizado
+    db.unshift(req.body);
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-    
-    res.json({ success: true, message: 'Registrado no Painel Admin com sucesso!' });
-  } catch (error) {
-    console.error('Erro ao salvar no banco:', error);
-    res.status(500).json({ error: 'Erro interno ao salvar dados do formulário.' });
-  }
+    res.json({ success: true });
+  } catch (error) { res.status(500).json({ error: 'Erro ao salvar' }); }
 });
 
-// ==========================================
-// ROTA 3: ENVIAR OS DADOS PARA A TELA DO ADMIN
-// ==========================================
 app.get('/api/solicitacoes', (req, res) => {
-  try {
-    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-    res.json(db);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao carregar o banco de dados.' });
-  }
+  try { res.json(JSON.parse(fs.readFileSync(dbPath, 'utf8'))); } 
+  catch (error) { res.status(500).json({ error: 'Erro ao ler' }); }
 });
 
-// ==========================================
-// INICIAR SERVIDOR
-// ==========================================
-app.listen(PORT, () => {
-  console.log(`Servidor SisDoc rodando na porta ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
