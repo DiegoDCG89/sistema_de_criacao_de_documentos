@@ -5,28 +5,19 @@ import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData } f
 let dependentes = [];
 let dadosFormularioAtual = null;
 
-// ==========================================
-// 1. INICIALIZAÇÃO E MÁSCARAS
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) lucide.createIcons();
-
   document.getElementById('cpf').addEventListener('input', e => e.target.value = mascaraCPF(e.target.value));
   document.getElementById('idt').addEventListener('input', e => e.target.value = mascaraIdt(e.target.value));
   document.getElementById('preccp').addEventListener('input', e => e.target.value = mascaraPrecCP(e.target.value));
   document.getElementById('telefone').addEventListener('input', e => e.target.value = mascaraTelefone(e.target.value));
   document.getElementById('dataDesligamento').addEventListener('input', e => e.target.value = mascaraData(e.target.value));
-
   document.getElementById('btn-add-dep').addEventListener('click', addDependente);
   document.getElementById('form-cursos').addEventListener('submit', processarFormulario);
   document.getElementById('btn-baixar-pdf').addEventListener('click', baixarPDFChecklist);
-
   renderDependentes();
 });
 
-// ==========================================
-// 2. LÓGICA DE DEPENDENTES
-// ==========================================
 function addDependente() {
   dependentes.push({ id: Date.now(), nome: '', parentesco: 'Esposa', dtNasc: '', idade: '' });
   renderDependentes();
@@ -55,9 +46,7 @@ function renderDependentes() {
   dependentes.forEach(dep => {
     container.innerHTML += `
       <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-white p-2.5 rounded border border-stone-200 shadow-sm">
-        <div class="sm:col-span-5">
-          <input type="text" placeholder="NOME COMPLETO" value="${dep.nome}" oninput="window.atualizarDep(${dep.id}, 'nome', this.value.toUpperCase())" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 uppercase focus:ring-2 focus:ring-[#4B5320] outline-none">
-        </div>
+        <div class="sm:col-span-5"><input type="text" placeholder="NOME COMPLETO" value="${dep.nome}" oninput="window.atualizarDep(${dep.id}, 'nome', this.value.toUpperCase())" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 uppercase focus:ring-2 focus:ring-[#4B5320] outline-none"></div>
         <div class="sm:col-span-3">
           <select onchange="window.atualizarDep(${dep.id}, 'parentesco', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white focus:ring-2 focus:ring-[#4B5320] outline-none">
             <option value="Esposa" ${dep.parentesco === 'Esposa' ? 'selected' : ''}>Esposa</option>
@@ -69,28 +58,19 @@ function renderDependentes() {
             <option value="Outro" ${dep.parentesco === 'Outro' ? 'selected' : ''}>Outro</option>
           </select>
         </div>
-        <div class="sm:col-span-2">
-          <input type="text" placeholder="Dt Nasc" value="${dep.dtNasc}" maxlength="10" oninput="window.aplicarMascaraDataDep(this, ${dep.id})" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none">
-        </div>
-        <div class="sm:col-span-2 flex gap-1 items-center">
-          <input type="number" placeholder="Idade" value="${dep.idade}" oninput="window.atualizarDep(${dep.id}, 'idade', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none">
-          <button type="button" onclick="window.removerDependente(${dep.id})" class="text-red-500 hover:text-red-700 px-2 font-bold transition">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
+        <div class="sm:col-span-2"><input type="text" placeholder="Dt Nasc" value="${dep.dtNasc}" maxlength="10" oninput="window.aplicarMascaraDataDep(this, ${dep.id})" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none"></div>
+        <div class="sm:col-span-2 flex gap-1 items-center"><input type="number" placeholder="Idade" value="${dep.idade}" oninput="window.atualizarDep(${dep.id}, 'idade', this.value)" class="w-full text-xs border border-stone-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-[#4B5320] outline-none"><button type="button" onclick="window.removerDependente(${dep.id})" class="text-red-500 hover:text-red-700 px-2 font-bold transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>
       </div>
     `;
   });
   if (window.lucide) lucide.createIcons();
 }
 
-// ==========================================
-// 3. COMUNICAÇÃO COM O SERVIDOR E IMAGENS
-// ==========================================
-async function subirArquivoParaServidor(blob, nomeArquivo) {
-  const res = await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}`, { method: 'POST', body: blob });
+// === NOVO UPLOAD PARA O GOOGLE DRIVE ===
+async function subirArquivoParaServidor(blob, nomeArquivo, nomePasta) {
+  const res = await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(nomePasta)}`, { method: 'POST', body: blob });
   if (!res.ok) throw new Error(`Falha no upload: ${nomeArquivo}`);
-  return (await res.json()).url;
+  return await res.json();
 }
 
 async function obterImagemBrasao() {
@@ -103,15 +83,11 @@ async function obterImagemBrasao() {
   }
 }
 
-// ==========================================
-// 4. PROCESSAMENTO DO FORMULÁRIO E ANEXOS
-// ==========================================
 async function processarFormulario(e) {
   e.preventDefault();
-
   const btnSubmit = document.querySelector('button[type="submit"]');
   const txtOriginalBtn = btnSubmit.innerHTML;
-  btnSubmit.innerHTML = '<i data-lucide="loader" class="w-6 h-6 animate-spin"></i> Preparando documentos...';
+  btnSubmit.innerHTML = '<i data-lucide="loader" class="w-6 h-6 animate-spin"></i> Enviando para o Google Drive...';
   btnSubmit.disabled = true;
 
   try {
@@ -125,25 +101,21 @@ async function processarFormulario(e) {
       idt: document.getElementById('idt').value.trim(),
       preccp: document.getElementById('preccp').value.trim(),
       telefone: document.getElementById('telefone').value.trim(),
-      
       curso: document.getElementById('curso').value.trim().toUpperCase(),
       omCurso: document.getElementById('omCurso').value.trim().toUpperCase(),
       guarnicaoCurso: document.getElementById('guarnicaoCurso').value.trim().toUpperCase(),
       adtDcem: document.getElementById('adtDcem').value.trim(),
       bi: document.getElementById('bi').value.trim(),
       dataDesligamento: document.getElementById('dataDesligamento').value.trim(),
-      
       banco: document.getElementById('banco').value.trim(),
       agencia: document.getElementById('agencia').value.trim(),
       conta: document.getElementById('conta').value.trim(),
-      
       dependentes: temDependentes ? [...dependentes] : []
     };
 
     const dataAtual = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
     const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, ImageRun } = window.docx;
 
-    // --- CABEÇALHO COM BRASÃO ---
     const elementosCabecalho = [];
     if (arrayBufferBrasao) {
       elementosCabecalho.push(
@@ -152,7 +124,6 @@ async function processarFormulario(e) {
     }
     elementosCabecalho.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "MINISTÉRIO DA DEFESA\nEXÉRCITO BRASILEIRO\nREGIMENTO ITORORÓ\n5º BATALHÃO DE INFANTARIA LEVE\n(Terço da Bahia/1631)", bold: true })] }));
 
-    // --- TABELA DE DEPENDENTES ---
     const gerarLinhaDep = (nome, grau, dtnasc, idade) => new TableRow({
       children: [
         new TableCell({ children: [new Paragraph({ text: nome })] }),
@@ -174,7 +145,6 @@ async function processarFormulario(e) {
       ? dadosFormularioAtual.dependentes.map(d => `${d.nome} (${d.parentesco})`).join("; ") 
       : "NÃO HÁ";
 
-    // --- 1. DIEx OPÇÃO CURSO ---
     const docDIEx = new Document({
       sections: [{
         properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
@@ -210,7 +180,6 @@ async function processarFormulario(e) {
       }]
     });
 
-    // --- 2. NOTA DIEx DE OPÇÃO (CURSOS) ---
     const docBAR = new Document({
       sections: [{
         properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
@@ -235,7 +204,6 @@ async function processarFormulario(e) {
       }]
     });
 
-    // --- 3. ORDEM DE PAGAMENTO ---
     const docOrdPagto = new Document({
       sections: [{
         properties: { page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
@@ -262,7 +230,6 @@ async function processarFormulario(e) {
       }]
     });
 
-    // --- UPLOADS ---
     const blobDIEx = await window.docx.Packer.toBlob(docDIEx);
     const blobBAR = await window.docx.Packer.toBlob(docBAR);
     const blobOrdPagto = await window.docx.Packer.toBlob(docOrdPagto);
@@ -270,24 +237,23 @@ async function processarFormulario(e) {
     const docPdf = criarInstanciaPDF(dadosFormularioAtual);
     const blobPdf = docPdf.output('blob');
 
+    // MÁGICA DA NUVEM (Google Drive)
     const nomeBase = `${dadosFormularioAtual.posto}_${dadosFormularioAtual.nome.replace(/\s+/g, '_')}_${Date.now()}`;
-    const urlPdfDocs = await subirArquivoParaServidor(blobPdf, `Checklist_Cursos_${nomeBase}.pdf`);
-    const urlDiex = await subirArquivoParaServidor(blobDIEx, `DIEx_Cursos_${nomeBase}.docx`);
-    const urlNotaBar = await subirArquivoParaServidor(blobBAR, `NotaBAR_Cursos_${nomeBase}.docx`);
-    const urlOrdPagto = await subirArquivoParaServidor(blobOrdPagto, `OrdPagto_Cursos_${nomeBase}.docx`);
+    const nomePasta = `Cursos - ${dadosFormularioAtual.posto} ${dadosFormularioAtual.nome}`;
 
+    await subirArquivoParaServidor(blobPdf, `Checklist_Cursos_${nomeBase}.pdf`, nomePasta);
+    await subirArquivoParaServidor(blobDIEx, `DIEx_Cursos_${nomeBase}.docx`, nomePasta);
+    await subirArquivoParaServidor(blobBAR, `NotaBAR_Cursos_${nomeBase}.docx`, nomePasta);
+    await subirArquivoParaServidor(blobOrdPagto, `OrdPagto_Cursos_${nomeBase}.docx`, nomePasta);
+
+    // MÁGICA DO PROTOCOLO ADMIN
     const payloadReq = {
       id: 'CUR-' + Date.now().toString().slice(-6),
       dataCriacao: new Date().toLocaleDateString('pt-BR'),
       modalidade: 'Cursos / Estagios',
-      omDestino: dadosFormularioAtual.omCurso,
       posto: dadosFormularioAtual.posto,
       nomeCompleto: dadosFormularioAtual.nome,
-      cpf: dadosFormularioAtual.cpf,
-      urlPdfDocs: urlPdfDocs,
-      urlDiex: urlDiex,
-      urlNotaBar: urlNotaBar,
-      urlOp: urlOrdPagto
+      cpf: dadosFormularioAtual.cpf
     };
 
     const resDb = await fetch('/api/solicitacoes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadReq) });
@@ -308,58 +274,45 @@ async function processarFormulario(e) {
   }
 }
 
-// ==========================================
-// 5. GERAÇÃO DO CHECKLIST (PDF)
-// ==========================================
 function criarInstanciaPDF(dados) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.text('MINISTÉRIO DA DEFESA', 105, 20, { align: 'center' });
   doc.text('EXÉRCITO BRASILEIRO', 105, 26, { align: 'center' });
   doc.text('5º BATALHÃO DE INFANTARIA LEVE', 105, 32, { align: 'center' });
-  
   doc.setDrawColor(75, 83, 32); 
   doc.setLineWidth(0.5); 
   doc.line(20, 38, 190, 38);
-
   doc.setFontSize(14);
   doc.text('RELAÇÃO DE DOCUMENTOS (ANEXOS)', 105, 48, { align: 'center' });
-
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text(`Militar:`, 20, 60);
   doc.setFont('helvetica', 'normal');
   doc.text(`${dados.posto} ${dados.nome}`, 35, 60);
-  
   doc.setFont('helvetica', 'bold');
   doc.text(`Modalidade:`, 20, 66);
   doc.setFont('helvetica', 'normal');
   doc.text(`Cursos e Estágios`, 43, 66);
-
   doc.setFillColor(254, 226, 226); 
   doc.setDrawColor(220, 38, 38);   
   doc.setLineWidth(0.5);
   doc.roundedRect(20, 75, 170, 16, 2, 2, 'FD');
-
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(185, 28, 28); 
   doc.text('O MILITAR DEVERÁ COMPARECER A DIVISÃO ADMINISTRATIVA', 105, 81, { align: 'center' });
   doc.text('PARA ASSINATURA E ENTREGA DE DOCUMENTOS', 105, 87, { align: 'center' });
-
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'bold');
   doc.text('ANEXOS NECESSÁRIOS:', 20, 105);
-  
   doc.setFont('helvetica', 'normal');
   let y = 115;
   doc.text('[   ] 01 (uma) cópia autenticada do Adt DCEM', 20, y); y += 8;
   doc.text('[   ] 01 (uma) cópia autenticada do BI de transcrição do Adt DCEM', 20, y); y += 8;
   doc.text('[   ] 01 (uma) cópia autenticada do último contracheque', 20, y); y += 8;
   doc.text('[   ] 01 (uma) cópia autenticada da Declaração de Beneficiários', 20, y); y += 8;
-
   return doc;
 }
 
