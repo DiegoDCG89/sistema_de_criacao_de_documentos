@@ -157,12 +157,23 @@
             <i data-lucide="check-circle" class="w-6 h-6"></i> Confirmar e Gerar Documentos
           </button>
         </div>
+<div style="display: none;">
+          <button type="button" id="btn-add-dep"></button>
+          <input type="text" id="cursoDataInicio">
+          <input type="text" id="cursoDataTermino">
+          <input type="text" id="transfDataDesligamento">
+        </div>
 
+        <div class="pt-4 border-t border-[#dcd3b6]">
+          <button type="submit" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg border border-[#445646]">
+            <i data-lucide="check-circle" class="w-6 h-6"></i> Confirmar e Gerar Documentos
+          </button>
+        </div>
       </form>
     </div>
   </main>
 
-  <!-- MODAL OMITIDO POR ESPAÇO, MANTENHA O MESMO MODAL DO CÓDIGO ANTERIOR -->
+  <!-- MODAL DE SUCESSO COMPLETO E CORRIGIDO -->
   <div id="modal-sucesso" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-[#fbfaf6] rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-[#dcd3b6]">
       <div class="w-16 h-16 mx-auto rounded-full bg-[#e1d5b3] text-[#2c3b2c] flex items-center justify-center mb-4">
@@ -170,11 +181,30 @@
       </div>
       <h3 class="text-2xl font-serif-title font-bold text-center text-stone-900 mb-2">Solicitação Gerada!</h3>
       <p class="text-center text-sm text-stone-600 mb-6">Os documentos foram gerados e enviados para o servidor.</p>
+      
+      <div class="bg-white border border-[#dcd3b6] rounded-xl p-4 mb-5 shadow-sm">
+        <h4 class="text-xs font-bold text-[#2c3b2c] uppercase tracking-wider mb-2 flex items-center gap-1">
+          <i data-lucide="paperclip" class="w-4 h-4 text-[#c6b075]"></i> Documentos Necessários:
+        </h4>
+        <ul id="lista-anexos-final" class="text-xs sm:text-sm text-stone-700 list-disc list-inside space-y-1.5">
+          <!-- A lista será injetada pelo JS ou ficará a padrão -->
+          <li>Verifique a lista no PDF gerado.</li>
+        </ul>
+      </div>
+
+      <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded-r-lg">
+        <p class="text-red-700 font-bold text-center text-sm sm:text-base leading-snug uppercase tracking-wide">
+          O militar deverá comparecer à Divisão Administrativa para assinatura e entrega de documentos
+        </p>
+      </div>
+
       <div class="flex flex-col gap-3">
         <button id="btn-baixar-pdf" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] border border-[#445646] font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition">
           <i data-lucide="download-cloud" class="w-5 h-5"></i> Baixar Lista de Anexos (PDF)
         </button>
-        <a href="index.html" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition text-center block">Voltar ao Início</a>
+        <a href="index.html" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition text-center block">
+          Voltar ao Início
+        </a>
       </div>
     </div>
   </div>
