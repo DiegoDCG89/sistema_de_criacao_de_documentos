@@ -42,7 +42,6 @@ app.post('/api/upload', (req, res) => {
   const filename = req.query.filename || `arquivo_${Date.now()}`;
   const folderName = req.query.folder || 'Sem Classificacao'; 
 
-  // Salva temporariamente no servidor apenas para fazer a ponte
   const tempPath = path.join(uploadsDir, filename);
   const writeStream = fs.createWriteStream(tempPath);
   req.pipe(writeStream);
@@ -51,43 +50,59 @@ app.post('/api/upload', (req, res) => {
     try {
       if (!drive) throw new Error("Google Drive não está autenticado.");
 
-      // 1. Verifica se a subpasta (ex: Bagagem - Sgt Fulano) já existe
+      // 1. Busca se a subpasta já existe dentro da pasta mãe
       let query = `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and '${PARENT_FOLDER_ID}' in parents and trashed=false`;
-      let resFolder = await drive.files.list({ q: query, fields: 'files(id, name)' });
+      let resFolder = await drive.files.list({ 
+        q: query, 
+        fields: 'files(id, name)',
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true
+      });
+      
       let subFolderId;
 
       if (resFolder.data.files.length > 0) {
-        subFolderId = resFolder.data.files[0].id; // Já existe, usa a mesma
+        subFolderId = resFolder.data.files[0].id;
       } else {
-        // Cria a subpasta se não existir
+        // Cria a subpasta com suporte a drives compartilhados
         let createFolder = await drive.files.create({
-            resource: { name: folderName, mimeType: 'application/vnd.google-apps.folder', parents: [PARENT_FOLDER_ID] },
-            fields: 'id'
+          resource: { 
+            name: folderName, 
+            mimeType: 'application/vnd.google-apps.folder', 
+            parents: [PARENT_FOLDER_ID] 
+          },
+          fields: 'id',
+          supportsAllDrives: true
         });
         subFolderId = createFolder.data.id;
       }
 
-      // 2. Faz o upload do arquivo para dentro dessa subpasta
-      const fileMetadata = { name: filename, parents: [subFolderId] };
+      // 2. Upload do arquivo para a subpasta
+      const fileMetadata = { 
+        name: filename, 
+        parents: [subFolderId] 
+      };
       const media = { body: fs.createReadStream(tempPath) };
       
       await drive.files.create({
-          resource: fileMetadata,
-          media: media,
-          fields: 'id'
+        resource: fileMetadata,
+        media: media,
+        fields: 'id',
+        supportsAllDrives: true
       });
 
-      // 3. Apaga o arquivo temporário do Render para não ocupar espaço
-      fs.unlinkSync(tempPath);
+      // 3. Remove o arquivo temporário
+      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      
       res.json({ success: true });
 
     } catch (error) {
-      console.error('Erro no Drive:', error);
+      console.error('Erro no Drive:', error.response?.data || error.message);
+      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
       res.status(500).json({ error: 'Erro ao enviar para o Google Drive' });
     }
   });
 });
-
 // ==========================================
 // ROTAS DO LIVRO DE PROTOCOLO (ADMIN)
 // ==========================================
