@@ -1,8 +1,8 @@
 // =========================================================================
-// SisDoc - Gerador de Cursos e Estágios (Docxtemplater + Google Drive)
+// SisDoc - Gerador de Cursos e Estágios (Multi-documentos com Upload Silencioso)
 // =========================================================================
 
-// Formata data atual por extenso: ex: "17 de setembro de 2026"
+// Formata data atual: ex: "17 de setembro de 2026"
 function formatarDataPorExtenso() {
   const meses = [
     'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
@@ -13,6 +13,16 @@ function formatarDataPorExtenso() {
   const mes = meses[hoje.getMonth()];
   const ano = hoje.getFullYear();
   return `${dia} de ${mes} de ${ano}`;
+}
+
+// Formata apenas mês e ano: ex: "setembro de 2026"
+function formatarMesAno() {
+  const meses = [
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+  ];
+  const hoje = new Date();
+  return `${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
 }
 
 // Cria uma nova linha de dependente com seleção de parentesco
@@ -48,7 +58,6 @@ function adicionarLinhaDependente() {
     </div>
   `;
 
-  // Evento para remover a linha ao clicar no '✕'
   divLinha.querySelector('.btn-remover-dep').addEventListener('click', () => {
     divLinha.remove();
   });
@@ -56,9 +65,8 @@ function adicionarLinhaDependente() {
   listaDep.appendChild(divLinha);
 }
 
-// Inicialização dos eventos do formulário e interface
+// Inicialização dos eventos da tela
 document.addEventListener('DOMContentLoaded', () => {
-  // Controle da exibição da seção de Dependentes (Rádios SIM / NÃO)
   const radiosDep = document.querySelectorAll('input[name="opt_dependentes"]');
   const caixaInclusao = document.getElementById('caixa-inclusao-dependentes');
 
@@ -73,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Botão Adicionar Dependente
   const btnAddDep = document.getElementById('btn-add-dep');
   if (btnAddDep) {
     btnAddDep.addEventListener('click', (e) => {
@@ -82,14 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Intercepta a submissão do formulário
   const form = document.getElementById('form-cursos');
   if (form) {
     form.addEventListener('submit', processarEnvioCursos);
   }
 });
 
-// Coleta todos os dependentes cadastrados (apenas Nome e Grau de Parentesco)
+// Coleta os dependentes adicionados
 function coletarDependentes() {
   const radioSim = document.querySelector('input[name="opt_dependentes"][value="sim"]');
   if (!radioSim || !radioSim.checked) {
@@ -114,7 +120,25 @@ function coletarDependentes() {
   return dependentes;
 }
 
-// Processador Principal de Geração do DIEx
+// Função auxiliar: Renderiza qualquer modelo .docx em memória
+async function renderizarDocx(caminhoTemplate, dadosPayload, PizZipLib, DocxLib) {
+  const res = await fetch(caminhoTemplate);
+  if (!res.ok) {
+    throw new Error(`Não foi possível carregar o template '${caminhoTemplate}' (HTTP ${res.status})`);
+  }
+  const buffer = await res.arrayBuffer();
+  const zip = new PizZipLib(buffer);
+  const doc = new DocxLib(zip, { paragraphLoop: true, linebreaks: true });
+  
+  doc.render(dadosPayload);
+  
+  return doc.getZip().generate({
+    type: 'blob',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  });
+}
+
+// Processador Principal
 async function processarEnvioCursos(e) {
   e.preventDefault();
 
@@ -124,13 +148,14 @@ async function processarEnvioCursos(e) {
   try {
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.innerHTML = `<span class="animate-pulse">Processando documento...</span>`;
+      btnSubmit.innerHTML = `<span class="animate-pulse">Processando documentos...</span>`;
     }
 
     const getVal = (id) => document.getElementById(id)?.value.trim() || '';
 
     const dados = {
       DATA_ATUAL: formatarDataPorExtenso(),
+      MES_ANO: formatarMesAno(),
       POSTO_GRAD: getVal('posto'),
       NOME_COMPLETO: getVal('nome').toUpperCase(),
       CPF: getVal('cpf'),
@@ -150,61 +175,68 @@ async function processarEnvioCursos(e) {
 
     const dependentes = coletarDependentes();
 
-    // Verificação das bibliotecas PizZip e Docxtemplater com fallbacks
     const PizZipConstructor = window.PizZip || window.pizzip || (typeof PizZip !== 'undefined' ? PizZip : null);
     const DocxtemplaterConstructor = window.docxtemplater || window.Docxtemplater || (typeof docxtemplater !== 'undefined' ? docxtemplater : null);
 
     if (!PizZipConstructor || !DocxtemplaterConstructor) {
-      throw new Error("As bibliotecas PizZip ou Docxtemplater não foram carregadas. Verifique a conexão com a internet.");
+      throw new Error("Bibliotecas Word (PizZip/Docxtemplater) não disponíveis.");
     }
 
-    // Carrega o modelo Word oficial
-    const resTemplate = await fetch('/templates/diex_opcao_curso.docx');
-    if (!resTemplate.ok) {
-      throw new Error(`Não foi possível carregar '/templates/diex_opcao_curso.docx' (HTTP ${resTemplate.status})`);
-    }
-    const templateBuffer = await resTemplate.arrayBuffer();
-
-    // Renderiza os dados no template
-    const zip = new PizZipConstructor(templateBuffer);
-    const doc = new DocxtemplaterConstructor(zip, {
-      paragraphLoop: true,
-      linebreaks: true
-    });
-
-    doc.render({
+    const payloadTemplate = {
       ...dados,
       TEM_DEPENDENTES: dependentes.length > 0,
       DEPENDENTES: dependentes
-    });
+    };
 
-    const blobWord = doc.getZip().generate({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
+    const sufixoNome = `${dados.POSTO_GRAD.replace(/\s+/g, '_')}_${dados.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
+    const pastaDestinoDrive = `Cursos - ${dados.POSTO_GRAD} ${dados.NOME_COMPLETO}`;
 
-    const nomeArquivo = `DIEx_Opcao_Curso_${dados.POSTO_GRAD.replace(/\s+/g, '_')}_${dados.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
-    const nomePastaDrive = `Cursos - ${dados.POSTO_GRAD} ${dados.NOME_COMPLETO}`;
+    // =========================================================================
+    // 1. GERAÇÃO DO DIEX PRINCIPAL (Baixa para o usuário + Envia ao Drive)
+    // =========================================================================
+    const blobDiex = await renderizarDocx('/templates/diex_opcao_curso.docx', payloadTemplate, PizZipConstructor, DocxtemplaterConstructor);
+    const nomeArquivoDiex = `DIEx_Opcao_Curso_${sufixoNome}`;
 
-    // 1. Download Imediato do Word no navegador
-    const urlDownload = URL.createObjectURL(blobWord);
+    // Dispara o download local APENAS do DIEx para o militar
+    const urlDownload = URL.createObjectURL(blobDiex);
     const link = document.createElement('a');
     link.href = urlDownload;
-    link.download = nomeArquivo;
+    link.download = nomeArquivoDiex;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(urlDownload);
 
-    // 2. Upload para o Google Drive e registro de protocolo
-    if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Enviando ao Google Drive...</span>`;
+    // =========================================================================
+    // 2. GERAÇÃO DOS ANEXOS INTERNOS (Apenas para o Google Drive)
+    // =========================================================================
+    if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Gerando anexos internos...</span>`;
 
+    const blobBar = await renderizarDocx('/templates/nota_diex_bar.docx', payloadTemplate, PizZipConstructor, DocxtemplaterConstructor);
+    const nomeArquivoBar = `Nota_p_BAR_${sufixoNome}`;
+
+    const blobOrdPagto = await renderizarDocx('/templates/Nota_Ord_Pagto_curso.docx', payloadTemplate, PizZipConstructor, DocxtemplaterConstructor);
+    const nomeArquivoOrdPagto = `Nota_Ord_Pagto_${sufixoNome}`;
+
+    // =========================================================================
+    // 3. UPLOAD EM LOTE PARA O GOOGLE DRIVE
+    // =========================================================================
+    if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Enviando arquivos ao Google Drive...</span>`;
+
+    const enviarParaDrive = async (blob, nomeArquivo) => {
+      const url = `/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(pastaDestinoDrive)}`;
+      return fetch(url, { method: 'POST', body: blob });
+    };
+
+    // Envia os 3 arquivos de forma assíncrona
+    await Promise.allSettled([
+      enviarParaDrive(blobDiex, nomeArquivoDiex),
+      enviarParaDrive(blobBar, nomeArquivoBar),
+      enviarParaDrive(blobOrdPagto, nomeArquivoOrdPagto)
+    ]);
+
+    // Registra o protocolo no backend
     try {
-      await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(nomePastaDrive)}`, {
-        method: 'POST',
-        body: blobWord
-      });
-
       await fetch('/api/solicitacoes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -212,31 +244,30 @@ async function processarEnvioCursos(e) {
           id: Date.now(),
           data: new Date().toISOString(),
           requerente: `${dados.POSTO_GRAD} ${dados.NOME_COMPLETO}`,
-          tipo: 'DIEx Opção - Curso',
-          arquivo: nomeArquivo,
-          pasta: nomePastaDrive,
+          tipo: 'DIEx Opção - Curso (com Nota BAR e Ord Pagto)',
+          arquivo: nomeArquivoDiex,
+          pasta: pastaDestinoDrive,
           dependentesQtd: dependentes.length
         })
       });
-    } catch (driveErr) {
-      console.warn("Aviso no upload para o Google Drive:", driveErr);
+    } catch (eProtocolo) {
+      console.warn("Aviso ao registrar protocolo:", eProtocolo);
     }
 
-    // 3. Exibe o modal de sucesso
+    // Exibe o modal de sucesso na tela
     const modalSucesso = document.getElementById('modal-sucesso');
     if (modalSucesso) {
       modalSucesso.classList.remove('hidden');
     }
 
-    // Configura o botão de PDF de Anexos
     const btnBaixarPdf = document.getElementById('btn-baixar-pdf');
     if (btnBaixarPdf) {
       btnBaixarPdf.onclick = () => gerarPdfAnexos(dados);
     }
 
   } catch (err) {
-    console.error("Erro na geração:", err);
-    alert(`Erro ao gerar documento: ${err.message}`);
+    console.error("Erro no processamento:", err);
+    alert(`Erro ao processar documentos: ${err.message}`);
   } finally {
     if (btnSubmit) {
       btnSubmit.disabled = false;
@@ -246,10 +277,10 @@ async function processarEnvioCursos(e) {
   }
 }
 
-// Gerador da Lista de Anexos em PDF
+// Gerador da Lista de Anexos em PDF (jsPDF)
 function gerarPdfAnexos(dados) {
   if (!window.jspdf || !window.jspdf.jsPDF) {
-    alert("Biblioteca jsPDF indisponível no momento.");
+    alert("Biblioteca jsPDF indisponível.");
     return;
   }
 
