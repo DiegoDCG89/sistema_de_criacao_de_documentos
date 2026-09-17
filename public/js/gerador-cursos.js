@@ -1,5 +1,5 @@
 // =========================================================================
-// SisDoc - Gerador de Cursos e Estágios (Multi-documentos com Upload Silencioso)
+// SisDoc - Gerador de Cursos e Estágios (Multi-documentos na pasta Curso_{NOME})
 // =========================================================================
 
 // Formata data atual: ex: "17 de setembro de 2026"
@@ -189,7 +189,9 @@ async function processarEnvioCursos(e) {
     };
 
     const sufixoNome = `${dados.POSTO_GRAD.replace(/\s+/g, '_')}_${dados.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
-    const pastaDestinoDrive = `Cursos - ${dados.POSTO_GRAD} ${dados.NOME_COMPLETO}`;
+    
+    // Pasta unificada no Google Drive: Curso_{NOME_COMPLETO}
+    const pastaDestinoDrive = `Curso_${dados.NOME_COMPLETO.replace(/\s+/g, '_')}`;
 
     // =========================================================================
     // 1. GERAÇÃO DO DIEX PRINCIPAL (Baixa para o usuário + Envia ao Drive)
@@ -219,16 +221,16 @@ async function processarEnvioCursos(e) {
     const nomeArquivoOrdPagto = `Nota_Ord_Pagto_${sufixoNome}`;
 
     // =========================================================================
-    // 3. UPLOAD EM LOTE PARA O GOOGLE DRIVE
+    // 3. UPLOAD EM LOTE PARA A MESMA PASTA NO GOOGLE DRIVE
     // =========================================================================
-    if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Enviando arquivos ao Google Drive...</span>`;
+    if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Enviando arquivos para a pasta ${pastaDestinoDrive}...</span>`;
 
     const enviarParaDrive = async (blob, nomeArquivo) => {
       const url = `/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(pastaDestinoDrive)}`;
       return fetch(url, { method: 'POST', body: blob });
     };
 
-    // Envia os 3 arquivos de forma assíncrona
+    // Todos os 3 documentos vão exatamente para a pasta pastaDestinoDrive
     await Promise.allSettled([
       enviarParaDrive(blobDiex, nomeArquivoDiex),
       enviarParaDrive(blobBar, nomeArquivoBar),
