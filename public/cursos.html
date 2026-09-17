@@ -4,19 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cursos e Estágios - SisDoc</title>
-  <!-- Bibliotecas para processamento do Template Word (.docx) -->
-<!-- PizZip e Docxtemplater Standalone CDN -->
-<script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
-<script src="js/gerador-cursos.js"></script>
 
-<!-- Script do gerador da aba Cursos -->
-<script src="js/gerador-cursos.js"></script>
+  <!-- Bibliotecas para processamento do Template Word (.docx) -->
+  <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
+
+  <!-- Estilos e Utilitários -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background-color: #eae6dd; }
@@ -197,15 +194,8 @@
           </div>
         </div>
 
-        <!-- CAMUFLAGEM PARA O JS NÃO TRAVAR -->
-        <div style="display: none;">
-          <input type="text" id="cursoDataInicio">
-          <input type="text" id="cursoDataTermino">
-          <input type="text" id="transfDataDesligamento">
-        </div>
-
         <div class="pt-4 border-t border-[#dcd3b6]">
-          <button type="submit" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg border border-[#445646]">
+          <button type="submit" id="btn-submit" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg border border-[#445646]">
             <i data-lucide="check-circle" class="w-6 h-6"></i> Confirmar e Gerar Documentos
           </button>
         </div>
@@ -254,10 +244,15 @@
     if (typeof lucide !== 'undefined') lucide.createIcons();
     function toggleDependentes(opcao) {
       const caixaInclusao = document.getElementById('caixa-inclusao-dependentes');
-      if (opcao === 'sim') caixaInclusao.classList.remove('hidden');
-      else caixaInclusao.classList.add('hidden');
+      if (opcao === 'sim') {
+        caixaInclusao.classList.remove('hidden');
+      } else {
+        caixaInclusao.classList.add('hidden');
+      }
     }
   </script>
-  <script type="module" src="./js/gerador-cursos.js"></script>
+
+  <!-- Script Principal da Página -->
+  <script src="./js/gerador-cursos.js"></script>
 </body>
 </html>
