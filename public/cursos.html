@@ -177,11 +177,11 @@
               <span class="block text-sm font-semibold text-stone-700 mb-2">Possui dependentes?</span>
               <div class="flex gap-4">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="opt_dependentes" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4">
+                  <input type="radio" id="opt_dep_sim" name="opt_dependentes" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleDependentes('sim')">
                   <span class="text-sm font-medium">SIM</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="opt_dependentes" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4">
+                  <input type="radio" id="opt_dep_nao" name="opt_dependentes" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleDependentes('nao')">
                   <span class="text-sm font-medium">NÃO</span>
                 </label>
               </div>
@@ -244,8 +244,19 @@
     </div>
   </div>
 
+  <!-- Script Inline para Controle Imediato da Interface -->
   <script>
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    
+    function toggleDependentes(opcao) {
+      const caixaInclusao = document.getElementById('caixa-inclusao-dependentes');
+      if (!caixaInclusao) return;
+      if (opcao === 'sim') {
+        caixaInclusao.classList.remove('hidden');
+      } else {
+        caixaInclusao.classList.add('hidden');
+      }
+    }
   </script>
 
   <!-- Script do gerador (carregado após o DOM estar pronto) -->
