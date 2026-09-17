@@ -15,35 +15,40 @@ function formatarDataPorExtenso() {
   return `${dia} de ${mes} de ${ano}`;
 }
 
-// Cria uma nova linha de dependente na interface
+// Cria uma nova linha de dependente com seleção de parentesco
 function adicionarLinhaDependente() {
   const listaDep = document.getElementById('lista-dependentes');
   if (!listaDep) return;
 
   const divLinha = document.createElement('div');
-  divLinha.className = 'grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-stone-50 rounded-lg border border-stone-200 relative item-dependente';
+  divLinha.className = 'grid grid-cols-1 sm:grid-cols-5 gap-3 p-3 bg-stone-50 rounded-lg border border-stone-200 relative item-dependente items-end';
   
   divLinha.innerHTML = `
-    <div>
+    <div class="sm:col-span-3">
       <label class="block text-[11px] font-semibold text-stone-600 mb-1">Nome Completo *</label>
       <input type="text" class="dep-nome w-full border border-stone-300 rounded px-2 py-1.5 text-xs uppercase" placeholder="NOME DO DEPENDENTE" required>
     </div>
-    <div>
-      <label class="block text-[11px] font-semibold text-stone-600 mb-1">Parentesco *</label>
-      <input type="text" class="dep-parentesco w-full border border-stone-300 rounded px-2 py-1.5 text-xs" placeholder="Ex: Esposa, Filho(a)" required>
-    </div>
-    <div class="flex items-end gap-2">
+    <div class="sm:col-span-2 flex items-end gap-2">
       <div class="flex-grow">
-        <label class="block text-[11px] font-semibold text-stone-600 mb-1">Data de Nascimento *</label>
-        <input type="text" class="dep-nasc w-full border border-stone-300 rounded px-2 py-1.5 text-xs" placeholder="DD/MM/AAAA" maxlength="10" required>
+        <label class="block text-[11px] font-semibold text-stone-600 mb-1">Grau de Parentesco *</label>
+        <select class="dep-parentesco w-full border border-stone-300 rounded px-2 py-1.5 text-xs bg-white focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none" required>
+          <option value="">Selecione...</option>
+          <option value="Esposa / Cônjuge">Esposa / Cônjuge</option>
+          <option value="Companheira(o)">Companheira(o)</option>
+          <option value="Filho(a)">Filho(a)</option>
+          <option value="Enteado(a)">Enteado(a)</option>
+          <option value="Pai / Mãe">Pai / Mãe</option>
+          <option value="Menor sob Guarda">Menor sob Guarda</option>
+          <option value="Outro">Outro</option>
+        </select>
       </div>
-      <button type="button" class="btn-remover-dep px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded border border-red-300 text-xs transition cursor-pointer">
+      <button type="button" class="btn-remover-dep px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded border border-red-300 text-xs transition cursor-pointer" title="Remover Dependente">
         ✕
       </button>
     </div>
   `;
 
-  // Remover a linha ao clicar no '✕'
+  // Evento para remover a linha ao clicar no '✕'
   divLinha.querySelector('.btn-remover-dep').addEventListener('click', () => {
     divLinha.remove();
   });
@@ -84,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Coleta todos os dependentes adicionados
+// Coleta todos os dependentes cadastrados (apenas Nome e Grau de Parentesco)
 function coletarDependentes() {
   const radioSim = document.querySelector('input[name="opt_dependentes"][value="sim"]');
   if (!radioSim || !radioSim.checked) {
@@ -97,13 +102,11 @@ function coletarDependentes() {
   itens.forEach((el) => {
     const nome = el.querySelector('.dep-nome')?.value.trim().toUpperCase() || '';
     const parentesco = el.querySelector('.dep-parentesco')?.value.trim() || '';
-    const dataNasc = el.querySelector('.dep-nasc')?.value.trim() || '';
 
-    if (nome) {
+    if (nome && parentesco) {
       dependentes.push({
         NOME: nome,
-        PARENTESCO: parentesco,
-        DATA_NASC: dataNasc
+        PARENTESCO: parentesco
       });
     }
   });
