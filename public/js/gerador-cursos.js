@@ -103,7 +103,21 @@ async function gerarDocumentoCurso(event) {
     const templateArrayBuffer = await response.arrayBuffer();
 
     // 3. Inicializa o PizZip e o Docxtemplater
-    const zip = new window.PizZip(templateArrayBuffer);
+    // NOVA INICIALIZAÇÃO SEGURA:
+const PizZipConstructor = window.PizZip || window.pizzip || PizZip;
+if (!PizZipConstructor) {
+  throw new Error("A biblioteca PizZip não foi carregada. Verifique as tags <script> no HTML.");
+}
+const zip = new PizZipConstructor(templateArrayBuffer);
+
+const DocxTemplaterConstructor = window.docxtemplater || window.Docxtemplater || docxtemplater;
+if (!DocxTemplaterConstructor) {
+  throw new Error("A biblioteca Docxtemplater não foi carregada. Verifique as tags <script> no HTML.");
+}
+const doc = new DocxTemplaterConstructor(zip, {
+  paragraphLoop: true,
+  linebreaks: true
+});
     const doc = new window.docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true
