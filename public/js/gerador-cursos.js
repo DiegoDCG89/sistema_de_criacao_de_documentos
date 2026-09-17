@@ -1,8 +1,8 @@
 // =========================================================================
-// SisDoc - Gerador de DIEx de Opção de Curso (Docxtemplater + Google Drive)
+// SisDoc - Gerador de DIEx de Opção de Curso (Completo com UI e Dependentes)
 // =========================================================================
 
-// Função utilitária: Formata data atual (ex: "17 de setembro de 2026")
+// 1. Funções Utilitárias de Data
 function formatarDataPorExtenso() {
   const meses = [
     'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
@@ -15,7 +15,6 @@ function formatarDataPorExtenso() {
   return `${dia} de ${mes} de ${ano}`;
 }
 
-// Função utilitária: Formatar datas de inputs HTML (YYYY-MM-DD -> DD/MM/AAAA)
 function formatarDataBR(dataStr) {
   if (!dataStr) return '';
   const partes = dataStr.split('-');
@@ -23,23 +22,81 @@ function formatarDataBR(dataStr) {
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
-// Coleta todos os dependentes adicionados na tabela/lista do formulário
-function coletarDependentesDoForm() {
-  const listaDependentes = [];
-  // Procura por linhas de dependentes dinâmicos criados no formulário
-  const linhas = document.querySelectorAll('.linha-dependente, .item-dependente');
-  
+// 2. Controle de Interface: Dependentes (Adicionar / Remover / Exibir)
+document.addEventListener('DOMContentLoaded', () => {
+  // Controle dos Rádios SIM / NÃO
+  const radioSim = document.querySelector('input[type="radio"][value="SIM"], #dep_sim, #radioSim');
+  const radioNao = document.querySelector('input[type="radio"][value="NAO"], #dep_nao, #radioNao');
+  const containerDependentes = document.getElementById('containerDependentes') || 
+                               document.getElementById('area-dependentes') || 
+                               document.querySelector('.secao-dependentes');
+
+  function alternarDependentes() {
+    if (!containerDependentes) return;
+    const temDep = radioSim && radioSim.checked;
+    containerDependentes.style.display = temDep ? 'block' : 'none';
+  }
+
+  if (radioSim) radioSim.addEventListener('change', alternarDependentes);
+  if (radioNao) radioNao.addEventListener('change', alternarDependentes);
+
+  // Botão Adicionar Dependente
+  const btnAddDep = document.getElementById('btnAddDependente') || 
+                    document.getElementById('add-dependente') ||
+                    document.querySelector('.btn-add-dep');
+
+  const listaContainer = document.getElementById('listaDependentes') || 
+                         document.getElementById('tabelaDependentesBody') ||
+                         containerDependentes;
+
+  if (btnAddDep && listaContainer) {
+    btnAddDep.addEventListener('click', (e) => {
+      e.preventDefault();
+      const divLinha = document.createElement('div');
+      divLinha.className = 'linha-dependente';
+      divLinha.style.display = 'flex';
+      divLinha.style.gap = '10px';
+      divLinha.style.marginBottom = '10px';
+      divLinha.style.alignItems = 'center';
+
+      divLinha.innerHTML = `
+        <input type="text" placeholder="Nome Completo" class="dep-nome" style="flex: 2; padding: 6px; border: 1px solid #ccc; border-radius: 4px;" required>
+        <input type="text" placeholder="Parentesco (ex: Esposa, Filho)" class="dep-parentesco" style="flex: 1.5; padding: 6px; border: 1px solid #ccc; border-radius: 4px;" required>
+        <input type="date" class="dep-data-nasc" style="flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px;" required>
+        <button type="button" class="btn-remover-dep" style="background: #e53e3e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">X</button>
+      `;
+
+      divLinha.querySelector('.btn-remover-dep').addEventListener('click', () => {
+        divLinha.remove();
+      });
+
+      listaContainer.appendChild(divLinha);
+    });
+  }
+
+  // Intercepta o Submit do Formulário
+  const form = document.querySelector('form') || document.getElementById('formCurso');
+  if (form) {
+    form.addEventListener('submit', gerarDocumentoCurso);
+  }
+});
+
+// 3. Coleta dos dados dos dependentes
+function coletarDependentes() {
+  const lista = [];
+  const linhas = document.querySelectorAll('.linha-dependente');
+
   linhas.forEach((linha) => {
-    const nomeEl = linha.querySelector('[name="dep_nome"], .dep-nome');
-    const parentescoEl = linha.querySelector('[name="dep_parentesco"], .dep-parentesco');
-    const dataNascEl = linha.querySelector('[name="dep_data_nasc"], .dep-data-nasc');
+    const nomeEl = linha.querySelector('.dep-nome');
+    const parentescoEl = linha.querySelector('.dep-parentesco');
+    const dataNascEl = linha.querySelector('.dep-data-nasc');
 
     const nome = nomeEl ? nomeEl.value.trim().toUpperCase() : '';
     const parentesco = parentescoEl ? parentescoEl.value.trim() : '';
     const dataNasc = dataNascEl ? formatarDataBR(dataNascEl.value.trim()) : '';
 
     if (nome) {
-      listaDependentes.push({
+      lista.push({
         NOME: nome,
         PARENTESCO: parentesco,
         DATA_NASC: dataNasc
@@ -47,15 +104,15 @@ function coletarDependentesDoForm() {
     }
   });
 
-  return listaDependentes;
+  return lista;
 }
 
-// Função Principal de Geração do Documento
+// 4. Função Principal de Geração
 async function gerarDocumentoCurso(event) {
   if (event) event.preventDefault();
 
-  const btnGerar = document.getElementById('btnGerar') || document.querySelector('button[type="submit"]');
-  const textoOriginalBtn = btnGerar ? btnGerar.innerText : 'Gerar Documento';
+  const btnGerar = document.querySelector('button[type="submit"]') || document.getElementById('btnGerar');
+  const textoOriginal = btnGerar ? btnGerar.innerText : 'Gerar Documento';
 
   try {
     if (btnGerar) {
@@ -63,68 +120,60 @@ async function gerarDocumentoCurso(event) {
       btnGerar.innerText = 'Processando documento...';
     }
 
-    // 1. Coleta dados dos inputs do formulário
-    const getVal = (id) => {
-      const el = document.getElementById(id) || document.querySelector(`[name="${id}"]`);
+    // Helper tolerante para capturar valores por id, name ou label
+    const getVal = (seletor) => {
+      const el = document.querySelector(`#${seletor}, [name="${seletor}"], input[id*="${seletor}" i], select[id*="${seletor}" i]`);
       return el ? el.value.trim() : '';
     };
 
     const postoGrad = getVal('posto') || getVal('posto_graduacao');
     const nomeCompleto = (getVal('nome') || getVal('nome_completo')).toUpperCase();
-    const nomeCurso = getVal('nome_curso');
-    const omRealizacao = getVal('om_realizacao');
+    const nomeCurso = getVal('nome_curso') || getVal('curso');
+    const omRealizacao = getVal('om_realizacao') || getVal('om');
     const guarnicao = getVal('guarnicao');
-    const adtDcem = getVal('adt_dcem');
-    const dataDesligamento = formatarDataBR(getVal('data_desligamento'));
+    const adtDcem = getVal('adt_dcem') || getVal('adt');
+    const dataDesligamento = formatarDataBR(getVal('data_desligamento') || getVal('desligamento'));
     const cpf = getVal('cpf');
     const identidade = getVal('identidade');
-    const precCp = getVal('prec_cp');
+    const precCp = getVal('prec_cp') || getVal('preccp');
     const banco = getVal('banco');
     const agencia = getVal('agencia');
-    const contaCorrente = getVal('conta_corrente');
+    const contaCorrente = getVal('conta_corrente') || getVal('conta');
     const telefone = getVal('telefone');
 
-    if (!nomeCompleto || !postoGrad) {
-      alert('Por favor, preencha ao menos o Posto/Graduação e o Nome Completo.');
+    if (!postoGrad || !nomeCompleto) {
+      alert('Atenção: Preencha o Posto/Graduação e o Nome Completo antes de gerar.');
       if (btnGerar) {
         btnGerar.disabled = false;
-        btnGerar.innerText = textoOriginalBtn;
+        btnGerar.innerText = textoOriginal;
       }
       return;
     }
 
-    const dependentes = coletarDependentesDoForm();
+    // Dependentes
+    const radioSim = document.querySelector('input[type="radio"][value="SIM"]:checked, #dep_sim:checked');
+    const dependentes = radioSim ? coletarDependentes() : [];
 
-    // 2. Carrega o modelo .docx oficial salvo na pasta /templates
+    // Carregamento de Bibliotecas com Proteção contra erros de CDN
+    const PizZipLib = window.PizZip || window.pizzip || (typeof PizZip !== 'undefined' ? PizZip : null);
+    const DocxLib = window.docxtemplater || window.Docxtemplater || (typeof docxtemplater !== 'undefined' ? docxtemplater : null);
+
+    if (!PizZipLib || !DocxLib) {
+      throw new Error("As bibliotecas de Word não foram carregadas. Verifique a conexão com a internet ou os scripts no HTML.");
+    }
+
+    // Carregamento do Template
     const response = await fetch('/templates/diex_opcao_curso.docx');
     if (!response.ok) {
-      throw new Error(`Não foi possível carregar o modelo de template: ${response.statusText}`);
+      throw new Error(`Não foi possível carregar o arquivo /templates/diex_opcao_curso.docx (Status: ${response.status})`);
     }
-    const templateArrayBuffer = await response.arrayBuffer();
+    const arrayBuffer = await response.arrayBuffer();
 
-    // 3. Inicializa o PizZip e o Docxtemplater
-    // NOVA INICIALIZAÇÃO SEGURA:
-const PizZipConstructor = window.PizZip || window.pizzip || PizZip;
-if (!PizZipConstructor) {
-  throw new Error("A biblioteca PizZip não foi carregada. Verifique as tags <script> no HTML.");
-}
-const zip = new PizZipConstructor(templateArrayBuffer);
+    // Renderização
+    const zip = new PizZipLib(arrayBuffer);
+    const doc = new DocxLib(zip, { paragraphLoop: true, linebreaks: true });
 
-const DocxTemplaterConstructor = window.docxtemplater || window.Docxtemplater || docxtemplater;
-if (!DocxTemplaterConstructor) {
-  throw new Error("A biblioteca Docxtemplater não foi carregada. Verifique as tags <script> no HTML.");
-}
-const doc = new DocxTemplaterConstructor(zip, {
-  paragraphLoop: true,
-  linebreaks: true
-});
-    const doc = new window.docxtemplater(zip, {
-      paragraphLoop: true,
-      linebreaks: true
-    });
-
-    // 4. Injeta os dados nas tags oficiais que configuramos
-    const payloadTemplate = {
+    doc.render({
       DATA_ATUAL: formatarDataPorExtenso(),
       POSTO_GRAD: postoGrad,
       NOME_COMPLETO: nomeCompleto,
@@ -140,15 +189,10 @@ const doc = new DocxTemplaterConstructor(zip, {
       AGENCIA: agencia,
       CONTA_CORRENTE: contaCorrente,
       TELEFONE: telefone,
-
-      // Controle condicional da tabela
       TEM_DEPENDENTES: dependentes.length > 0,
       DEPENDENTES: dependentes
-    };
+    });
 
-    doc.render(payloadTemplate);
-
-    // 5. Gera o arquivo final compilado em formato Blob (.docx)
     const blobGerado = doc.getZip().generate({
       type: 'blob',
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -157,61 +201,47 @@ const doc = new DocxTemplaterConstructor(zip, {
     const nomeArquivo = `DIEx_Opcao_Curso_${postoGrad.replace(/\s+/g, '_')}_${nomeCompleto.replace(/\s+/g, '_')}.docx`;
     const nomePastaDrive = `Cursos - ${postoGrad} ${nomeCompleto}`;
 
-    // 6. Download imediato para o militar no navegador
-    const urlDownload = URL.createObjectURL(blobGerado);
-    const linkTemp = document.createElement('a');
-    linkTemp.href = urlDownload;
-    linkTemp.download = nomeArquivo;
-    document.body.appendChild(linkTemp);
-    linkTemp.click();
-    document.body.removeChild(linkTemp);
-    URL.revokeObjectURL(urlDownload);
+    // Download Local
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blobGerado);
+    link.download = nomeArquivo;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-    // 7. Upload para o backend -> Google Drive
+    // Upload Google Drive
     if (btnGerar) btnGerar.innerText = 'Enviando para o Google Drive...';
+    try {
+      await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(nomePastaDrive)}`, {
+        method: 'POST',
+        body: blobGerado
+      });
 
-    const urlUpload = `/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(nomePastaDrive)}`;
-    const resUpload = await fetch(urlUpload, {
-      method: 'POST',
-      body: blobGerado
-    });
-
-    if (!resUpload.ok) {
-      console.warn('Aviso: Falha ao enviar para o Google Drive');
+      await fetch('/api/solicitacoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: Date.now(),
+          data: new Date().toISOString(),
+          requerente: `${postoGrad} ${nomeCompleto}`,
+          tipo: 'DIEx Opção - Curso',
+          arquivo: nomeArquivo,
+          pasta: nomePastaDrive
+        })
+      });
+    } catch (errUpload) {
+      console.warn('Aviso: Falha no upload para nuvem, mas o download local foi concluído:', errUpload);
     }
 
-    // 8. Protocolo no sistema administrativo (database.json)
-    await fetch('/api/solicitacoes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: Date.now(),
-        data: new Date().toISOString(),
-        requerente: `${postoGrad} ${nomeCompleto}`,
-        tipo: 'DIEx Opção - Curso',
-        arquivo: nomeArquivo,
-        pasta: nomePastaDrive,
-        dependentesQtd: dependentes.length
-      })
-    });
+    alert('Documento gerado e baixado com sucesso!');
 
-    alert('Documento gerado com sucesso, baixado e arquivado no Google Drive!');
-
-  } catch (error) {
-    console.error('Erro no processamento do documento:', error);
-    alert(`Ocorreu um erro ao gerar o documento: ${error.message}`);
+  } catch (err) {
+    console.error('Erro na geração:', err);
+    alert(`Erro ao gerar documento: ${err.message}`);
   } finally {
     if (btnGerar) {
       btnGerar.disabled = false;
-      btnGerar.innerText = textoOriginalBtn;
+      btnGerar.innerText = textoOriginal;
     }
   }
 }
-
-// Vincula o disparador ao formulário da página
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('form') || document.getElementById('formCurso');
-  if (form) {
-    form.addEventListener('submit', gerarDocumentoCurso);
-  }
-});
