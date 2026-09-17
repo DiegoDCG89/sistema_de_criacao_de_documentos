@@ -28,7 +28,10 @@ function formatarMesAno() {
 // Cria uma nova linha de dependente com seleção de parentesco
 function adicionarLinhaDependente() {
   const listaDep = document.getElementById('lista-dependentes');
-  if (!listaDep) return;
+  if (!listaDep) {
+    console.error("Container 'lista-dependentes' não encontrado.");
+    return;
+  }
 
   const divLinha = document.createElement('div');
   divLinha.className = 'grid grid-cols-1 sm:grid-cols-5 gap-3 p-3 bg-stone-50 rounded-lg border border-stone-200 relative item-dependente items-end';
@@ -65,28 +68,14 @@ function adicionarLinhaDependente() {
   listaDep.appendChild(divLinha);
 }
 
-// Inicialização dos eventos da tela
+// Inicialização de eventos
 document.addEventListener('DOMContentLoaded', () => {
-  const radiosDep = document.querySelectorAll('input[name="opt_dependentes"]');
-  const caixaInclusao = document.getElementById('caixa-inclusao-dependentes');
-
-  radiosDep.forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      if (!caixaInclusao) return;
-      if (e.target.value === 'sim') {
-        caixaInclusao.classList.remove('hidden');
-      } else {
-        caixaInclusao.classList.add('hidden');
-      }
-    });
-  });
-
   const btnAddDep = document.getElementById('btn-add-dep');
   if (btnAddDep) {
-    btnAddDep.addEventListener('click', (e) => {
+    btnAddDep.onclick = function(e) {
       e.preventDefault();
       adicionarLinhaDependente();
-    });
+    };
   }
 
   const form = document.getElementById('form-cursos');
@@ -97,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Coleta os dependentes adicionados
 function coletarDependentes() {
-  const radioSim = document.querySelector('input[name="opt_dependentes"][value="sim"]');
+  const radioSim = document.getElementById('opt_dep_sim');
   if (!radioSim || !radioSim.checked) {
     return [];
   }
@@ -124,13 +113,28 @@ function coletarDependentes() {
 async function renderizarDocx(caminhoTemplate, dadosPayload, PizZipLib, DocxLib) {
   const res = await fetch(caminhoTemplate);
   if (!res.ok) {
-    throw new Error(`Não foi possível carregar o template '${caminhoTemplate}' (HTTP ${res.status})`);
+    throw new Error(`Não foi possível encontrar o arquivo de modelo '${caminhoTemplate}' (Status: ${res.status}). Verifique se ele está salvo na pasta public/templates.`);
   }
   const buffer = await res.arrayBuffer();
-  const zip = new PizZipLib(buffer);
-  const doc = new DocxLib(zip, { paragraphLoop: true, linebreaks: true });
   
-  doc.render(dadosPayload);
+  let zip;
+  try {
+    zip = new PizZipLib(buffer);
+  } catch (errZip) {
+    throw new Error(`Falha ao descompactar o modelo Word '${caminhoTemplate}'. O arquivo pode estar corrompido.`);
+  }
+
+  let doc;
+  try {
+    doc = new DocxLib(zip, { paragraphLoop: true, linebreaks: true });
+    doc.render(dadosPayload);
+  } catch (errRender) {
+    if (errRender.properties && errRender.properties.errors) {
+      const msgs = errRender.properties.errors.map(e => e.properties?.explanation || e.message).join(' | ');
+      throw new Error(`Erro de tag no template '${caminhoTemplate}': ${msgs}`);
+    }
+    throw errRender;
+  }
   
   return doc.getZip().generate({
     type: 'blob',
@@ -173,13 +177,18 @@ async function processarEnvioCursos(e) {
       CONTA_CORRENTE: getVal('conta')
     };
 
+    if (!dados.POSTO_GRAD || !dados.NOME_COMPLETO) {
+      alert("Por favor, preencha pelo menos o Posto/Graduação e o Nome Completo.");
+      return;
+    }
+
     const dependentes = coletarDependentes();
 
     const PizZipConstructor = window.PizZip || window.pizzip || (typeof PizZip !== 'undefined' ? PizZip : null);
     const DocxtemplaterConstructor = window.docxtemplater || window.Docxtemplater || (typeof docxtemplater !== 'undefined' ? docxtemplater : null);
 
     if (!PizZipConstructor || !DocxtemplaterConstructor) {
-      throw new Error("Bibliotecas Word (PizZip/Docxtemplater) não disponíveis.");
+      throw new Error("As bibliotecas de geração de Word não foram carregadas. Verifique a conexão com a internet.");
     }
 
     const payloadTemplate = {
@@ -190,14 +199,14 @@ async function processarEnvioCursos(e) {
 
     const sufixoNome = `${dados.POSTO_GRAD.replace(/\s+/g, '_')}_${dados.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
     
-    // Nome da pasta única
+    // Nome padronizado para criar UMA ÚNICA pasta no Drive
     const pastaDestinoDrive = `Curso_${dados.NOME_COMPLETO.replace(/\s+/g, '_')}`;
 
-    // 1. GERAÇÃO DO DIEX PRINCIPAL (Baixa para o usuário + Envia ao Drive)
+    // 1. Gera DIEx
     const blobDiex = await renderizarDocx('/templates/diex_opcao_curso.docx', payloadTemplate, PizZipConstructor, DocxtemplaterConstructor);
     const nomeArquivoDiex = `DIEx_Opcao_Curso_${sufixoNome}`;
 
-    // Download local exclusivo do DIEx
+    // Download imediato do DIEx para o militar
     const urlDownload = URL.createObjectURL(blobDiex);
     const link = document.createElement('a');
     link.href = urlDownload;
@@ -207,7 +216,7 @@ async function processarEnvioCursos(e) {
     document.body.removeChild(link);
     URL.revokeObjectURL(urlDownload);
 
-    // 2. GERAÇÃO DOS ANEXOS INTERNOS (Apenas para o Google Drive)
+    // 2. Gera os anexos para o Drive
     if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Gerando anexos internos...</span>`;
 
     const blobBar = await renderizarDocx('/templates/nota_diex_bar.docx', payloadTemplate, PizZipConstructor, DocxtemplaterConstructor);
@@ -216,8 +225,8 @@ async function processarEnvioCursos(e) {
     const blobOrdPagto = await renderizarDocx('/templates/Nota_Ord_Pagto_curso.docx', payloadTemplate, PizZipConstructor, DocxtemplaterConstructor);
     const nomeArquivoOrdPagto = `Nota_Ord_Pagto_${sufixoNome}`;
 
-    // 3. UPLOAD SEQUENCIAL (Garante que apenas 1 pasta seja criada)
-    if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Enviando arquivos para a pasta ${pastaDestinoDrive}...</span>`;
+    // 3. Upload sequencial para o Google Drive
+    if (btnSubmit) btnSubmit.innerHTML = `<span class="animate-pulse">Enviando à pasta ${pastaDestinoDrive}...</span>`;
 
     const enviarParaDrive = async (blob, nomeArquivo) => {
       const url = `/api/upload?filename=${encodeURIComponent(nomeArquivo)}&folder=${encodeURIComponent(pastaDestinoDrive)}`;
@@ -230,7 +239,7 @@ async function processarEnvioCursos(e) {
       { blob: blobOrdPagto, nome: nomeArquivoOrdPagto }
     ];
 
-    // O primeiro upload cria a pasta; os subsequentes salvam na mesma pasta já criada
+    // O primeiro upload cria a pasta; os dois seguintes entram na mesma pasta
     for (const item of listaEnvios) {
       try {
         await enviarParaDrive(item.blob, item.nome);
@@ -239,7 +248,7 @@ async function processarEnvioCursos(e) {
       }
     }
 
-    // Registra o protocolo no backend
+    // Registra o protocolo
     try {
       await fetch('/api/solicitacoes', {
         method: 'POST',
@@ -258,7 +267,7 @@ async function processarEnvioCursos(e) {
       console.warn("Aviso ao registrar protocolo:", eProtocolo);
     }
 
-    // Exibe o modal de sucesso na tela
+    // Abre o Modal de Sucesso
     const modalSucesso = document.getElementById('modal-sucesso');
     if (modalSucesso) {
       modalSucesso.classList.remove('hidden');
@@ -271,7 +280,7 @@ async function processarEnvioCursos(e) {
 
   } catch (err) {
     console.error("Erro no processamento:", err);
-    alert(`Erro ao processar documentos: ${err.message}`);
+    alert(`Erro ao gerar documentos: ${err.message}`);
   } finally {
     if (btnSubmit) {
       btnSubmit.disabled = false;
