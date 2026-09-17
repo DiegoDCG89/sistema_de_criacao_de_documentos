@@ -61,6 +61,7 @@
 
       <form id="form-cursos" class="p-6 sm:p-8 space-y-6">
         
+        <!-- 1. IDENTIFICAÇÃO DO MILITAR -->
         <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="user" class="w-4 h-4 text-[#c6b075]"></i> 1. Identificação do Militar
@@ -112,6 +113,7 @@
           </div>
         </div>
 
+        <!-- 2. DADOS DO CURSO E DESTINO -->
         <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="book-open" class="w-4 h-4 text-[#c6b075]"></i> 2. Dados do Curso e Destino
@@ -144,6 +146,7 @@
           </div>
         </div>
 
+        <!-- 3. DADOS BANCÁRIOS -->
         <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="wallet" class="w-4 h-4 text-[#c6b075]"></i> 3. Dados Bancários
@@ -164,6 +167,7 @@
           </div>
         </div>
 
+        <!-- 4. DEPENDENTES -->
         <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
           <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
             <i data-lucide="users" class="w-4 h-4 text-[#c6b075]"></i> 4. Dependentes
@@ -173,11 +177,11 @@
               <span class="block text-sm font-semibold text-stone-700 mb-2">Possui dependentes?</span>
               <div class="flex gap-4">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="opt_dependentes" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleDependentes('sim')">
+                  <input type="radio" name="opt_dependentes" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4">
                   <span class="text-sm font-medium">SIM</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="opt_dependentes" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleDependentes('nao')">
+                  <input type="radio" name="opt_dependentes" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4">
                   <span class="text-sm font-medium">NÃO</span>
                 </label>
               </div>
@@ -186,7 +190,7 @@
           <div id="caixa-inclusao-dependentes" class="hidden mt-6 pt-4 border-t border-[#dcd3b6]">
             <div class="flex justify-between items-center mb-4">
               <span class="text-sm font-bold text-stone-700">Preencha os dados dos dependentes:</span>
-              <button type="button" id="btn-add-dep" class="text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition shadow-sm">
+              <button type="button" id="btn-add-dep" class="text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition shadow-sm cursor-pointer">
                 + Adicionar
               </button>
             </div>
@@ -195,7 +199,7 @@
         </div>
 
         <div class="pt-4 border-t border-[#dcd3b6]">
-          <button type="submit" id="btn-submit" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg border border-[#445646]">
+          <button type="submit" id="btn-submit" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg border border-[#445646] cursor-pointer">
             <i data-lucide="check-circle" class="w-6 h-6"></i> Confirmar e Gerar Documentos
           </button>
         </div>
@@ -232,7 +236,7 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        <button id="btn-baixar-pdf" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] border border-[#445646] font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition">
+        <button id="btn-baixar-pdf" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] border border-[#445646] font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition cursor-pointer">
           <i data-lucide="download-cloud" class="w-5 h-5"></i> Baixar Lista de Anexos (PDF)
         </button>
         <a href="index.html" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition text-center block">Voltar ao Início</a>
@@ -242,17 +246,9 @@
 
   <script>
     if (typeof lucide !== 'undefined') lucide.createIcons();
-    function toggleDependentes(opcao) {
-      const caixaInclusao = document.getElementById('caixa-inclusao-dependentes');
-      if (opcao === 'sim') {
-        caixaInclusao.classList.remove('hidden');
-      } else {
-        caixaInclusao.classList.add('hidden');
-      }
-    }
   </script>
 
-  <!-- Script Principal da Página -->
+  <!-- Script do gerador (carregado após o DOM estar pronto) -->
   <script src="./js/gerador-cursos.js"></script>
 </body>
 </html>
