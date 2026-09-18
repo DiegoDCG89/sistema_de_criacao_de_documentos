@@ -136,8 +136,8 @@ async function processarEnvioMovimentacao(e) {
     const sufixoNome = `${payload.POSTO_GRAD.replace(/\s+/g, '_')}_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
     const pastaDestinoDrive = `Movimentacao_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}`;
 
-    const tplDiex = isComplemento ? '/templates/diex_opcao_movimentacao_complemento.docx' : '/templates/diex_opcao_movimentacao_2.docx';
-    const tplBar = isComplemento ? '/templates/nota_diex_opção_movimentacao_complemento_2.docx' : '/templates/nota_diex_opção_movimentacao.docx';
+    const tplDiex = isComplemento ? '/templates/diex_opcao_movimentacao_complemento.docx' : '/templates/diex_opcao_movimentacao.docx';
+    const tplBar = isComplemento ? '/templates/nota_diex_opção_movimentacao_complemento.docx' : '/templates/nota_diex_opção_movimentacao.docx';
     const tplOrd = isComplemento ? '/templates/Ord_Pagto_Nota_movimentacao_complemento.docx' : '/templates/Ord_Pagto_Nota_movimentacao.docx';
     const prefArq = isComplemento ? 'Complemento_' : '';
 
