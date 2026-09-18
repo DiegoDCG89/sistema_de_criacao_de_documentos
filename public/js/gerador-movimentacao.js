@@ -58,13 +58,32 @@ function coletarDependentesMov() {
   return dependentes;
 }
 
+// Renderizador com tratamento de erro nativo do Docxtemplater
 async function renderizarDocx(caminhoTemplate, dadosPayload) {
   const res = await fetch(caminhoTemplate);
-  if (!res.ok) throw new Error(`Template não encontrado: ${caminhoTemplate}`);
+  if (!res.ok) throw new Error(`Template não encontrado na pasta: ${caminhoTemplate}`);
+  
   const buffer = await res.arrayBuffer();
-  const zip = new window.PizZip(buffer);
-  const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-  doc.render(dadosPayload);
+  let zip;
+  try {
+    zip = new window.PizZip(buffer);
+  } catch (errZip) {
+    throw new Error(`O arquivo ${caminhoTemplate} parece corrompido ou não é um .docx válido.`);
+  }
+
+  let doc;
+  try {
+    doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    doc.render(dadosPayload);
+  } catch (errRender) {
+    // Trata erros de tag mal formatada no Word (MultiError)
+    if (errRender.properties && errRender.properties.errors) {
+      const msgs = errRender.properties.errors.map(e => e.properties?.explanation || e.message).join(' | ');
+      throw new Error(`Erro dentro do arquivo ${caminhoTemplate}: ${msgs}`);
+    }
+    throw errRender;
+  }
+  
   return doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
 
@@ -133,9 +152,14 @@ async function processarEnvioMovimentacao(e) {
       MOTO_PLACA: optMoto ? getVal('moto_placa') : '-', MOTO_ANO: optMoto ? getVal('moto_ano') : '-'
     };
 
+    if (!payload.POSTO_GRAD || !payload.NOME_COMPLETO) {
+      throw new Error("Por favor, preencha pelo menos o Posto/Graduação e o Nome Completo.");
+    }
+
     const sufixoNome = `${payload.POSTO_GRAD.replace(/\s+/g, '_')}_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
     const pastaDestinoDrive = `Movimentacao_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}`;
 
+    // Nomes Exatos conforme a Imagem
     const tplDiex = isComplemento ? '/templates/diex_opcao_movimentacao_complemento.docx' : '/templates/diex_opcao_movimentacao.docx';
     const tplBar = isComplemento ? '/templates/nota_diex_opção_movimentacao_complemento.docx' : '/templates/nota_diex_opção_movimentacao.docx';
     const tplOrd = isComplemento ? '/templates/Ord_Pagto_Nota_movimentacao_complemento.docx' : '/templates/Ord_Pagto_Nota_movimentacao.docx';
@@ -144,28 +168,50 @@ async function processarEnvioMovimentacao(e) {
     const blobDiex = await renderizarDocx(tplDiex, payload);
     const nomeArquivoDiex = `DIEx_Opcao_Movimentacao_${prefArq}${sufixoNome}`;
     
+    // Força o Download
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blobDiex);
     link.download = nomeArquivoDiex;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
 
     const blobBar = await renderizarDocx(tplBar, payload);
     const blobOrdPagto = await renderizarDocx(tplOrd, payload);
 
     btnSubmit.innerHTML = `<span class="animate-pulse">Enviando para o Drive...</span>`;
+    
     const enviarParaDrive = async (blob, nome) => {
-      await fetch(`/api/upload?filename=${encodeURIComponent(nome)}&folder=${encodeURIComponent(pastaDestinoDrive)}`, { method: 'POST', body: blob });
+      const resposta = await fetch(`/api/upload?filename=${encodeURIComponent(nome)}&folder=${encodeURIComponent(pastaDestinoDrive)}`, { 
+        method: 'POST', 
+        body: blob 
+      });
+      if(!resposta.ok) {
+        console.warn(`Erro no drive para o arquivo ${nome}`);
+      }
     };
 
+    // Upload Sequencial
     await enviarParaDrive(blobDiex, nomeArquivoDiex);
     await enviarParaDrive(blobBar, `Nota_p_BAR_Mov_${prefArq}${sufixoNome}`);
     await enviarParaDrive(blobOrdPagto, `Nota_Ord_Pagto_Mov_${prefArq}${sufixoNome}`);
 
-    alert("Documentos de Movimentação gerados e enviados para o Google Drive!");
+    // Modal de confirmação
+    const modalSucesso = document.getElementById('modal-sucesso');
+    if (modalSucesso) {
+      modalSucesso.classList.remove('hidden');
+    } else {
+      alert("Documentos de Movimentação gerados e enviados para o Google Drive!");
+    }
+
   } catch (err) {
-    alert(`Erro: ${err.message}`);
+    alert(`Erro na geração: ${err.message}`);
+    console.error(err);
   } finally {
-    btnSubmit.disabled = false;
-    btnSubmit.innerHTML = textoOriginal;
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = textoOriginal;
+    }
   }
 }
