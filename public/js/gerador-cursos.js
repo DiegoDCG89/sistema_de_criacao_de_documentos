@@ -115,7 +115,7 @@ async function processarEnvioCursos(e) {
     // Definição dos templates de acordo com a opção Complemento
     const tplDiex = isComplemento ? '/templates/diex_opcao_curso_complemento.docx' : '/templates/diex_opcao_curso.docx';
     const tplBar = isComplemento ? '/templates/nota_diex_opcao_curso_bar_complemento.docx' : '/templates/nota_diex_opcao_curso_bar.docx';
-    const tplOrd = isComplemento ? '/templates/ord_pagto_curso_complemento.docx' : '/templates/Nota_Ord_Pagto_curso_2.docx';
+    const tplOrd = isComplemento ? '/templates/ord_pagto_curso_complemento.docx' : '/templates/Nota_Ord_Pagto_curso.docx';
     const prefArq = isComplemento ? 'Complemento_' : '';
 
     const blobDiex = await renderizarDocx(tplDiex, payload);
