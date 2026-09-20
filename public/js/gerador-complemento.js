@@ -77,7 +77,7 @@ async function subirArquivoParaServidor(blob, nomeArquivo, nomePasta) {
 
 async function obterImagemBrasao() {
   try {
-    const response = await fetch('/img/brasao.png');
+    const response = await fetch(encodeURI('/imagens/brasão.png'));
     if (!response.ok) return null;
     return await response.arrayBuffer();
   } catch (error) {
