@@ -129,7 +129,8 @@ app.post('/api/upload', (req, res) => {
 });
 
 // ==========================================
-// ROTAS DO LIVRO DE PROTOCOLO (ADMIN)
+// REGISTRO INTERNO DE SOLICITAÇÕES (log em database.json,
+// sem endpoint de leitura pública — painel admin removido)
 // ==========================================
 app.post('/api/solicitacoes', (req, res) => {
   try {
@@ -139,15 +140,6 @@ app.post('/api/solicitacoes', (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao salvar protocolo' });
-  }
-});
-
-app.get('/api/solicitacoes', (req, res) => {
-  try {
-    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-    res.json(db);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao ler protocolo' });
   }
 });
 
