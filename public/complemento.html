@@ -3,67 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Complemento - SisDoc</title>
+  <title>Complemento — SisDoc</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #eae6dd; }
-    .font-serif-title { font-family: 'Playfair Display', Georgia, serif; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/sisdoc.css">
 </head>
-<body class="text-stone-800 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
-  <header class="bg-[#2c3b2c] text-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+  <header class="timbre text-white">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[68px]">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 flex items-center justify-center">
-          <i data-lucide="shield" class="w-8 h-8 text-[#c6b075]"></i>
-        </div>
-        <div class="flex flex-col justify-center">
-          <span class="text-[10px] text-[#a0a89d] uppercase tracking-wider mb-[2px]">5º BI Amv - SisDoc - Geração de Documentos</span>
-          <h1 class="text-base sm:text-lg font-bold tracking-wide text-white leading-none">SisDoc - Geração de Documentos</h1>
+        <i data-lucide="shield" class="w-7 h-7" style="color: var(--dourado-300);"></i>
+        <div class="flex flex-col justify-center leading-tight">
+          <span class="timbre-unidade uppercase">5º Batalhão de Infantaria Aeromóvel · Regimento Itororó</span>
+          <h1 class="timbre-sistema text-base sm:text-lg">SisDoc — Geração de Documentos</h1>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <a href="admin.html" class="flex items-center gap-2 border border-[#445646] rounded p-1 pr-2 hover:bg-[#3b4d3d] transition-colors cursor-pointer">
-          <div class="w-6 h-6 sm:w-7 sm:h-7 bg-stone-300 rounded-sm overflow-hidden flex items-end justify-center">
-            <i data-lucide="user" class="w-5 h-5 text-stone-500"></i>
-          </div>
-          <i data-lucide="chevron-down" class="w-3 h-3 text-[#c6b075]"></i>
-        </a>
-      </div>
+      <a href="index.html" class="timbre-voltar">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Painel
+      </a>
     </div>
   </header>
 
   <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8">
-    <div class="bg-[#fbfaf6] rounded-xl shadow-lg border border-[#dcd3b6] overflow-hidden">
-      
-      <div class="bg-[#2c3b2c] p-6 flex items-center justify-between border-b-2 border-[#c6b075]">
+    <div class="painel-form">
+
+      <div class="painel-form-cabecalho">
+        <i data-lucide="file-plus-2" class="w-6 h-6" style="color: var(--dourado-300);"></i>
         <div>
-          <h1 class="text-xl font-serif-title font-bold flex items-center gap-2 text-[#c6b075]">
-            <i data-lucide="file-plus-2" class="w-6 h-6"></i> Complemento de Indenização
-          </h1>
-          <p class="text-[#a0a89d] text-sm mt-1">Preencha os dados para reajuste de ajuda de custo</p>
+          <h2 class="fonte-titulo text-xl font-medium">Complemento de Indenização</h2>
+          <p class="text-sm mt-0.5" style="color: var(--dourado-200);">Preencha os dados para reajuste de ajuda de custo</p>
         </div>
-        <a href="index.html" class="p-2 bg-[#1a241a] border border-[#445646] rounded hover:bg-[#3b4d3d] transition flex items-center gap-1 text-sm font-semibold text-[#c6b075]">
-          <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
-        </a>
       </div>
 
-      <form id="form-complemento" class="p-6 sm:p-8 space-y-6">
-        
-        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="user" class="w-4 h-4 text-[#c6b075]"></i> 1. Identificação do Militar
-          </h2>
+      <form id="form-complemento" class="p-6 sm:p-8 space-y-5">
+
+        <div class="secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">1</span> Identificação do Militar</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="lg:col-span-1">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Posto / Graduação *</label>
-              <select id="posto" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none bg-white">
+              <label class="rotulo rotulo-obrigatorio">Posto / Graduação</label>
+              <select id="posto" required class="campo-select">
                 <option value="">Selecione...</option>
                 <option value="Gen Ex">Gen Ex</option>
                 <option value="Gen Div">Gen Div</option>
@@ -85,60 +70,58 @@
               </select>
             </div>
             <div class="sm:col-span-1 lg:col-span-3">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Nome Completo *</label>
-              <input type="text" id="nome" required placeholder="Ex: FULANO DE TAL" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">Nome Completo</label>
+              <input type="text" id="nome" required placeholder="Ex: FULANO DE TAL" class="campo uppercase-input">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">CPF *</label>
-              <input type="text" id="cpf" required placeholder="Ex: 000.000.000-00" maxlength="14" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">CPF</label>
+              <input type="text" id="cpf" required placeholder="Ex: 000.000.000-00" maxlength="14" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Identidade Militar *</label>
-              <input type="text" id="idt" required placeholder="Ex: 000.000.000-0" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">Identidade Militar</label>
+              <input type="text" id="idt" required placeholder="Ex: 000.000.000-0" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Prec CP *</label>
-              <input type="text" id="preccp" required placeholder="Ex: 000000000" maxlength="11" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">Prec CP</label>
+              <input type="text" id="preccp" required placeholder="Ex: 000000000" maxlength="11" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Telefone de Contato *</label>
-              <input type="text" id="telefone" required placeholder="Ex: (12) 99999-9999" maxlength="15" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">Telefone de Contato</label>
+              <input type="text" id="telefone" required placeholder="Ex: (12) 99999-9999" maxlength="15" class="campo">
             </div>
           </div>
         </div>
 
-        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="wallet" class="w-4 h-4 text-[#c6b075]"></i> 2. Dados Bancários
-          </h2>
+        <div class="secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">2</span> Dados Bancários</h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Banco *</label>
-              <input type="text" id="banco" required placeholder="Ex: Banco do Brasil" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">Banco</label>
+              <input type="text" id="banco" required placeholder="Ex: Banco do Brasil" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Agência *</label>
-              <input type="text" id="agencia" required placeholder="Ex: 1234-5" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">Agência</label>
+              <input type="text" id="agencia" required placeholder="Ex: 1234-5" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Conta Corrente *</label>
-              <input type="text" id="conta" required placeholder="Ex: 12345-6" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c] focus:outline-none">
+              <label class="rotulo rotulo-obrigatorio">Conta Corrente</label>
+              <input type="text" id="conta" required placeholder="Ex: 12345-6" class="campo">
             </div>
           </div>
         </div>
 
-        <div class="bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="layers" class="w-4 h-4 text-[#c6b075]"></i> 3. Selecione a Modalidade do Complemento
-          </h2>
-          <div class="flex gap-6">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="modalidade_comp" value="curso" checked onchange="toggleModalidade(this.value)" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-5 h-5">
-              <span class="text-sm font-bold text-stone-800">Complemento de Curso</span>
+        <div class="secao-form">
+          <h3 class="secao-titulo" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
+            <span class="secao-numero">3</span> Selecione a Modalidade do Complemento
+          </h3>
+          <div class="flex flex-wrap gap-3">
+            <label class="opcao-pilula">
+              <input type="radio" name="modalidade_comp" value="curso" checked onchange="toggleModalidade(this.value)">
+              <span>Complemento de Curso</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="modalidade_comp" value="transferencia" onchange="toggleModalidade(this.value)" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-5 h-5">
-              <span class="text-sm font-bold text-stone-800">Complemento de Transferência</span>
+            <label class="opcao-pilula">
+              <input type="radio" name="modalidade_comp" value="transferencia" onchange="toggleModalidade(this.value)">
+              <span>Complemento de Transferência</span>
             </label>
           </div>
         </div>
@@ -148,164 +131,154 @@
           <input type="hidden" id="transfGuarnicao" value="">
         </div>
 
-        <div id="dados-curso" class="block bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="book-open" class="w-4 h-4 text-[#c6b075]"></i> 4. Dados Específicos do Curso
-          </h2>
+        <div id="dados-curso" class="block secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">4</span> Dados Específicos do Curso</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Nome do Curso *</label>
-              <input type="text" id="cursoNome" placeholder="Ex: CAS" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Nome do Curso *</label>
+              <input type="text" id="cursoNome" placeholder="Ex: CAS" class="campo uppercase-input">
             </div>
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Cidade *</label>
-              <input type="text" id="cursoCidade" placeholder="Ex: RIO DE JANEIRO - RJ" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Cidade *</label>
+              <input type="text" id="cursoCidade" placeholder="Ex: RIO DE JANEIRO - RJ" class="campo uppercase-input">
             </div>
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Aditamento que gerou o benefício *</label>
-              <input type="text" id="cursoAdt" placeholder="Ex: Adt DCEM 1A ao Bol DGP n° 000" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Aditamento que gerou o benefício *</label>
+              <input type="text" id="cursoAdt" placeholder="Ex: Adt DCEM 1A ao Bol DGP n° 000" class="campo">
             </div>
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Motivo do complemento *</label>
-              <input type="text" id="cursoMotivo" placeholder="Ex: Reajuste salarial" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Motivo do complemento *</label>
+              <input type="text" id="cursoMotivo" placeholder="Ex: Reajuste salarial" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Data de Início *</label>
-              <input type="text" id="cursoDataInicio" placeholder="Ex: 01/02/2026" maxlength="10" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Data de Início *</label>
+              <input type="text" id="cursoDataInicio" placeholder="Ex: 01/02/2026" maxlength="10" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Data de Término *</label>
-              <input type="text" id="cursoDataTermino" placeholder="Ex: 10/12/2026" maxlength="10" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Data de Término *</label>
+              <input type="text" id="cursoDataTermino" placeholder="Ex: 10/12/2026" maxlength="10" class="campo">
             </div>
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Boletim de Homologação do Curso *</label>
-              <input type="text" id="cursoBolHomologacao" placeholder="Ex: BI nº 45, de 10 JAN 26" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Boletim de Homologação do Curso *</label>
+              <input type="text" id="cursoBolHomologacao" placeholder="Ex: BI nº 45, de 10 JAN 26" class="campo">
             </div>
           </div>
         </div>
 
-        <div id="dados-transferencia" class="hidden bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="map-pin" class="w-4 h-4 text-[#c6b075]"></i> 4. Dados Específicos da Movimentação
-          </h2>
+        <div id="dados-transferencia" class="hidden secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">4</span> Dados Específicos da Movimentação</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">OM de destino *</label>
-              <input type="text" id="transfOm" placeholder="Ex: 5º BIAMV" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">OM de destino *</label>
+              <input type="text" id="transfOm" placeholder="Ex: 5º BIAMV" class="campo uppercase-input">
             </div>
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Cidade *</label>
-              <input type="text" id="transfCidade" placeholder="Ex: RIO DE JANEIRO - RJ" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Cidade *</label>
+              <input type="text" id="transfCidade" placeholder="Ex: RIO DE JANEIRO - RJ" class="campo uppercase-input">
             </div>
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Motivo *</label>
-              <input type="text" id="transfMotivo" placeholder="Ex: Transferência por necessidade do serviço" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Motivo *</label>
+              <input type="text" id="transfMotivo" placeholder="Ex: Transferência por necessidade do serviço" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Aditamento que gerou o benefício *</label>
-              <input type="text" id="transfAdt" placeholder="Ex: Adt DCEM 1A ao Bol DGP n° 000" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Aditamento que gerou o benefício *</label>
+              <input type="text" id="transfAdt" placeholder="Ex: Adt DCEM 1A ao Bol DGP n° 000" class="campo">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-stone-600 mb-1">Data de Desligamento *</label>
-              <input type="text" id="transfDataDesligamento" placeholder="Ex: 10/12/2026" maxlength="10" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2c3b2c]">
+              <label class="rotulo">Data de Desligamento *</label>
+              <input type="text" id="transfDataDesligamento" placeholder="Ex: 10/12/2026" maxlength="10" class="campo">
             </div>
           </div>
         </div>
 
-        <div id="bloco-dependentes" class="hidden bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="users" class="w-4 h-4 text-[#c6b075]"></i> 5. Dependentes
-          </h2>
-          <div class="flex items-center gap-6 mb-4">
-            <span class="block text-sm font-semibold text-stone-700">Deseja adicionar dependentes no complemento?</span>
-            <div class="flex gap-4">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="opt_dependentes" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleDependentes('sim')">
-                <span class="text-sm font-medium">SIM</span>
+        <div id="bloco-dependentes" class="hidden secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">5</span> Dependentes</h3>
+          <div class="flex flex-wrap items-center gap-4 mb-2">
+            <span class="rotulo mb-0">Deseja adicionar dependentes no complemento?</span>
+            <div class="flex gap-3">
+              <label class="opcao-pilula">
+                <input type="radio" name="opt_dependentes" value="sim" onchange="toggleDependentes('sim')">
+                <span>SIM</span>
               </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="opt_dependentes" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleDependentes('nao')">
-                <span class="text-sm font-medium">NÃO</span>
+              <label class="opcao-pilula">
+                <input type="radio" name="opt_dependentes" value="nao" checked onchange="toggleDependentes('nao')">
+                <span>NÃO</span>
               </label>
             </div>
           </div>
-          <div id="caixa-inclusao-dependentes" class="hidden mt-4 pt-4 border-t border-[#dcd3b6]">
+          <div id="caixa-inclusao-dependentes" class="hidden mt-4 pt-4" style="border-top: 1px solid var(--bege);">
             <div class="flex justify-between items-center mb-4">
-              <span class="text-sm font-bold text-stone-700">Dados dos dependentes:</span>
-              <button type="button" id="btn-add-dep" class="text-xs bg-stone-200 hover:bg-stone-300 text-stone-800 px-3 py-1.5 rounded-lg font-semibold transition">
-                + Adicionar
-              </button>
+              <span class="text-sm font-bold" style="color: var(--carvao-suave);">Dados dos dependentes:</span>
+              <button type="button" id="btn-add-dep" class="btn-secundario text-xs">+ Adicionar</button>
             </div>
             <div id="lista-dependentes" class="space-y-3"></div>
           </div>
         </div>
 
-        <div id="bloco-veiculos" class="hidden bg-white border border-[#dcd3b6] rounded-xl p-5 shadow-sm">
-          <h2 class="text-sm font-bold text-[#2c3b2c] border-b border-[#dcd3b6] pb-2 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <i data-lucide="car" class="w-4 h-4 text-[#c6b075]"></i> 6. Veículos
-          </h2>
-          <div class="flex items-center gap-6 mb-4">
-            <span class="block text-sm font-semibold text-stone-700">Deseja adicionar veículo no complemento?</span>
-            <div class="flex gap-4">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="opt_veiculos_global" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleVeiculosGlobal('sim')">
-                <span class="text-sm font-medium">SIM</span>
+        <div id="bloco-veiculos" class="hidden secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">6</span> Veículos</h3>
+          <div class="flex flex-wrap items-center gap-4 mb-2">
+            <span class="rotulo mb-0">Deseja adicionar veículo no complemento?</span>
+            <div class="flex gap-3">
+              <label class="opcao-pilula">
+                <input type="radio" name="opt_veiculos_global" value="sim" onchange="toggleVeiculosGlobal('sim')">
+                <span>SIM</span>
               </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="opt_veiculos_global" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="toggleVeiculosGlobal('nao')">
-                <span class="text-sm font-medium">NÃO</span>
+              <label class="opcao-pilula">
+                <input type="radio" name="opt_veiculos_global" value="nao" checked onchange="toggleVeiculosGlobal('nao')">
+                <span>NÃO</span>
               </label>
             </div>
           </div>
-          <div id="caixa-inclusao-veiculos" class="hidden space-y-6 pt-4 border-t border-[#dcd3b6]">
+          <div id="caixa-inclusao-veiculos" class="hidden space-y-5 pt-4" style="border-top: 1px solid var(--bege);">
             <div>
-              <div class="flex items-center gap-6 mb-3">
-                <span class="block text-sm font-semibold text-stone-700">Transporte de Automóvel?</span>
-                <div class="flex gap-4">
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="opt_carro" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="document.getElementById('tabela-carro').classList.remove('hidden')">
-                    <span class="text-sm font-medium">SIM</span>
+              <div class="flex flex-wrap items-center gap-4 mb-3">
+                <span class="rotulo mb-0">Transporte de Automóvel?</span>
+                <div class="flex gap-3">
+                  <label class="opcao-pilula">
+                    <input type="radio" name="opt_carro" value="sim" onchange="document.getElementById('tabela-carro').classList.remove('hidden')">
+                    <span>SIM</span>
                   </label>
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="opt_carro" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="document.getElementById('tabela-carro').classList.add('hidden')">
-                    <span class="text-sm font-medium">NÃO</span>
+                  <label class="opcao-pilula">
+                    <input type="radio" name="opt_carro" value="nao" checked onchange="document.getElementById('tabela-carro').classList.add('hidden')">
+                    <span>NÃO</span>
                   </label>
                 </div>
               </div>
-              <div id="tabela-carro" class="hidden bg-[#fbfaf6] p-3 rounded-lg border border-stone-200 grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <input type="text" id="carro_marca" placeholder="Marca / Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#2c3b2c]">
-                <input type="text" id="carro_placa" placeholder="Placa" class="border border-stone-300 px-3 py-2 text-sm rounded-lg uppercase focus:ring-2 focus:ring-[#2c3b2c]">
-                <input type="text" id="carro_cor" placeholder="Cor" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#2c3b2c]">
-                <input type="text" id="carro_ano" placeholder="Ano/Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#2c3b2c]">
+              <div id="tabela-carro" class="hidden grid grid-cols-1 sm:grid-cols-4 gap-3 p-3 rounded-lg" style="background: var(--pergaminho); border: 1px solid var(--bege);">
+                <input type="text" id="carro_marca" placeholder="Marca / Modelo" class="campo">
+                <input type="text" id="carro_placa" placeholder="Placa" class="campo uppercase-input">
+                <input type="text" id="carro_cor" placeholder="Cor" class="campo">
+                <input type="text" id="carro_ano" placeholder="Ano/Modelo" class="campo">
               </div>
             </div>
             <div>
-              <div class="flex items-center gap-6 mb-3">
-                <span class="block text-sm font-semibold text-stone-700">Transporte de Motocicleta?</span>
-                <div class="flex gap-4">
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="opt_moto" value="sim" class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="document.getElementById('tabela-moto').classList.remove('hidden')">
-                    <span class="text-sm font-medium">SIM</span>
+              <div class="flex flex-wrap items-center gap-4 mb-3">
+                <span class="rotulo mb-0">Transporte de Motocicleta?</span>
+                <div class="flex gap-3">
+                  <label class="opcao-pilula">
+                    <input type="radio" name="opt_moto" value="sim" onchange="document.getElementById('tabela-moto').classList.remove('hidden')">
+                    <span>SIM</span>
                   </label>
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="opt_moto" value="nao" checked class="text-[#2c3b2c] focus:ring-[#2c3b2c] w-4 h-4" onchange="document.getElementById('tabela-moto').classList.add('hidden')">
-                    <span class="text-sm font-medium">NÃO</span>
+                  <label class="opcao-pilula">
+                    <input type="radio" name="opt_moto" value="nao" checked onchange="document.getElementById('tabela-moto').classList.add('hidden')">
+                    <span>NÃO</span>
                   </label>
                 </div>
               </div>
-              <div id="tabela-moto" class="hidden bg-[#fbfaf6] p-3 rounded-lg border border-stone-200 grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <input type="text" id="moto_marca" placeholder="Marca / Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#2c3b2c]">
-                <input type="text" id="moto_placa" placeholder="Placa" class="border border-stone-300 px-3 py-2 text-sm rounded-lg uppercase focus:ring-2 focus:ring-[#2c3b2c]">
-                <input type="text" id="moto_cor" placeholder="Cor" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#2c3b2c]">
-                <input type="text" id="moto_ano" placeholder="Ano/Modelo" class="border border-stone-300 px-3 py-2 text-sm rounded-lg focus:ring-2 focus:ring-[#2c3b2c]">
+              <div id="tabela-moto" class="hidden grid grid-cols-1 sm:grid-cols-4 gap-3 p-3 rounded-lg" style="background: var(--pergaminho); border: 1px solid var(--bege);">
+                <input type="text" id="moto_marca" placeholder="Marca / Modelo" class="campo">
+                <input type="text" id="moto_placa" placeholder="Placa" class="campo uppercase-input">
+                <input type="text" id="moto_cor" placeholder="Cor" class="campo">
+                <input type="text" id="moto_ano" placeholder="Ano/Modelo" class="campo">
               </div>
             </div>
           </div>
         </div>
 
-        <div class="pt-4 border-t border-[#dcd3b6]">
-          <button type="submit" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] font-bold py-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 text-lg border border-[#445646]">
-            <i data-lucide="check-circle" class="w-6 h-6"></i> Confirmar e Gerar Documentos
+        <div class="pt-2">
+          <button type="submit" class="btn-primario w-full text-base">
+            <i data-lucide="check-circle" class="w-5 h-5"></i> Confirmar e Gerar Documentos
           </button>
         </div>
 
@@ -314,19 +287,19 @@
   </main>
 
   <!-- MODAL SUCESSO -->
-  <div id="modal-sucesso" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-[#fbfaf6] rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-[#dcd3b6]">
-      <div class="w-16 h-16 mx-auto rounded-full bg-[#e1d5b3] text-[#2c3b2c] flex items-center justify-center mb-4">
+  <div id="modal-sucesso" class="fixed inset-0 z-50 modal-fundo hidden flex items-center justify-center p-4">
+    <div class="rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative" style="background: var(--papel); border: 1px solid var(--bege);">
+      <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4" style="background: var(--dourado-300); color: var(--oliva-800);">
         <i data-lucide="check" class="w-10 h-10"></i>
       </div>
-      <h3 class="text-2xl font-serif-title font-bold text-center text-stone-900 mb-2">Solicitação Gerada!</h3>
-      <p class="text-center text-sm text-stone-600 mb-6">Os documentos foram gerados e enviados para o servidor.</p>
-      
-      <div class="bg-white border border-[#dcd3b6] rounded-xl p-4 mb-5 shadow-sm">
-        <h4 class="text-xs font-bold text-[#2c3b2c] uppercase tracking-wider mb-2 flex items-center gap-1">
-          <i data-lucide="paperclip" class="w-4 h-4 text-[#c6b075]"></i> Documentos Necessários:
+      <h3 class="fonte-titulo text-2xl font-medium text-center mb-2" style="color: var(--carvao);">Solicitação Gerada!</h3>
+      <p class="text-center text-sm mb-6" style="color: var(--carvao-suave);">Os documentos foram gerados e enviados para o servidor.</p>
+
+      <div class="secao-form mb-5">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-2 flex items-center gap-1.5" style="color: var(--oliva-700);">
+          <i data-lucide="paperclip" class="w-4 h-4"></i> Documentos Necessários
         </h4>
-        <ul id="lista-anexos-final" class="text-xs sm:text-sm text-stone-700 list-disc list-inside space-y-1.5">
+        <ul id="lista-anexos-final" class="text-xs sm:text-sm list-disc list-inside space-y-1.5" style="color: var(--carvao-suave);">
           <li>Cópia autenticada do Adt que gerou o benefício</li>
           <li>Cópia autenticada do BI da transcrição do Adt</li>
           <li>Contracheque do mês que solicitou a ajuda de custo</li>
@@ -338,17 +311,17 @@
         </ul>
       </div>
 
-      <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded-r-lg">
-        <p class="text-red-700 font-bold text-center text-sm sm:text-base leading-snug uppercase tracking-wide">
+      <div class="mb-6 rounded-lg p-4" style="background: var(--erro-bg); border-left: 4px solid var(--erro);">
+        <p class="font-bold text-center text-sm sm:text-base leading-snug" style="color: var(--erro);">
           O militar deverá comparecer à Divisão Administrativa para assinatura e entrega de documentos
         </p>
       </div>
 
       <div class="flex flex-col gap-3">
-        <button id="btn-baixar-pdf" class="w-full bg-[#2c3b2c] hover:bg-[#1a241a] text-[#c6b075] border border-[#445646] font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition">
+        <button id="btn-baixar-pdf" class="btn-primario w-full">
           <i data-lucide="download-cloud" class="w-5 h-5"></i> Baixar Lista de Anexos (PDF)
         </button>
-        <a href="index.html" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-lg transition text-center block">Voltar ao Início</a>
+        <a href="index.html" class="btn-secundario w-full text-center block">Voltar ao Início</a>
       </div>
     </div>
   </div>
