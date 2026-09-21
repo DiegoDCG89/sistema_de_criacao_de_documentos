@@ -79,12 +79,12 @@
             </div>
             <div class="sm:col-span-1 lg:col-span-3">
               <label class="rotulo rotulo-obrigatorio">Nome Completo</label>
-              <input type="text" id="nome" required class="campo uppercase-input">
+              <input type="text" id="nome" placeholder="Fulano de Tal"  required class="campo uppercase-input">
             </div>
             <div><label class="rotulo rotulo-obrigatorio">CPF</label><input type="text" id="cpf" required class="campo"></div>
-            <div><label class="rotulo rotulo-obrigatorio">Identidade</label><input type="text" id="idt" required class="campo"></div>
-            <div><label class="rotulo rotulo-obrigatorio">Prec CP</label><input type="text" id="preccp" required class="campo"></div>
-            <div><label class="rotulo rotulo-obrigatorio">Telefone</label><input type="text" id="telefone" required class="campo"></div>
+            <div><label class="rotulo rotulo-obrigatorio">Identidade</label><input type="text" id="idt" placeholder="000.000.000-0" required class="campo"></div>
+            <div><label class="rotulo rotulo-obrigatorio">Prec CP</label><input type="text" id="preccp" placeholder="00.000.000-0" required class="campo"></div>
+            <div><label class="rotulo rotulo-obrigatorio">Telefone</label><input type="text" id="telefone" placeholder="(00) 0 0000-0000" required class="campo"></div>
           </div>
         </div>
 
@@ -92,11 +92,11 @@
         <div class="secao-form">
           <h3 class="secao-titulo"><span class="secao-numero">2</span> Curso e Destino</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="sm:col-span-2"><label class="rotulo rotulo-obrigatorio">Nome do Curso</label><input type="text" id="curso" required class="campo uppercase-input"></div>
-            <div><label class="rotulo rotulo-obrigatorio">OM de Realização</label><input type="text" id="omCurso" required class="campo uppercase-input"></div>
-            <div><label class="rotulo rotulo-obrigatorio">Guarnição</label><input type="text" id="guarnicaoCurso" required class="campo uppercase-input"></div>
-            <div><label class="rotulo rotulo-obrigatorio">Adt DCEM</label><input type="text" id="adtDcem" required class="campo"></div>
-            <div><label class="rotulo rotulo-obrigatorio">Previsão de Desligamento</label><input type="text" id="dataDesligamento" required class="campo"></div>
+            <div class="sm:col-span-2"><label class="rotulo rotulo-obrigatorio">Nome do Curso</label><input type="text" id="curso" placeholder="Ex. Curso de Aperfeiçoemento de Sargentos "required class="campo uppercase-input"></div>
+            <div><label class="rotulo rotulo-obrigatorio">OM de Realização</label><input type="text" id="omCurso" placeholder="Ex. EASA"required class="campo uppercase-input"></div>
+            <div><label class="rotulo rotulo-obrigatorio">Guarnição</label><input type="text" id="guarnicaoCurso" placeholder="Ex. Cruz Alta - RS" required class="campo uppercase-input"></div>
+            <div><label class="rotulo rotulo-obrigatorio">Adt DCEM</label><input type="text" id="adtDcem" placeholder="Ex: Adt DCEM 1A ao Bol DGP n° 000" required class="campo"></div>
+            <div><label class="rotulo rotulo-obrigatorio">Previsão de Desligamento</label><input type="text" id="dataDesligamento" placeholder="00 de mes de 0000"required class="campo"></div>
           </div>
         </div>
 
@@ -105,10 +105,10 @@
           <div class="secao-form">
             <h3 class="secao-titulo"><span class="secao-numero">3</span> Dados Bancários</h3>
             <div class="space-y-3">
-              <div><label class="rotulo rotulo-obrigatorio">Banco</label><input type="text" id="banco" required class="campo"></div>
+              <div><label class="rotulo rotulo-obrigatorio">Banco</label><input type="text" id="banco" placeholder="Ex:001 - Banco do Brasil" required class="campo"></div>
               <div class="flex gap-3">
-                <div class="flex-1"><label class="rotulo rotulo-obrigatorio">Agência</label><input type="text" id="agencia" required class="campo"></div>
-                <div class="flex-1"><label class="rotulo rotulo-obrigatorio">Conta</label><input type="text" id="conta" required class="campo"></div>
+                <div class="flex-1"><label class="rotulo rotulo-obrigatorio">Agência</label><input type="text" id="agencia" placeholder="Ex: 000-0"required class="campo"></div>
+                <div class="flex-1"><label class="rotulo rotulo-obrigatorio">Conta</label><input type="text" id="conta" placeholder="Ex:00-00" required class="campo"></div>
               </div>
             </div>
           </div>
