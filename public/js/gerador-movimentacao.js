@@ -197,6 +197,24 @@ async function processarEnvioMovimentacao(e) {
     await enviarParaDrive(blobBar, `Nota_p_BAR_Mov_${prefArq}${sufixoNome}`);
     await enviarParaDrive(blobOrdPagto, `Nota_Ord_Pagto_Mov_${prefArq}${sufixoNome}`);
 
+    // Protocolo interno (mesmo padrão usado em Bagagem e Complemento)
+    try {
+      await fetch('/api/solicitacoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: 'MOV-' + Date.now().toString().slice(-6),
+          dataCriacao: new Date().toLocaleDateString('pt-BR'),
+          modalidade: isComplemento ? 'Movimentação (Complemento)' : 'Movimentação',
+          posto: payload.POSTO_GRAD,
+          nomeCompleto: payload.NOME_COMPLETO,
+          cpf: payload.CPF
+        })
+      });
+    } catch (eProtocolo) {
+      console.warn('Aviso: protocolo local falhou, mas upload foi concluído.');
+    }
+
     // Modal de confirmação
     const modalSucesso = document.getElementById('modal-sucesso');
     if (modalSucesso) {
