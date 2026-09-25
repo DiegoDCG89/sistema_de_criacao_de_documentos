@@ -143,7 +143,9 @@ async function processarEnvioCursos(e) {
     btnSubmit.innerHTML = `<span class="animate-pulse">Enviando para o Drive...</span>`;
 
     const enviarParaDrive = async (blob, nome) => {
-      await fetch(`/api/upload?filename=${encodeURIComponent(nome)}&folder=${encodeURIComponent(pastaDestinoDrive)}`, { method: 'POST', body: blob });
+      const res = await fetch(`/api/upload?filename=${encodeURIComponent(nome)}&folder=${encodeURIComponent(pastaDestinoDrive)}`, { method: 'POST', body: blob });
+      if (!res.ok) throw new Error(`Falha no upload do arquivo ${nome}`);
+      return await res.json();
     };
 
     // Upload Sequencial
