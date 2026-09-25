@@ -1,11 +1,3 @@
-import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData, obterDataExtenso } from './utils.js';
-
-let dependentes = [];
-let dadosFormularioAtual = null;
-
-
-
-
 // =========================================================================
 // SisDoc - Gerador de Cursos e Estágios (Normal e Complemento)
 // =========================================================================
