@@ -5,6 +5,7 @@
 import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData } from './utils.js';
 
 let dependentes = [];
+let dadosUltimoEnvio = null;
 
 // Funções de Data
 function formatarDataPorExtenso() {
@@ -140,6 +141,7 @@ async function processarFormularioComplemento(e) {
     const nomeCompleto = getVal('nome').toUpperCase();
     
     if (!posto || !nomeCompleto) throw new Error("Preencha Posto e Nome.");
+    dadosUltimoEnvio = { posto, nomeCompleto, modalidade };
 
     const dependentes = coletarDependentes();
     const possuiDep = dependentes.length > 0;
@@ -286,5 +288,57 @@ async function processarFormularioComplemento(e) {
 }
 
 function baixarPDFChecklist() {
-  alert("Por favor, consulte a lista de documentos na tela. Os documentos exigidos podem variar conforme o motivo do complemento.");
+  if (!dadosUltimoEnvio || !window.jspdf) {
+    alert("Gere os documentos primeiro para poder baixar o checklist.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('MINISTÉRIO DA DEFESA', 105, 20, { align: 'center' });
+  doc.text('EXÉRCITO BRASILEIRO', 105, 26, { align: 'center' });
+  doc.text('5º BATALHÃO DE INFANTARIA LEVE', 105, 32, { align: 'center' });
+  doc.setDrawColor(75, 83, 32);
+  doc.setLineWidth(0.5);
+  doc.line(20, 38, 190, 38);
+
+  doc.setFontSize(14);
+  doc.text('RELAÇÃO DE DOCUMENTOS (ANEXOS)', 105, 48, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Militar:', 20, 60);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${dadosUltimoEnvio.posto} ${dadosUltimoEnvio.nomeCompleto}`, 35, 60);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Modalidade:', 20, 66);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Complemento de Indenização (${dadosUltimoEnvio.modalidade === 'curso' ? 'Curso' : 'Transferência'})`, 45, 66);
+
+  doc.setFillColor(254, 226, 226);
+  doc.setDrawColor(220, 38, 38);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(20, 75, 170, 16, 2, 2, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(185, 28, 28);
+  doc.text('O MILITAR DEVERÁ COMPARECER À DIVISÃO ADMINISTRATIVA', 105, 81, { align: 'center' });
+  doc.text('PARA ASSINATURA E ENTREGA DE DOCUMENTOS', 105, 87, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('ANEXOS NECESSÁRIOS:', 20, 100);
+  doc.setFont('helvetica', 'normal');
+
+  // Lê a mesma lista mostrada no modal de sucesso — evita manter duas listas divergentes
+  const itens = Array.from(document.querySelectorAll('#lista-anexos-final li')).map(li => li.textContent.trim());
+  let y = 108;
+  itens.forEach(item => {
+    const linhas = doc.splitTextToSize(`[   ] ${item}`, 165);
+    doc.text(linhas, 20, y);
+    y += linhas.length * 6;
+  });
+
+  doc.save(`Checklist_Complemento_${dadosUltimoEnvio.posto}_${dadosUltimoEnvio.nomeCompleto.replace(/\s+/g, '_')}.pdf`);
 }
