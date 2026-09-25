@@ -141,6 +141,24 @@ async function processarEnvioCursos(e) {
     await enviarParaDrive(blobBar, `Nota_p_BAR_Curso_${prefArq}${sufixoNome}`);
     await enviarParaDrive(blobOrdPagto, `Nota_Ord_Pagto_${prefArq}${sufixoNome}`);
 
+    // Protocolo interno (mesmo padrão usado em Bagagem e Complemento)
+    try {
+      await fetch('/api/solicitacoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: 'CUR-' + Date.now().toString().slice(-6),
+          dataCriacao: new Date().toLocaleDateString('pt-BR'),
+          modalidade: isComplemento ? 'Curso (Complemento)' : 'Curso',
+          posto: payload.POSTO_GRAD,
+          nomeCompleto: payload.NOME_COMPLETO,
+          cpf: payload.CPF
+        })
+      });
+    } catch (eProtocolo) {
+      console.warn('Aviso: protocolo local falhou, mas upload foi concluído.');
+    }
+
     alert("Documentos de Curso gerados e enviados para o Google Drive com sucesso!");
   } catch (err) {
     alert(`Erro: ${err.message}`);
