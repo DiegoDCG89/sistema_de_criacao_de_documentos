@@ -171,7 +171,13 @@ async function processarEnvioCursos(e) {
       console.warn('Aviso: protocolo local falhou, mas upload foi concluído.');
     }
 
-    alert("Documentos de Curso gerados e enviados para o Google Drive com sucesso!");
+    const modalSucesso = document.getElementById('modal-sucesso');
+    if (modalSucesso) {
+      modalSucesso.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    } else {
+      alert("Documentos de Curso gerados e enviados para o Google Drive com sucesso!");
+    }
   } catch (err) {
     alert(`Erro: ${err.message}`);
   } finally {
