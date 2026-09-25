@@ -1,6 +1,7 @@
 // =========================================================================
 // SisDoc - Gerador de Cursos e Estágios (Normal e Complemento)
 // =========================================================================
+import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone } from './utils.js';
 
 function formatarDataPorExtenso() {
   const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -50,6 +51,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnAddDep) btnAddDep.addEventListener('click', adicionarLinhaDependente);
   const form = document.getElementById('form-cursos');
   if (form) form.addEventListener('submit', processarEnvioCursos);
+
+  const campoCpf = document.getElementById('cpf');
+  if (campoCpf) campoCpf.addEventListener('input', e => e.target.value = mascaraCPF(e.target.value));
+  const campoIdt = document.getElementById('idt');
+  if (campoIdt) campoIdt.addEventListener('input', e => e.target.value = mascaraIdt(e.target.value));
+  const campoPreccp = document.getElementById('preccp');
+  if (campoPreccp) campoPreccp.addEventListener('input', e => e.target.value = mascaraPrecCP(e.target.value));
+  const campoTelefone = document.getElementById('telefone');
+  if (campoTelefone) campoTelefone.addEventListener('input', e => e.target.value = mascaraTelefone(e.target.value));
 });
 
 function coletarDependentes() {
