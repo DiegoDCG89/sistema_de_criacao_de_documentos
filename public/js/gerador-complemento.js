@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'cpf', fn: mascaraCPF },
     { id: 'idt', fn: mascaraIdt },
     { id: 'preccp', fn: mascaraPrecCP },
+    { id= 'cursoDataInicio' , fn: mascaraData}
     { id: 'telefone', fn: mascaraTelefone },
     { id: 'cursoDataTermino', fn: mascaraData },
     { id: 'transfDataDesligamento', fn: mascaraData }
