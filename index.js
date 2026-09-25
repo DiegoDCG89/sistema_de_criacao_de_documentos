@@ -25,14 +25,6 @@ try {
     'https://developers.google.com/oauthplayground'
   );
 
-  // Monitora se o token foi aceito
-  oauth2Client.on('tokens', (tokens) => {
-    if (tokens.refresh_token) {
-      console.log('Novo Refresh Token recebido da Google.');
-    }
-    console.log('Access Token gerado com sucesso.');
-  });
-
   oauth2Client.setCredentials({
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN
   });
@@ -46,14 +38,18 @@ try {
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
+const dbPath = path.join(__dirname, 'database.json');
+if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify([]));
+
 // ==========================================
 // ROTA 1: UPLOAD DIRETO PARA O GOOGLE DRIVE
 // ==========================================
 app.post('/api/upload', (req, res) => {
   const filenameOriginal = req.query.filename || `documento_${Date.now()}.docx`;
+  // Sanitização: remove qualquer diretório embutido (../, caminho absoluto etc.)
+  // e restringe a extensão a tipos que este endpoint realmente precisa aceitar.
   const filename = path.basename(filenameOriginal);
   const extensoesPermitidas = ['.docx', '.pdf'];
-  
   if (!extensoesPermitidas.includes(path.extname(filename).toLowerCase())) {
     return res.status(400).json({ error: 'Tipo de arquivo não permitido.' });
   }
@@ -62,13 +58,16 @@ app.post('/api/upload', (req, res) => {
   const folderName = req.query.folder || 'Sem Classificacao';
 
   const writeStream = fs.createWriteStream(tempPath);
+
   req.pipe(writeStream);
 
   writeStream.on('finish', async () => {
     try {
-      if (!drive) throw new Error('Cliente Google Drive não autenticado.');
+      if (!drive) {
+        throw new Error('Cliente Google Drive não autenticado.');
+      }
 
-      // 1. Busca se a subpasta já existe (QUERY CORRIGIDA)
+      // 1. Busca se a subpasta já existe dentro da pasta mãe
       const sanitizedFolder = folderName.replace(/'/g, "\\'");
       const query = `mimeType='application/vnd.google-apps.folder' and name='${sanitizedFolder}' and '${PARENT_FOLDER_ID}' in parents and trashed=false`;
       
@@ -82,7 +81,7 @@ app.post('/api/upload', (req, res) => {
       if (resFolder.data.files && resFolder.data.files.length > 0) {
         subFolderId = resFolder.data.files[0].id;
       } else {
-        // Cria a subpasta na pasta mãe
+        // Cria a subpasta na conta pessoal
         const createFolder = await drive.files.create({
           requestBody: {
             name: folderName,
@@ -92,14 +91,18 @@ app.post('/api/upload', (req, res) => {
           fields: 'id'
         });
         subFolderId = createFolder.data.id;
-        console.log(`Nova subpasta criada: [${folderName}] ID: ${subFolderId}`);
+        console.log(`Subpasta criada: [${folderName}] ID: ${subFolderId}`);
       }
 
-      // 2. Upload do arquivo
-      let mimeType = filename.endsWith('.docx') 
-        ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-        : 'application/pdf';
+      // 2. Detecta tipo MIME adequado
+      let mimeType = 'application/octet-stream';
+      if (filename.endsWith('.docx')) {
+        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      } else if (filename.endsWith('.pdf')) {
+        mimeType = 'application/pdf';
+      }
 
+      // 3. Upload do arquivo para a subpasta
       const uploadedFile = await drive.files.create({
         requestBody: {
           name: filename,
@@ -112,27 +115,45 @@ app.post('/api/upload', (req, res) => {
         fields: 'id, name'
       });
 
-      console.log(`Salvo com sucesso: [${uploadedFile.data.name}]`);
-      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      console.log(`Arquivo salvo no Drive: [${uploadedFile.data.name}] ID: ${uploadedFile.data.id}`);
+
+      // 4. Limpa o arquivo temporário local — falha aqui NÃO deve derrubar a resposta de sucesso,
+      // já que o arquivo já está salvo no Drive nesse ponto.
+      try {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      } catch (errLimpeza) {
+        console.warn('Aviso: não foi possível remover o arquivo temporário:', errLimpeza.message);
+      }
+
       return res.json({ success: true, fileId: uploadedFile.data.id });
 
     } catch (error) {
-      console.error('Falha de Upload:', error.message);
+      console.error('Erro no upload para o Drive:', error.response?.data || error.message);
       if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
-      return res.status(500).json({ error: 'Erro de comunicação com o Drive' });
+      return res.status(500).json({ error: 'Erro ao enviar para o Google Drive' });
     }
   });
 
   writeStream.on('error', (err) => {
-    console.error('Erro na gravação local:', err);
+    console.error('Erro na gravação do arquivo temporário:', err);
     if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
-    return res.status(500).json({ error: 'Erro no servidor' });
+    return res.status(500).json({ error: 'Erro ao processar arquivo no servidor' });
   });
 });
 
-// Mantivemos sua rota fake para não quebrar o frontend, mas o arquivo JSON foi removido
+// ==========================================
+// REGISTRO INTERNO DE SOLICITAÇÕES (log em database.json,
+// sem endpoint de leitura pública — painel admin removido)
+// ==========================================
 app.post('/api/solicitacoes', (req, res) => {
-  res.json({ success: true, message: 'Log local desativado nesta versão' });
+  try {
+    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    db.unshift(req.body);
+    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao salvar protocolo' });
+  }
 });
 
 app.listen(PORT, () => {
