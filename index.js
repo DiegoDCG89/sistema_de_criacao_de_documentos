@@ -45,10 +45,18 @@ if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify([]));
 // ROTA 1: UPLOAD DIRETO PARA O GOOGLE DRIVE
 // ==========================================
 app.post('/api/upload', (req, res) => {
-  const filename = req.query.filename || `documento_${Date.now()}.docx`;
-  const folderName = req.query.folder || 'Sem Classificacao';
+  const filenameOriginal = req.query.filename || `documento_${Date.now()}.docx`;
+  // Sanitização: remove qualquer diretório embutido (../, caminho absoluto etc.)
+  // e restringe a extensão a tipos que este endpoint realmente precisa aceitar.
+  const filename = path.basename(filenameOriginal);
+  const extensoesPermitidas = ['.docx', '.pdf'];
+  if (!extensoesPermitidas.includes(path.extname(filename).toLowerCase())) {
+    return res.status(400).json({ error: 'Tipo de arquivo não permitido.' });
+  }
 
   const tempPath = path.join(uploadsDir, filename);
+  const folderName = req.query.folder || 'Sem Classificacao';
+
   const writeStream = fs.createWriteStream(tempPath);
 
   req.pipe(writeStream);
