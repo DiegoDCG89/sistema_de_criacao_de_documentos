@@ -1,118 +1,81 @@
+// Exemplo da função que você provavelmente já tem para gerar e enviar os arquivos
+async function gerarDocumento(templateUrl, nomeArquivoSaida, dadosFormulario, nomePasta) {
+    try {
+        // 1. Carrega o template
+        const response = await fetch(templateUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        
+        // 2. Processa com PizZip e Docxtemplater
+        const zip = new window.PizZip(arrayBuffer);
+        const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+        
+        // 3. Aplica os dados do formulário nas variáveis do documento
+        doc.render(dadosFormulario);
+        
+        // 4. Gera o arquivo final (Blob)
+        const blob = doc.getZip().generate({
+            type: "blob",
+            mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        });
 
-// =========================================================================
-// SisDoc - Gerador de Bagagem na Mesma Sede (PNR)
-// =========================================================================
-
-function adicionarLinhaDependenteSede() {
-  const listaDep = document.getElementById('lista-dependentes');
-  if (!listaDep) return;
-  const divLinha = document.createElement('div');
-  divLinha.className = 'grid grid-cols-1 sm:grid-cols-5 gap-3 p-3 bg-stone-50 rounded-lg border border-stone-200 relative item-dependente items-end';
-  divLinha.innerHTML = `
-    <div class="sm:col-span-3">
-      <label class="block text-[11px] font-semibold text-stone-600 mb-1">Nome Completo *</label>
-      <input type="text" class="dep-nome w-full border border-stone-300 rounded px-2 py-1.5 text-xs uppercase" required>
-    </div>
-    <div class="sm:col-span-2 flex items-end gap-2">
-      <div class="flex-grow">
-        <label class="block text-[11px] font-semibold text-stone-600 mb-1">Grau de Parentesco *</label>
-        <select class="dep-parentesco w-full border border-stone-300 rounded px-2 py-1.5 text-xs bg-white" required>
-          <option value="">Selecione...</option>
-          <option value="Esposa / Cônjuge">Esposa / Cônjuge</option>
-          <option value="Filho(a)">Filho(a)</option>
-          <option value="Enteado(a)">Enteado(a)</option>
-          <option value="Pai / Mãe">Pai / Mãe</option>
-          <option value="Outro">Outro</option>
-        </select>
-      </div>
-      <button type="button" class="btn-remover-dep px-3 py-1.5 bg-red-100 text-red-700 font-bold rounded border text-xs">✕</button>
-    </div>
-  `;
-  divLinha.querySelector('.btn-remover-dep').addEventListener('click', () => divLinha.remove());
-  listaDep.appendChild(divLinha);
+        // 5. Cria um File object para enviar para a sua rota de upload no Node.js
+        const file = new File([blob], nomeArquivoSaida, { type: blob.type });
+        
+        // Chama a sua função existente que faz o fetch para '/api/upload'
+        await fazerUploadParaDrive(file, nomePasta); 
+        
+    } catch (error) {
+        console.error(`Erro ao gerar ${nomeArquivoSaida}:`, error);
+    }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const btnAddDep = document.getElementById('btn-add-dep');
-  if (btnAddDep) btnAddDep.addEventListener('click', adicionarLinhaDependenteSede);
-  const form = document.getElementById('form-mesma-sede');
-  if (form) form.addEventListener('submit', processarEnvioMesmaSede);
-});
+// Evento de envio do formulário da Mesma Sede
+document.getElementById('formMesmaSede').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-function coletarDependentesSede() {
-  const radioSim = document.getElementById('opt_dep_sim');
-  if (!radioSim || !radioSim.checked) return [];
-  const dependentes = [];
-  document.querySelectorAll('.item-dependente').forEach((el) => {
-    const nome = el.querySelector('.dep-nome')?.value.trim().toUpperCase() || '';
-    const parentesco = el.querySelector('.dep-parentesco')?.value.trim() || '';
-    if (nome && parentesco) dependentes.push({ NOME: nome, PARENTESCO: parentesco });
-  });
-  return dependentes;
-}
-
-async function renderizarDocxSede(caminhoTemplate, dadosPayload) {
-  const res = await fetch(caminhoTemplate);
-  if (!res.ok) throw new Error(`Template não encontrado: ${caminhoTemplate}`);
-  const buffer = await res.arrayBuffer();
-  const zip = new window.PizZip(buffer);
-  const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-  doc.render(dadosPayload);
-  return doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-}
-
-async function processarEnvioMesmaSede(e) {
-  e.preventDefault();
-  const btnSubmit = document.getElementById('btn-submit');
-  const textoOriginal = btnSubmit.innerHTML;
-
-  try {
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = `<span class="animate-pulse">Gerando documento...</span>`;
-
-    const getVal = (id) => document.getElementById(id)?.value.trim() || '';
-    const dependentes = coletarDependentesSede();
-
-    const payload = {
-      POSTO_GRAD: getVal('posto'),
-      NOME_COMPLETO: getVal('nome').toUpperCase(),
-      CPF: getVal('cpf'),
-      IDENTIDADE: getVal('idt'),
-      PREC_CP: getVal('preccp'),
-      TELEFONE: getVal('telefone'),
-      BAR_OCUPACAO: getVal('bar_ocupacao'),
-      BANCO: getVal('banco'),
-      AGENCIA: getVal('agencia'),
-      CONTA_CORRENTE: getVal('conta'),
-      TEM_DEPENDENTES: dependentes.length > 0,
-      DEPENDENTES: dependentes
+    // Captura os dados do formulário
+    const dados = {
+        nome: document.getElementById('nome').value,
+        posto: document.getElementById('posto').value,
+        // ... (adicione todas as variáveis necessárias que estão nos templates)
     };
 
-    const sufixoNome = `${payload.POSTO_GRAD.replace(/\s+/g, '_')}_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
-    const pastaDestinoDrive = `Mesma_Sede_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}`;
+    const pastaDestino = `Bagagem_Mesma_Sede_${dados.nome}`;
 
-    const blobDiex = await renderizarDocxSede('/templates/DIEx_Opcao_tranporte_na_mesma_sede.docx', payload);
-    const nomeArquivoDiex = `DIEx_Bagagem_Mesma_Sede_${sufixoNome}`;
+    // Mostra indicador de carregamento na interface...
     
-    // Download imediato para o militar
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blobDiex);
-    link.download = nomeArquivoDiex;
-    link.click();
+    try {
+        // 1. Gera o documento principal (que você já tinha)
+        await gerarDocumento(
+            '/templates/template-mesma-sede.docx', 
+            `Requerimento_Bagagem_${dados.nome}.docx`, 
+            dados, 
+            pastaDestino
+        );
 
-    btnSubmit.innerHTML = `<span class="animate-pulse">Enviando para o Drive...</span>`;
-    
-    // Upload direto, sem necessidade de loop por ser só 1 arquivo
-    await fetch(`/api/upload?filename=${encodeURIComponent(nomeArquivoDiex)}&folder=${encodeURIComponent(pastaDestinoDrive)}`, { 
-      method: 'POST', 
-      body: blobDiex 
-    });
+        // ==========================================
+        // 2. ADICIONA A GERAÇÃO DO DIEX DE OPÇÃO
+        // ==========================================
+        await gerarDocumento(
+            '/templates/template-diex-opcao.docx', // Caminho para o template igual ao de Cursos
+            `DIEx_Opcao_${dados.nome}.docx`, 
+            dados, 
+            pastaDestino
+        );
 
-    alert("Documento gerado e enviado para o Google Drive com sucesso!");
-  } catch (err) {
-    alert(`Erro: ${err.message}`);
-  } finally {
-    btnSubmit.disabled = false;
-    btnSubmit.innerHTML = textoOriginal;
-  }
-}
+        // ==========================================
+        // 3. ADICIONA A GERAÇÃO DA NOTA DIEX OPÇÃO
+        // ==========================================
+        await gerarDocumento(
+            '/templates/template-nota-diex-opcao.docx', // Caminho para o template
+            `Nota_DIEx_Opcao_${dados.nome}.docx`, 
+            dados, 
+            pastaDestino
+        );
+
+        alert('Todos os documentos gerados e salvos no Drive com sucesso!');
+        // Limpar formulário, esconder loading, etc.
+    } catch (erro) {
+        alert('Ocorreu um erro ao gerar os documentos da Mesma Sede.');
+    }
+});
