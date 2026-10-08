@@ -1,13 +1,7 @@
 // =========================================================================
 // SisDoc - Gerador de Movimentação (Normal e Complemento)
 // =========================================================================
-import { nomeArquivoDoc } from './utils.js';
-
-function formatarDataPorExtenso() {
-  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-  const hoje = new Date();
-  return `${String(hoje.getDate()).padStart(2, '0')} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-}
+import { nomeArquivoDoc, formatarDataMilitar, dataAtualMilitar } from './utils.js';
 
 function adicionarLinhaDependenteMov() {
   const listaDep = document.getElementById('lista-dependentes');
@@ -110,7 +104,7 @@ async function processarEnvioMovimentacao(e) {
     const optMoto = isChecked('chk_moto');
 
     const payload = {
-      DATA_ATUAL: formatarDataPorExtenso(),
+      DATA_ATUAL: dataAtualMilitar(),
       POSTO_GRAD: getVal('posto'),
       NOME_COMPLETO: getVal('nome').toUpperCase(),
       CPF: getVal('cpf'),
@@ -124,7 +118,7 @@ async function processarEnvioMovimentacao(e) {
       ADT_DCEM: getVal('adtDcem'),
       CIDADE_RESIDE: getVal('cidadeReside').toUpperCase(),
       CIDADE_DESTINO: getVal('cidadeDestino').toUpperCase(),
-      DATA_DESLIGAMENTO: getVal('dataDesligamento'),
+      DATA_DESLIGAMENTO: formatarDataMilitar(getVal('dataDesligamento')),
       MOTIVO: getVal('motivo_complemento').toUpperCase(),
 
       BANCO: getVal('banco'),
