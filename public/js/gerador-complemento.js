@@ -2,24 +2,12 @@
 // SisDoc - Gerador de Complementos (Curso e Movimentação)
 // =========================================================================
 
-import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData } from './utils.js';
+import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, mascaraData, nomeArquivoDoc, formatarDataMilitar, dataAtualMilitar, mesAnoAtualMilitar } from './utils.js';
 
 let dependentes = [];
 let dadosUltimoEnvio = null;
 
 // Funções de Data
-function formatarDataPorExtenso() {
-  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-  const hoje = new Date();
-  return `${String(hoje.getDate()).padStart(2, '0')} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-}
-
-function formatarMesAno() {
-  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-  const hoje = new Date();
-  return `${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-}
-
 // Eventos e Inicialização
 document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) lucide.createIcons();
@@ -111,7 +99,7 @@ async function renderizarDocx(caminhoTemplate, dadosPayload) {
 
   let doc;
   try {
-    doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true, nullGetter: () => '' });
     doc.render(dadosPayload);
   } catch (errRender) {
     if (errRender.properties && errRender.properties.errors) {
@@ -152,8 +140,8 @@ async function processarFormularioComplemento(e) {
 
     // Payload Unificado
     const payload = {
-      DATA_ATUAL: formatarDataPorExtenso(),
-      MES_ANO: formatarMesAno(),
+      DATA_ATUAL: dataAtualMilitar(),
+      MES_ANO: mesAnoAtualMilitar(),
       POSTO_GRAD: posto,
       NOME_COMPLETO: nomeCompleto,
       CPF: getVal('cpf'),
@@ -183,26 +171,24 @@ async function processarFormularioComplemento(e) {
         OM_REALIZACAO: getVal('cursoCidade').toUpperCase(),
         GUARNICAO: getVal('cursoGuarnicao').toUpperCase(),
         ADT_DCEM: getVal('cursoAdt'),
-        DATA_DESLIGAMENTO: getVal('cursoDataTermino'),
+        DATA_DESLIGAMENTO: formatarDataMilitar(getVal('cursoDataTermino')),
         MOTIVO: getVal('cursoMotivo').toUpperCase()
       });
       templates = {
-        diex: '/templates/diex_opcao_curso_complemento.docx',
-        bar: '/templates/nota_diex_opcao_curso_bar_complemento.docx',
+        diex: '/templates/diex_curso_complemento.docx',
+        bar: '/templates/nota_bar_curso_complemento.docx',
         ord: '/templates/ord_pagto_curso_complemento.docx'
       };
     } else {
       // Movimentação
       Object.assign(payload, {
         OM_DESTINO: getVal('transfOm').toUpperCase(),
-        OM_destino: getVal('transfOm').toUpperCase(),
-        OM_origem: '5º BIL',
+        OM_ORIGEM: '5º BIL',
         GUARNICAO: getVal('transfGuarnicao').toUpperCase(),
-        Cidade_reside: getVal('transfCidade').toUpperCase(),
-        Cidade_destino: getVal('transfCidade').toUpperCase(), // Ajuste conforme formulário
+        CIDADE_RESIDE: getVal('transfCidade').toUpperCase(),
+        CIDADE_DESTINO: getVal('transfCidade').toUpperCase(), // Ajuste conforme formulário
         ADT_DCEM: getVal('transfAdt'),
-        desligamento: getVal('transfDataDesligamento'),
-        data_desligamento: getVal('transfDataDesligamento'),
+        DATA_DESLIGAMENTO: formatarDataMilitar(getVal('transfDataDesligamento')),
         MOTIVO: getVal('transfMotivo').toUpperCase(),
         
         TEM_VEICULO: Boolean(optAuto || optMoto),
@@ -223,13 +209,14 @@ async function processarFormularioComplemento(e) {
         AJUDA_SIM: 'X', AJUDA_NAO: ' ' // Complemento geralmente é Ajuda de Custo
       });
       templates = {
-        diex: '/templates/diex_opcao_movimentacao_complemento.docx',
-        bar: '/templates/nota_diex_opção_movimentacao_complemento.docx',
-        ord: '/templates/Ord_Pagto_Nota_movimentacao_complemento.docx'
+        diex: '/templates/diex_movimentacao_complemento.docx',
+        bar: '/templates/nota_bar_movimentacao_complemento.docx',
+        ord: '/templates/ord_pagto_movimentacao_complemento.docx'
       };
     }
 
-    const sufixoNome = `${posto.replace(/\s+/g, '_')}_${nomeCompleto.replace(/\s+/g, '_')}`;
+    const fluxoDoc = modalidade === 'curso' ? 'CURSO' : 'MOVIMENTACAO';
+    const nomeDoc = (tipo) => nomeArquivoDoc(tipo, fluxoDoc, posto, nomeCompleto, true);
     const pastaDestinoDrive = `Complemento_${modalidade.toUpperCase()}_${nomeCompleto.replace(/\s+/g, '_')}`;
 
     // Renderiza
@@ -240,7 +227,7 @@ async function processarFormularioComplemento(e) {
     // Download do DIEx
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blobDiex);
-    link.download = `DIEx_Complemento_${modalidade}_${sufixoNome}.docx`;
+    link.download = nomeDoc('DIEX');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -251,9 +238,9 @@ async function processarFormularioComplemento(e) {
       await fetch(`/api/upload?filename=${encodeURIComponent(nome)}&folder=${encodeURIComponent(pastaDestinoDrive)}`, { method: 'POST', body: blob });
     };
 
-    await enviarParaDrive(blobDiex, `DIEx_Complemento_${modalidade}_${sufixoNome}.docx`);
-    await enviarParaDrive(blobBar, `NotaBAR_Complemento_${modalidade}_${sufixoNome}.docx`);
-    await enviarParaDrive(blobOrdPagto, `OrdPagto_Complemento_${modalidade}_${sufixoNome}.docx`);
+    await enviarParaDrive(blobDiex, nomeDoc('DIEX'));
+    await enviarParaDrive(blobBar, nomeDoc('NOTA_BAR'));
+    await enviarParaDrive(blobOrdPagto, nomeDoc('ORD_PAGTO'));
 
     // Protocolo
     try {
@@ -265,7 +252,7 @@ async function processarFormularioComplemento(e) {
           data: new Date().toISOString(),
           requerente: `${posto} ${nomeCompleto}`,
           tipo: `Complemento de Indenização (${modalidade})`,
-          arquivo: `DIEx_Complemento_${modalidade}_${sufixoNome}.docx`,
+          arquivo: nomeDoc('DIEX'),
           pasta: pastaDestinoDrive,
           dependentesQtd: dependentes.length
         })
