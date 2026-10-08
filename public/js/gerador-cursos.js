@@ -1,19 +1,7 @@
 // =========================================================================
 // SisDoc - Gerador de Cursos e Estágios (Normal e Complemento)
 // =========================================================================
-import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, nomeArquivoDoc } from './utils.js';
-
-function formatarDataPorExtenso() {
-  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-  const hoje = new Date();
-  return `${String(hoje.getDate()).padStart(2, '0')} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-}
-
-function formatarMesAno() {
-  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-  const hoje = new Date();
-  return `${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-}
+import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, nomeArquivoDoc, formatarDataMilitar, dataAtualMilitar, mesAnoAtualMilitar } from './utils.js';
 
 function adicionarLinhaDependente() {
   const listaDep = document.getElementById('lista-dependentes');
@@ -98,8 +86,8 @@ async function processarEnvioCursos(e) {
 
     const dependentes = coletarDependentes();
     const payload = {
-      DATA_ATUAL: formatarDataPorExtenso(),
-      MES_ANO: formatarMesAno(),
+      DATA_ATUAL: dataAtualMilitar(),
+      MES_ANO: mesAnoAtualMilitar(),
       POSTO_GRAD: getVal('posto'),
       NOME_COMPLETO: getVal('nome').toUpperCase(),
       CPF: getVal('cpf'),
@@ -110,7 +98,7 @@ async function processarEnvioCursos(e) {
       OM_REALIZACAO: getVal('omCurso').toUpperCase(),
       GUARNICAO: getVal('guarnicaoCurso').toUpperCase(),
       ADT_DCEM: getVal('adtDcem'),
-      DATA_DESLIGAMENTO: getVal('dataDesligamento'),
+      DATA_DESLIGAMENTO: formatarDataMilitar(getVal('dataDesligamento')),
       BANCO: getVal('banco'),
       AGENCIA: getVal('agencia'),
       CONTA_CORRENTE: getVal('conta'),
