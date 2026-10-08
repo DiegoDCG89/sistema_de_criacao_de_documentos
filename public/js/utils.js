@@ -90,18 +90,37 @@ export function nomeArquivoDoc(tipo, fluxo, posto, nome, complemento = false) {
     .filter(Boolean).join('_') + '.docx';
 }
 
-const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
-/** Ex: 07 de outubro de 2026 */
-export function formatarDataPorExtenso() {
-  const h = new Date();
-  return `${String(h.getDate()).padStart(2, '0')} de ${MESES[h.getMonth()]} de ${h.getFullYear()}`;
+/**
+ * Formato militar de data: DD MÊS AA  (ex.: 07 OUT 26).
+ * Aceita Date, "dd/mm/aaaa", "dd/mm/aa" ou "aaaa-mm-dd". Valor vazio/inválido volta como veio.
+ */
+export function formatarDataMilitar(valor) {
+  if (!valor) return '';
+  let d, m, a;
+  if (valor instanceof Date) {
+    d = valor.getDate(); m = valor.getMonth() + 1; a = valor.getFullYear();
+  } else {
+    const br = String(valor).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+    const iso = String(valor).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (br) { d = +br[1]; m = +br[2]; a = +br[3]; }
+    else if (iso) { a = +iso[1]; m = +iso[2]; d = +iso[3]; }
+    else return String(valor);
+  }
+  if (m < 1 || m > 12 || d < 1 || d > 31) return String(valor);
+  return `${String(d).padStart(2, '0')} ${MESES_ABREV[m - 1]} ${String(a % 100).padStart(2, '0')}`;
 }
 
-/** Ex: outubro de 2026 */
-export function formatarMesAno() {
+/** Data de hoje no formato militar. Ex: 07 OUT 26 */
+export function dataAtualMilitar() {
+  return formatarDataMilitar(new Date());
+}
+
+/** Mês/ano de hoje no formato militar. Ex: OUT 26 */
+export function mesAnoAtualMilitar() {
   const h = new Date();
-  return `${MESES[h.getMonth()]} de ${h.getFullYear()}`;
+  return `${MESES_ABREV[h.getMonth()]} ${String(h.getFullYear() % 100).padStart(2, '0')}`;
 }
 
 /**
