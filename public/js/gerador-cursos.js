@@ -1,7 +1,7 @@
 // =========================================================================
 // SisDoc - Gerador de Cursos e Estágios (Normal e Complemento)
 // =========================================================================
-import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone } from './utils.js';
+import { mascaraCPF, mascaraIdt, mascaraPrecCP, mascaraTelefone, nomeArquivoDoc } from './utils.js';
 
 function formatarDataPorExtenso() {
   const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -79,7 +79,7 @@ async function renderizarDocx(caminhoTemplate, dadosPayload) {
   if (!res.ok) throw new Error(`Template não encontrado: ${caminhoTemplate}`);
   const buffer = await res.arrayBuffer();
   const zip = new window.PizZip(buffer);
-  const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+  const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true, nullGetter: () => '' });
   doc.render(dadosPayload);
   return doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
@@ -119,17 +119,16 @@ async function processarEnvioCursos(e) {
       DEPENDENTES: dependentes
     };
 
-    const sufixoNome = `${payload.POSTO_GRAD.replace(/\s+/g, '_')}_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
     const pastaDestinoDrive = `Curso_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}`;
 
     // Definição dos templates de acordo com a opção Complemento
-    const tplDiex = isComplemento ? '/templates/diex_opcao_curso_complemento.docx' : '/templates/diex_opcao_curso.docx';
-    const tplBar = isComplemento ? '/templates/nota_diex_opcao_curso_bar_complemento.docx' : '/templates/nota_diex_opcao_curso_bar.docx';
-    const tplOrd = isComplemento ? '/templates/ord_pagto_curso_complemento.docx' : '/templates/Nota_Ord_Pagto_curso.docx';
-    const prefArq = isComplemento ? 'Complemento_' : '';
+    const tplDiex = isComplemento ? '/templates/diex_curso_complemento.docx' : '/templates/diex_curso.docx';
+    const tplBar = isComplemento ? '/templates/nota_bar_curso_complemento.docx' : '/templates/nota_bar_curso.docx';
+    const tplOrd = isComplemento ? '/templates/ord_pagto_curso_complemento.docx' : '/templates/ord_pagto_curso.docx';
+    const nomeDoc = (tipo) => nomeArquivoDoc(tipo, 'CURSO', payload.POSTO_GRAD, payload.NOME_COMPLETO, isComplemento);
 
     const blobDiex = await renderizarDocx(tplDiex, payload);
-    const nomeArquivoDiex = `DIEx_Opcao_Curso_${prefArq}${sufixoNome}`;
+    const nomeArquivoDiex = nomeDoc('DIEX');
     
     // Baixa o DIEx localmente
     const link = document.createElement('a');
@@ -150,8 +149,8 @@ async function processarEnvioCursos(e) {
 
     // Upload Sequencial
     await enviarParaDrive(blobDiex, nomeArquivoDiex);
-    await enviarParaDrive(blobBar, `Nota_p_BAR_Curso_${prefArq}${sufixoNome}`);
-    await enviarParaDrive(blobOrdPagto, `Nota_Ord_Pagto_${prefArq}${sufixoNome}`);
+    await enviarParaDrive(blobBar, nomeDoc('NOTA_BAR'));
+    await enviarParaDrive(blobOrdPagto, nomeDoc('ORD_PAGTO'));
 
     // Protocolo interno (mesmo padrão usado em Bagagem e Complemento)
     try {
