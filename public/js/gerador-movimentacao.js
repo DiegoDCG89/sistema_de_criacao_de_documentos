@@ -1,6 +1,7 @@
 // =========================================================================
 // SisDoc - Gerador de Movimentação (Normal e Complemento)
 // =========================================================================
+import { nomeArquivoDoc } from './utils.js';
 
 function formatarDataPorExtenso() {
   const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -73,7 +74,7 @@ async function renderizarDocx(caminhoTemplate, dadosPayload) {
 
   let doc;
   try {
-    doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true, nullGetter: () => '' });
     doc.render(dadosPayload);
   } catch (errRender) {
     // Trata erros de tag mal formatada no Word (MultiError)
@@ -118,14 +119,12 @@ async function processarEnvioMovimentacao(e) {
       TELEFONE: getVal('telefone'),
       
       OM_DESTINO: getVal('omDestino').toUpperCase(),
-      OM_destino: getVal('omDestino').toUpperCase(),
-      OM_origem: '5º BIL',
+      OM_ORIGEM: '5º BIL',
       GUARNICAO: getVal('guarnicao').toUpperCase(),
       ADT_DCEM: getVal('adtDcem'),
-      Cidade_reside: getVal('cidadeReside').toUpperCase(),
-      Cidade_destino: getVal('cidadeDestino').toUpperCase(),
-      desligamento: getVal('dataDesligamento'),
-      data_desligamento: getVal('dataDesligamento'),
+      CIDADE_RESIDE: getVal('cidadeReside').toUpperCase(),
+      CIDADE_DESTINO: getVal('cidadeDestino').toUpperCase(),
+      DATA_DESLIGAMENTO: getVal('dataDesligamento'),
       MOTIVO: getVal('motivo_complemento').toUpperCase(),
 
       BANCO: getVal('banco'),
@@ -156,17 +155,16 @@ async function processarEnvioMovimentacao(e) {
       throw new Error("Por favor, preencha pelo menos o Posto/Graduação e o Nome Completo.");
     }
 
-    const sufixoNome = `${payload.POSTO_GRAD.replace(/\s+/g, '_')}_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}.docx`;
     const pastaDestinoDrive = `Movimentacao_${payload.NOME_COMPLETO.replace(/\s+/g, '_')}`;
 
     // Nomes Exatos conforme a Imagem
-    const tplDiex = isComplemento ? '/templates/diex_opcao_movimentacao_complemento.docx' : '/templates/diex_opcao_movimentacao.docx';
-    const tplBar = isComplemento ? '/templates/nota_diex_opção_movimentacao_complemento.docx' : '/templates/nota_diex_opção_movimentacao.docx';
-    const tplOrd = isComplemento ? '/templates/Ord_Pagto_Nota_movimentacao_complemento.docx' : '/templates/Ord_Pagto_Nota_movimentacao.docx';
-    const prefArq = isComplemento ? 'Complemento_' : '';
+    const tplDiex = isComplemento ? '/templates/diex_movimentacao_complemento.docx' : '/templates/diex_movimentacao.docx';
+    const tplBar = isComplemento ? '/templates/nota_bar_movimentacao_complemento.docx' : '/templates/nota_bar_movimentacao.docx';
+    const tplOrd = isComplemento ? '/templates/ord_pagto_movimentacao_complemento.docx' : '/templates/ord_pagto_movimentacao.docx';
+    const nomeDoc = (tipo) => nomeArquivoDoc(tipo, 'MOVIMENTACAO', payload.POSTO_GRAD, payload.NOME_COMPLETO, isComplemento);
 
     const blobDiex = await renderizarDocx(tplDiex, payload);
-    const nomeArquivoDiex = `DIEx_Opcao_Movimentacao_${prefArq}${sufixoNome}`;
+    const nomeArquivoDiex = nomeDoc('DIEX');
     
     // Força o Download
     const link = document.createElement('a');
@@ -194,8 +192,8 @@ async function processarEnvioMovimentacao(e) {
 
     // Upload Sequencial
     await enviarParaDrive(blobDiex, nomeArquivoDiex);
-    await enviarParaDrive(blobBar, `Nota_p_BAR_Mov_${prefArq}${sufixoNome}`);
-    await enviarParaDrive(blobOrdPagto, `Nota_Ord_Pagto_Mov_${prefArq}${sufixoNome}`);
+    await enviarParaDrive(blobBar, nomeDoc('NOTA_BAR'));
+    await enviarParaDrive(blobOrdPagto, nomeDoc('ORD_PAGTO'));
 
     // Protocolo interno (mesmo padrão usado em Bagagem e Complemento)
     try {
