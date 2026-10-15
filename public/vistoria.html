@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerador - Termo de Vistoria</title>
+    <link rel="stylesheet" href="css/sisdoc.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Termo de Vistoria de PNR</h1>
+        <form id="formVistoria">
+            <div class="form-group">
+                <label for="tipoVistoria">Tipo de Vistoria:</label>
+                <select id="tipoVistoria" name="tipoVistoria" required>
+                    <option value="OCUPAÇÃO">Ocupação</option>
+                    <option value="DESOCUPAÇÃO">Desocupação</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="nomeMilitar">Nome do Militar (Ex: SGT P TEIXEIRA):</label>
+                <input type="text" id="nomeMilitar" name="nomeMilitar" required>
+            </div>
+
+            <div class="form-group">
+                <label for="dataVistoria">Data da Vistoria:</label>
+                <input type="date" id="dataVistoria" name="dataVistoria" required>
+            </div>
+
+            <h3>Tabela de Itens Vistoriados</h3>
+            <table id="tabelaItens" border="1" style="width: 100%; margin-bottom: 15px;">
+                <thead>
+                    <tr>
+                        <th>Cômodo/Item</th>
+                        <th>Estado de Conservação</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Linha inicial -->
+                    <tr>
+                        <td><input type="text" class="item-nome" value="Sala - Pintura" required></td>
+                        <td><input type="text" class="item-estado" value="Bom" required></td>
+                        <td><button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="btn-secondary" onclick="adicionarLinha()">+ Adicionar Item</button>
+
+            <br><br>
+            <button type="submit" class="btn-primary">Gerar e Enviar para o Drive</button>
+        </form>
+    </div>
+
+    <script src="js/gerador-vistoria.js"></script>
+</body>
+</html>
