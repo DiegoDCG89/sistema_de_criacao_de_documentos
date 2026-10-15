@@ -1,57 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Gerador - Termo de Vistoria</title>
-    <link rel="stylesheet" href="css/sisdoc.css">
+  <meta charset="UTF-8">
+  <title>SisDoc - Vistoria PNR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/sisdoc.css">
 </head>
-<body>
-    <div class="container">
-        <h1>Termo de Vistoria de PNR</h1>
-        <form id="formVistoria">
-            <div class="form-group">
-                <label for="tipoVistoria">Tipo de Vistoria:</label>
-                <select id="tipoVistoria" name="tipoVistoria" required>
-                    <option value="OCUPAÇÃO">Ocupação</option>
-                    <option value="DESOCUPAÇÃO">Desocupação</option>
-                </select>
-            </div>
+<body class="bg-gray-50 min-h-screen p-8">
+  <div class="max-w-4xl mx-auto bg-white p-8 shadow-md rounded-lg">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Termo de Vistoria de PNR</h1>
+    
+    <form id="formVistoria" class="space-y-6">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Tipo de Vistoria</label>
+          <select id="tipoVistoria" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+            <option value="OCUPACAO">Ocupação</option>
+            <option value="DESOCUPACAO">Desocupação</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Data da Vistoria</label>
+          <input type="date" id="dataVistoria" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="nomeMilitar">Nome do Militar (Ex: SGT P TEIXEIRA):</label>
-                <input type="text" id="nomeMilitar" name="nomeMilitar" required>
-            </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Posto/Graduação e Nome do Permissionário</label>
+          <input type="text" id="nomeMilitar" placeholder="Ex: SGT P TEIXEIRA" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Endereço do PNR</label>
+          <input type="text" id="enderecoPNR" placeholder="Ex: Av. Mal Argolo Nº 01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="dataVistoria">Data da Vistoria:</label>
-                <input type="date" id="dataVistoria" name="dataVistoria" required>
-            </div>
+      <div class="mt-8">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium">Itens Vistoriados</h3>
+            <button type="button" onclick="adicionarLinha()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 text-sm">
+                + Adicionar Item
+            </button>
+        </div>
+        
+        <table class="w-full border-collapse border border-gray-300" id="tabelaItens">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="border border-gray-300 p-2 text-left">Cômodo / Item</th>
+              <th class="border border-gray-300 p-2 text-left">Estado de Conservação</th>
+              <th class="border border-gray-300 p-2 text-center w-24">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="border border-gray-300 p-2"><input type="text" class="item-nome w-full p-1" value="Sala - Pintura" required></td>
+              <td class="border border-gray-300 p-2"><input type="text" class="item-estado w-full p-1" value="Bom" required></td>
+              <td class="border border-gray-300 p-2 text-center"><button type="button" onclick="removerLinha(this)" class="text-red-600 hover:text-red-800 font-bold">X</button></td>
+            </tr>
+            <tr>
+              <td class="border border-gray-300 p-2"><input type="text" class="item-nome w-full p-1" value="Quarto 1 - Portas e Maçanetas" required></td>
+              <td class="border border-gray-300 p-2"><input type="text" class="item-estado w-full p-1" value="Com avarias" required></td>
+              <td class="border border-gray-300 p-2 text-center"><button type="button" onclick="removerLinha(this)" class="text-red-600 hover:text-red-800 font-bold">X</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-            <h3>Tabela de Itens Vistoriados</h3>
-            <table id="tabelaItens" border="1" style="width: 100%; margin-bottom: 15px;">
-                <thead>
-                    <tr>
-                        <th>Cômodo/Item</th>
-                        <th>Estado de Conservação</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Linha inicial -->
-                    <tr>
-                        <td><input type="text" class="item-nome" value="Sala - Pintura" required></td>
-                        <td><input type="text" class="item-estado" value="Bom" required></td>
-                        <td><button type="button" class="btn-remover" onclick="removerLinha(this)">Remover</button></td>
-                    </tr>
-                </tbody>
-            </table>
-            <button type="button" class="btn-secondary" onclick="adicionarLinha()">+ Adicionar Item</button>
+      <div class="flex justify-end pt-4">
+        <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg font-bold hover:bg-green-700 transition">
+          Gerar e Salvar no Drive
+        </button>
+      </div>
+    </form>
+  </div>
 
-            <br><br>
-            <button type="submit" class="btn-primary">Gerar e Enviar para o Drive</button>
-        </form>
-    </div>
+  <script>
+    function adicionarLinha() {
+      const tbody = document.querySelector('#tabelaItens tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="border border-gray-300 p-2"><input type="text" class="item-nome w-full p-1" placeholder="Ex: Cozinha - Piso" required></td>
+        <td class="border border-gray-300 p-2"><input type="text" class="item-estado w-full p-1" placeholder="Ex: Bom" required></td>
+        <td class="border border-gray-300 p-2 text-center"><button type="button" onclick="removerLinha(this)" class="text-red-600 hover:text-red-800 font-bold">X</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
 
-    <script src="js/gerador-vistoria.js"></script>
+    function removerLinha(btn) {
+      if (document.querySelectorAll('#tabelaItens tbody tr').length > 1) {
+        btn.closest('tr').remove();
+      } else {
+        alert("O termo precisa ter pelo menos um item.");
+      }
+    }
+
+    document.getElementById('formVistoria').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Montar objeto de dados
+      const dados = {
+        tipoVistoria: document.getElementById('tipoVistoria').value,
+        dataVistoria: document.getElementById('dataVistoria').value.split('-').reverse().join('/'), // Formata DD/MM/AAAA
+        nomeMilitar: document.getElementById('nomeMilitar').value,
+        enderecoPNR: document.getElementById('enderecoPNR').value,
+        itens: Array.from(document.querySelectorAll('#tabelaItens tbody tr')).map(linha => ({
+          nome: linha.querySelector('.item-nome').value,
+          estado: linha.querySelector('.item-estado').value
+        }))
+      };
+
+      try {
+        const response = await fetch('/gerar-termo-vistoria', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dados)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert('Sucesso! Documento salvo na pasta PNR no Google Drive.');
+          if(result.downloadUrl) window.open(result.downloadUrl, '_blank');
+        } else {
+          alert('Erro: ' + result.error);
+        }
+      } catch (error) {
+        alert('Falha na comunicação com o servidor.');
+      }
+    });
+  </script>
 </body>
 </html>
