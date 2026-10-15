@@ -79,6 +79,74 @@ app.get('/api/solicitacoes', (req, res) => {
   }
 });
 
+app.post('/gerar-vistoria', async (req, res) => {
+    try {
+        const { tipoVistoria, nomeMilitar, dataVistoria, itens } = req.body;
+
+        // 1. Carregar o template do Termo de Vistoria (certifique-se de salvar um modelo .docx válido na pasta templates)
+        const content = fs.readFileSync(path.resolve(__dirname, 'public/templates/termo_vistoria.docx'), 'binary');
+        
+        const zip = new PizZip(content);
+        const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+        });
+
+        // 2. Preencher os dados no documento
+        // No seu template .docx, você usará {#itens} {nome} - {estado} {/itens} para gerar as linhas da tabela
+        doc.render({
+            tipoVistoria: tipoVistoria,
+            nomeMilitar: nomeMilitar,
+            dataVistoria: dataVistoria,
+            itens: itens 
+        });
+
+        const buf = doc.getZip().generate({ type: 'nodebuffer' });
+        
+        // Caminho temporário para salvar o arquivo gerado
+        const fileName = `Termo_Vistoria_${tipoVistoria}_${nomeMilitar.replace(/\s+/g, '_')}.docx`;
+        const tempPath = path.resolve(__dirname, 'temp', fileName);
+        fs.writeFileSync(tempPath, buf);
+
+        // 3. Upload para o Google Drive na pasta ESPECÍFICA solicitada
+        // ID da Pasta: 10XKJm8SvCr6YWLNgbdaYUR20Go_L6m6P
+        const drive = google.drive({ version: 'v3', auth: oauth2Client }); // Usa a autenticação já configurada no seu projeto
+        
+        const fileMetadata = {
+            name: fileName,
+            parents: ['10XKJm8SvCr6YWLNgbdaYUR20Go_L6m6P'] // <--- PASTA SOLICITADA
+        };
+        
+        const media = {
+            mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            body: fs.createReadStream(tempPath)
+        };
+
+        const driveResponse = await drive.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: 'id, webViewLink, webContentLink'
+        });
+
+        // Limpar arquivo temporário
+        fs.unlinkSync(tempPath);
+
+        // Enviar a URL de volta para o usuário baixar/visualizar
+        res.json({ 
+            success: true, 
+            message: 'Documento salvo no Drive',
+            fileId: driveResponse.data.id,
+            downloadUrl: driveResponse.data.webContentLink
+        });
+
+    } catch (error) {
+        console.error("Erro ao gerar vistoria:", error);
+        res.status(500).json({ error: 'Erro interno ao gerar o documento de vistoria.' });
+    }
+});
+
+
+
 // Inicia o servidor
 app.listen(PORT, () => {
   console.log(`Servidor SisDoc rodando na porta ${PORT}`);
