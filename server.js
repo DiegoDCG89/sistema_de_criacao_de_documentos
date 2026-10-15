@@ -144,7 +144,77 @@ app.post('/gerar-vistoria', async (req, res) => {
         res.status(500).json({ error: 'Erro interno ao gerar o documento de vistoria.' });
     }
 });
+// Rota para Gerar Termo de Vistoria de PNR
+app.post('/gerar-termo-vistoria', async (req, res) => {
+    try {
+        const { tipoVistoria, dataVistoria, nomeMilitar, enderecoPNR, itens } = req.body;
 
+        // Escolhe o template certo baseado no dropdown
+        let templateFile = tipoVistoria === 'OCUPACAO' 
+            ? 'termo_vistoria_ocupacao.docx' 
+            : 'termo_vistoria_desocupacao.docx';
+
+        const templatePath = path.resolve(__dirname, 'public/templates', templateFile);
+        
+        // Lê o arquivo gerado e extrai o ZIP (docxtemplater)
+        const content = fs.readFileSync(templatePath, 'binary');
+        const zip = new PizZip(content);
+        const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+        });
+
+        // Aplica os dados (substitui as tags no Word, multiplicando a tabela)
+        doc.render({
+            tipoVistoria: tipoVistoria === 'OCUPACAO' ? 'OCUPAÇÃO' : 'DESOCUPAÇÃO',
+            dataVistoria: dataVistoria,
+            nomeMilitar: nomeMilitar.toUpperCase(),
+            enderecoPNR: enderecoPNR,
+            itens: itens // O array que vai gerar as linhas dinâmicas
+        });
+
+        const buf = doc.getZip().generate({ type: 'nodebuffer' });
+        
+        // Nome limpo para salvar
+        const nomeMilitarLimpo = nomeMilitar.replace(/[^a-zA-Z0-9]/g, '_');
+        const fileName = `Vistoria_PNR_${tipoVistoria}_${nomeMilitarLimpo}.docx`;
+        const tempPath = path.resolve(__dirname, 'temp', fileName); // Garanta que a pasta "temp" exista na raiz do projeto
+        
+        fs.writeFileSync(tempPath, buf);
+
+        // Upload para a pasta específica do Google Drive
+        const drive = google.drive({ version: 'v3', auth: oauth2Client }); // Supondo que oauth2Client está configurado
+        
+        const fileMetadata = {
+            name: fileName,
+            parents: ['10XKJm8SvCr6YWLNgbdaYUR20Go_L6m6P'] // A PASTA DO PNR NO DRIVE
+        };
+        
+        const media = {
+            mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            body: fs.createReadStream(tempPath)
+        };
+
+        const driveResponse = await drive.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: 'id, webViewLink'
+        });
+
+        // Apaga o arquivo local temporário
+        fs.unlinkSync(tempPath);
+
+        res.json({ 
+            success: true, 
+            fileId: driveResponse.data.id,
+            downloadUrl: driveResponse.data.webViewLink
+        });
+
+    } catch (error) {
+        console.error("Erro na Vistoria PNR:", error);
+        res.status(500).json({ error: 'Erro ao gerar ou salvar a vistoria.' });
+    }
+});
 
 
 // Inicia o servidor
