@@ -24,17 +24,83 @@
           <input type="date" id="dataVistoria" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
         </div>
       </div>
+    
+       <div class="secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">1</span> Identificação do Militar</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="rotulo rotulo-obrigatorio">Posto / Graduação</label>
+              <select id="posto" required class="campo-select">
+                <option value="">Selecione...</option>
+                <option value="Gen Ex">Gen Ex</option>
+                <option value="Gen Div">Gen Div</option>
+                <option value="Gen Bda">Gen Bda</option>
+                <option value="Cel">Cel</option>
+                <option value="Ten Cel">Ten Cel</option>
+                <option value="Maj">Maj</option>
+                <option value="Cap">Cap</option>
+                <option value="1º Ten">1º Ten</option>
+                <option value="2º Ten">2º Ten</option>
+                <option value="Asp">Asp</option>
+                <option value="S Ten">S Ten</option>
+                <option value="Cad">Cad</option>
+                <option value="1º Sgt">1º Sgt</option>
+                <option value="2º Sgt">2º Sgt</option>
+                <option value="3º Sgt">3º Sgt</option>
+                <option value="Cb">Cb</option>
+                <option value="Sd">Sd</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="rotulo rotulo-obrigatorio">Nome Completo</label>
+              <input type="text" id="nomeMilitar" placeholder="Fulano de Tal" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
+            </div>
+           <div>
+  <label for="enderecoPNR" class="rotulo rotulo-obrigatorio">
+    Número do PNR
+  </label>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Posto/Graduação e Nome do Permissionário</label>
-          <input type="text" id="nomeMilitar" placeholder="Ex: SGT P TEIXEIRA" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Endereço do PNR</label>
-          <input type="text" id="enderecoPNR" placeholder="Ex: Av. Mal Argolo Nº 01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border">
-        </div>
-      </div>
+  <select id="enderecoPNR" name="enderecoPNR" required class="campo-select">
+    <option value="">Selecione o PNR...</option>
+
+    <optgroup label="Av. Mal Argolo">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6VII">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+      <option value="12VII">12</option>
+      <option value="13">13</option>
+      <option value="14">14</option>
+      <option value="15VII">15</option>
+      <option value="16">16</option>
+      <option value="17">17</option>
+      <option value="18">18</option>
+      <option value="60">60</option>
+    </optgroup>
+
+    <optgroup label="R. Dr. José Machado Coelho de Castro">
+      <option value="93">93</option>
+      <option value="113">113</option>
+      <option value="133">133</option>
+      <option value="145">145</option>
+      <option value="163">163</option>
+      <option value="175">175</option>
+      <option value="195">195</option>
+    </optgroup>
+
+    <optgroup label="R. Sgt Camargo">
+      <option value="53">53</option>
+      <option value="65">65</option>
+    </optgroup>
+  </select>
+</div>
 
       <div class="mt-8">
         <div class="flex justify-between items-center mb-4">
@@ -104,6 +170,7 @@
         dataVistoria: document.getElementById('dataVistoria').value.split('-').reverse().join('/'), // Formata DD/MM/AAAA
         nomeMilitar: document.getElementById('nomeMilitar').value,
         enderecoPNR: document.getElementById('enderecoPNR').value,
+        posto: document.getElementById('posto').value,
         itens: Array.from(document.querySelectorAll('#tabelaItens tbody tr')).map(linha => ({
           nome: linha.querySelector('.item-nome').value,
           estado: linha.querySelector('.item-estado').value
@@ -126,8 +193,14 @@
         }
       } catch (error) {
         alert('Falha na comunicação com o servidor.');
+        
       }
     });
   </script>
 </body>
 </html>
+
+
+
+
+
