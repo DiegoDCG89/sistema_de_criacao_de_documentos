@@ -1,85 +1,211 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Configurações básicas
-app.use(cors());
-app.use(express.json()); // Permite receber JSON do frontend
-
-// Define as pastas que o navegador pode acessar publicamente
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Garante que a pasta de uploads e o arquivo de banco de dados existam
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-
-const dbPath = path.join(__dirname, 'database.json');
-if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify([]));
-
-// ==========================================
-// ROTA 1: RECEBER OS ARQUIVOS WORD E PDF
-// ==========================================
-app.post('/api/upload', (req, res) => {
-  // Pega o nome do arquivo que enviamos no frontend
-  const filename = req.query.filename || `arquivo_${Date.now()}`;
-  const filePath = path.join(uploadsDir, filename);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vistoria de PNR — SisDoc</title>
   
-  // Cria um fluxo de gravação para salvar o arquivo cru que vem no Body
-  const writeStream = fs.createWriteStream(filePath);
-  req.pipe(writeStream);
+  <!-- Dependências -->
+  <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   
-  req.on('end', () => {
-    // Quando terminar de baixar no servidor, devolve o link de acesso
-    res.json({ url: `/uploads/${filename}` });
-  });
-
-  req.on('error', (err) => {
-    console.error('Erro no upload:', err);
-    res.status(500).json({ error: 'Erro ao salvar o arquivo' });
-  });
-});
-
-// ==========================================
-// ROTA 2: SALVAR DADOS DA SOLICITAÇÃO (JSON)
-// ==========================================
-app.post('/api/solicitacoes', (req, res) => {
-  try {
-    const novaSolicitacao = req.body;
+  <!-- Fontes e Estilos Padrão -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/sisdoc.css">
+  
+  <style>
+    /* Estilos dinâmicos específicos para os cards de cômodos da Vistoria */
+    .comodo-card {
+      background: #ffffff;
+      border: 1px solid var(--bege);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .comodo-cabecalho {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+      gap: 16px;
+    }
+    .item-vistoria {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .item-vistoria label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--carvao-suave);
+    }
+    .campo-textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 14px;
+      resize: vertical;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .campo-textarea:focus {
+      outline: none;
+      border-color: var(--oliva-500);
+      box-shadow: 0 0 0 3px var(--dourado-200);
+    }
+    .item-vistoria.obs {
+      grid-column: 1 / -1;
+    }
     
-    // Lê o banco de dados atual
-    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-    
-    // Adiciona o novo pedido no início da lista
-    db.unshift(novaSolicitacao);
-    
-    // Salva o arquivo novamente
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-    
-    res.json({ success: true, message: 'Solicitação registrada com sucesso!' });
-  } catch (error) {
-    console.error('Erro ao salvar no banco:', error);
-    res.status(500).json({ error: 'Erro interno ao salvar dados.' });
-  }
-});
+    /* Sistema de Feedback via JS */
+    .mensagem-status {
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+    }
+    .mensagem-status.sucesso, .mensagem-status.erro {
+      display: block;
+    }
+    .mensagem-status.sucesso {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .mensagem-status.erro {
+      background: var(--erro-bg);
+      color: var(--erro);
+      border: 1px solid #fca5a5;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
 
-// ==========================================
-// ROTA 3: LISTAR DADOS PARA O PAINEL ADMIN
-// ==========================================
-app.get('/api/solicitacoes', (req, res) => {
-  try {
-    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-    res.json(db);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao ler o banco de dados.' });
-  }
-});
+  <!-- CABEÇALHO PADRÃO -->
+  <header class="timbre text-white">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[68px]">
+      <div class="flex items-center gap-3">
+        <i data-lucide="shield" class="w-7 h-7" style="color: var(--dourado-300);"></i>
+        <div class="flex flex-col justify-center leading-tight">
+          <span class="timbre-unidade uppercase">5º Batalhão de Infantaria Aeromóvel · Regimento Itororó</span>
+          <h1 class="timbre-sistema text-base sm:text-lg">SisDoc — Geração de Documentos</h1>
+        </div>
+      </div>
+      <a href="index.html" class="timbre-voltar">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Painel
+      </a>
+    </div>
+  </header>
 
-// Inicia o servidor
-app.listen(PORT, () => {
-  console.log(`Servidor SisDoc rodando na porta ${PORT}`);
-});
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8">
+    <div class="painel-form">
+
+      <!-- Título da Seção -->
+      <div class="painel-form-cabecalho">
+        <i data-lucide="clipboard-check" class="w-6 h-6" style="color: var(--dourado-300);"></i>
+        <div>
+          <h2 class="fonte-titulo text-xl font-medium">Vistoria de PNR</h2>
+          <p class="text-sm mt-0.5" style="color: var(--dourado-200);">Geração de Termo de Ocupação e Desocupação</p>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO -->
+      <form id="formVistoria" class="p-6 sm:p-8 space-y-5">
+        
+        <!-- 1. IDENTIFICAÇÃO -->
+        <div class="secao-form">
+          <h3 class="secao-titulo"><span class="secao-numero">1</span> Dados da Vistoria</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div class="sm:col-span-2">
+              <label class="rotulo rotulo-obrigatorio" for="enderecoPNR">Endereço do PNR</label>
+              <select id="enderecoPNR" required class="campo-select">
+                <option value="">Carregando...</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="rotulo rotulo-obrigatorio" for="tipoVistoria">Tipo de Vistoria</label>
+              <select id="tipoVistoria" required class="campo-select">
+                <option value="OCUPACAO">Ocupação</option>
+                <option value="DESOCUPACAO">Desocupação</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="rotulo rotulo-obrigatorio" for="dataVistoria">Data da Vistoria</label>
+              <input type="date" id="dataVistoria" required class="campo">
+            </div>
+
+            <div>
+              <label class="rotulo rotulo-obrigatorio" for="posto">Posto/Graduação</label>
+              <select id="posto" required class="campo-select">
+                <option value="">Selecione...</option>
+                <option value="Ten Cel">Ten Cel</option>
+                <option value="Maj">Maj</option>
+                <option value="Cap">Cap</option>
+                <option value="1º Ten">1º Ten</option>
+                <option value="2º Ten">2º Ten</option>
+                <option value="Asp">Asp</option>
+                <option value="S Ten">S Ten</option>
+                <option value="1º Sgt">1º Sgt</option>
+                <option value="2º Sgt">2º Sgt</option>
+                <option value="3º Sgt">3º Sgt</option>
+                <option value="Cb">Cb</option>
+                <option value="Sd">Sd</option>
+              </select>
+            </div>
+            
+            <div class="sm:col-span-1 lg:col-span-3">
+              <label class="rotulo rotulo-obrigatorio" for="nomeMilitar">Nome Completo</label>
+              <input type="text" id="nomeMilitar" placeholder="Ex: Fulano de Tal" required class="campo uppercase-input">
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- 2. CÔMODOS -->
+        <div class="secao-form">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+            <h3 class="secao-titulo m-0"><span class="secao-numero">2</span> Cômodos Vistoriados</h3>
+            <button type="button" id="btnAdicionarComodo" class="btn-secundario text-sm py-1.5 px-3 flex items-center gap-1.5">
+              <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Cômodo
+            </button>
+          </div>
+          
+          <div id="avisoComodos" class="text-sm text-center py-6 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            Nenhum cômodo adicionado. Clique no botão acima para incluir áreas na vistoria.
+          </div>
+
+          <div id="comodosContainer" class="space-y-4">
+            <!-- Os cômodos dinâmicos serão gerados aqui pelo JS -->
+          </div>
+        </div>
+
+        <!-- Mensagens de Sucesso ou Erro geradas pelo JS -->
+        <div id="mensagemStatus"></div>
+
+        <button type="submit" id="btnEnviar" class="btn-primario w-full text-base">
+          <i data-lucide="file-check-2" class="w-5 h-5"></i> Gerar Termo de Vistoria
+        </button>
+      </form>
+
+    </div>
+  </main>
+
+  <script>
+    // Inicializa os ícones do Lucide
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  </script>
+  
+  <!-- Lógica da Vistoria -->
+  <script type="module" src="./js/gerador-vistoria.js"></script>
+</body>
+</html>
