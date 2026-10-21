@@ -18,7 +18,7 @@ function adicionarLinhaDependente() {
         <label class="block text-[11px] font-semibold text-stone-600 mb-1">Grau de Parentesco *</label>
         <select class="dep-parentesco w-full border border-stone-300 rounded px-2 py-1.5 text-xs bg-white" required>
           <option value="">Selecione...</option>
-          <option value="Esposa / Cônjuge">Esposa / Cônjuge</option>
+          <option value="Esposa / Cônjuge">Esposa</option>
           <option value="Companheira(o)">Companheira(o)</option>
           <option value="Filho(a)">Filho(a)</option>
           <option value="Enteado(a)">Enteado(a)</option>
