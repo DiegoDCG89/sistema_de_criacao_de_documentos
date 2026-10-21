@@ -1,4 +1,5 @@
 SisDoc - Sistema de Geração de Documentos
+
 O SisDoc é uma aplicação web desenvolvida para automatizar, padronizar e acelerar a criação de documentos administrativos e formais. Projetado especificamente para as necessidades do 5º Batalhão de Infantaria Aeromóvel, o sistema elimina o trabalho manual repetitivo na elaboração de despachos, termos e requisições, garantindo integridade e agilidade nos processos burocráticos.
 
 🚀 Funcionalidades
@@ -50,6 +51,7 @@ sistema_de_criacao_de_documentos/
 ├── server.js               # Ponto de entrada do backend (API e rotas)
 ├── package.json            # Dependências e scripts do projeto
 └── README.md
+
 ⚙️ Pré-requisitos e Instalação
 Certifique-se de ter o Node.js (versão 18+ recomendada) instalado na sua máquina.
 
