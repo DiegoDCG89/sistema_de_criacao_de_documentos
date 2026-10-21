@@ -1,10 +1,6 @@
 // =========================================================================
 // SisDoc - Termo de Vistoria de PNR (ocupação / desocupação)
 // Gera o .docx no navegador (Docxtemplater), baixa uma cópia e envia ao Drive
-// via /api/upload — mesmo fluxo dos demais geradores.
-// Templates: termo_vistoria_ocupacao.docx / termo_vistoria_desocupacao.docx
-// Tags: TIPO_VISTORIA, DATA_VISTORIA, DATA_ATUAL, POSTO_GRAD, NOME_COMPLETO,
-//       ENDERECO_PNR, {#COMODOS} NOME_COMODO {#ITENS} NOME RELATO {/ITENS} {/COMODOS}
 // =========================================================================
 import { nomeArquivoDoc, nomeSeguro, formatarDataMilitar, dataAtualMilitar, renderizarDocx } from './utils.js';
 
@@ -49,7 +45,7 @@ function mostrarMensagem(texto, tipo) {
 }
 function limparMensagem() { msg.textContent = ''; msg.className = 'mensagem-status'; }
 
-// ---------------- Catálogo de PNRs (js/pnr-enderecos.json) ----------------
+// ---------------- Catálogo de PNRs ----------------
 async function carregarPNRs() {
   const select = $('enderecoPNR');
   try {
@@ -75,7 +71,7 @@ async function carregarPNRs() {
   }
 }
 
-// ---------------- Cômodos ----------------
+// ---------------- Cômodos e Melhorias ----------------
 function adicionarComodo() {
   limparMensagem();
   const card = document.createElement('section');
@@ -106,6 +102,7 @@ function adicionarComodo() {
   const titulo = document.createElement('h4');
   titulo.className = 'text-sm font-bold text-gray-700 border-b border-gray-200 pb-2 mb-4';
   titulo.textContent = 'Itens para vistoria';
+  
   const grade = document.createElement('div');
   grade.className = 'comodo-itens grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4';
 
@@ -119,10 +116,14 @@ function adicionarComodo() {
 
 function renderizarItens(grade, tipoComodo) {
   grade.replaceChildren();
+  
+  if (!tipoComodo) return;
+
+  // Renderiza itens padrão do cômodo
   (itensPorComodo[tipoComodo] || []).forEach(nomeItem => {
     const ehObs = nomeItem === 'OBS';
     const bloco = document.createElement('div');
-    bloco.className = 'item-vistoria' + (ehObs ? ' obs' : '');
+    bloco.className = 'item-vistoria' + (ehObs ? ' obs md:col-span-2' : '');
 
     const label = document.createElement('label');
     label.textContent = nomeItem;
@@ -132,6 +133,7 @@ function renderizarItens(grade, tipoComodo) {
     campo.dataset.item = nomeItem;
     campo.rows = ehObs ? 3 : 2;
     campo.setAttribute('aria-label', `${nomeItem} - ${tipoComodo}`);
+    
     if (ehObs) {
       campo.placeholder = 'Observações gerais do cômodo (opcional)';
     } else {
@@ -141,6 +143,73 @@ function renderizarItens(grade, tipoComodo) {
     bloco.append(label, campo);
     grade.appendChild(bloco);
   });
+
+  // Bloco para adicionar Melhorias Dinâmicas
+  const blocoBtnMelhoria = document.createElement('div');
+  blocoBtnMelhoria.className = 'md:col-span-2 flex justify-start mt-2 border-t border-dashed border-gray-300 pt-4';
+
+  const btnMelhoria = document.createElement('button');
+  btnMelhoria.type = 'button';
+  btnMelhoria.className = 'btn-secundario text-sm py-1.5 px-3 flex items-center gap-1.5';
+  btnMelhoria.innerHTML = '<i data-lucide="plus" class="w-4 h-4"></i> Adicionar Melhoria';
+  
+  btnMelhoria.addEventListener('click', () => adicionarCampoMelhoria(grade, blocoBtnMelhoria));
+
+  blocoBtnMelhoria.appendChild(btnMelhoria);
+  grade.appendChild(blocoBtnMelhoria);
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: grade });
+}
+
+function adicionarCampoMelhoria(grade, blocoBtnMelhoria) {
+  const bloco = document.createElement('div');
+  bloco.className = 'item-melhoria-container flex flex-col gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg md:col-span-2 shadow-sm';
+
+  const cabecalho = document.createElement('div');
+  cabecalho.className = 'flex justify-between items-center';
+  const titulo = document.createElement('h5');
+  titulo.textContent = 'Nova Melhoria';
+  titulo.className = 'text-sm font-bold text-gray-700';
+
+  const btnRemover = document.createElement('button');
+  btnRemover.type = 'button';
+  btnRemover.className = 'text-red-500 hover:text-red-700 text-xs font-semibold';
+  btnRemover.textContent = 'Remover Melhoria';
+  btnRemover.addEventListener('click', () => bloco.remove());
+
+  cabecalho.append(titulo, btnRemover);
+
+  const gridInputs = document.createElement('div');
+  gridInputs.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+
+  const divNome = document.createElement('div');
+  const labelNome = document.createElement('label');
+  labelNome.textContent = 'Nome da Melhoria';
+  labelNome.className = 'text-xs font-semibold text-gray-600 mb-1 block';
+  const inputNome = document.createElement('input');
+  inputNome.type = 'text';
+  inputNome.className = 'campo nome-melhoria uppercase-input';
+  inputNome.placeholder = 'Ex: Porcelanato, Toldo, Armário...';
+  inputNome.required = true;
+  divNome.append(labelNome, inputNome);
+
+  const divRelato = document.createElement('div');
+  const labelRelato = document.createElement('label');
+  labelRelato.textContent = 'Estado / Condição';
+  labelRelato.className = 'text-xs font-semibold text-gray-600 mb-1 block';
+  const inputRelato = document.createElement('textarea');
+  inputRelato.className = 'campo-textarea relato-melhoria';
+  inputRelato.rows = 2;
+  inputRelato.placeholder = 'Condição atual da melhoria';
+  inputRelato.value = PADRAO;
+  inputRelato.required = true;
+  divRelato.append(labelRelato, inputRelato);
+
+  gridInputs.append(divNome, divRelato);
+  bloco.append(cabecalho, gridInputs);
+
+  // Insere a nova melhoria antes do botão "Adicionar Melhoria"
+  grade.insertBefore(bloco, blocoBtnMelhoria);
 }
 
 function atualizarNumeracao() {
@@ -152,13 +221,15 @@ function atualizarNumeracao() {
   aviso.classList.toggle('hidden', cards.length > 0);
 }
 
-// Retorna [{ NOME_COMODO, ITENS: [{ NOME, RELATO }] }] — tags em MAIÚSCULAS (padrão dos templates)
+// ---------------- Coleta de Dados ----------------
 function coletarComodos() {
   return Array.from(container.querySelectorAll('.comodo-card')).map((card, i) => {
     const tipo = card.querySelector('.comodo-tipo').value;
     if (!tipo) throw new Error(`Selecione o tipo do cômodo ${i + 1}.`);
 
     const itens = [];
+    
+    // Coleta itens padrão
     card.querySelectorAll('.item-relato').forEach(campo => {
       const relato = campo.value.trim();
       if (!relato && campo.dataset.item !== 'OBS') {
@@ -166,11 +237,23 @@ function coletarComodos() {
       }
       if (relato) itens.push({ NOME: campo.dataset.item, RELATO: relato });
     });
+
+    // Coleta as melhorias extras (Dinâmicas)
+    card.querySelectorAll('.item-melhoria-container').forEach(container => {
+      const nome = container.querySelector('.nome-melhoria').value.trim().toUpperCase();
+      const relato = container.querySelector('.relato-melhoria').value.trim();
+      
+      if (!nome || !relato) {
+        throw new Error(`Preencha corretamente o nome e o estado da melhoria adicionada no cômodo ${i + 1} (${tipo}).`);
+      }
+      itens.push({ NOME: nome, RELATO: relato });
+    });
+
     return { NOME_COMODO: tipo, ITENS: itens };
   });
 }
 
-// ---------------- Envio ----------------
+// ---------------- Envio e Geração ----------------
 function baixarLocal(doc) {
   const link = document.createElement('a');
   link.href = URL.createObjectURL(doc.blob);
@@ -188,6 +271,7 @@ form.addEventListener('submit', async (e) => {
   let comodos;
   try { comodos = coletarComodos(); }
   catch (err) { mostrarMensagem(err.message, 'erro'); return; }
+  
   if (comodos.length === 0) {
     mostrarMensagem('Adicione pelo menos um cômodo para realizar a vistoria.', 'erro');
     return;
@@ -227,7 +311,7 @@ form.addEventListener('submit', async (e) => {
       { method: 'POST', body: docGerado.blob });
     if (!res.ok) throw Object.assign(new Error('Falha no upload para o Google Drive.'), { aposGerar: true });
 
-    // Protocolo interno (mesmo padrão dos demais fluxos) — falha aqui não invalida o envio
+    // Protocolo interno
     try {
       await fetch('/api/solicitacoes', {
         method: 'POST',
@@ -257,7 +341,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// ---------------- Botões / inicialização ----------------
+// ---------------- Inicialização ----------------
 btnAdd.addEventListener('click', adicionarComodo);
 
 function definirDataHoje() {
@@ -266,7 +350,6 @@ function definirDataHoje() {
 }
 
 form.addEventListener('reset', () => {
-  // o reset nativo roda depois deste evento; recompõe o estado inicial em seguida
   setTimeout(() => {
     container.replaceChildren();
     limparMensagem();
